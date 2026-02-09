@@ -3,9 +3,12 @@
  * CLI - Real-time agentic loop interface
  * Shows tool calls and progress in Claude Code style
  */
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
+import { existsSync } from 'fs';
+import { join, resolve, dirname } from 'path';
 import { config } from 'dotenv';
+import { DaemonManager } from './daemon/index.js';
 
 import { Input } from './components/Input.js';
 import { Intro } from './components/Intro.js';
@@ -69,6 +72,29 @@ export function CLI() {
     resetNavigation,
   } = useInputHistory();
   
+  // Auto-start daemon if running inside a Tino project directory
+  const daemonRef = useRef<DaemonManager | null>(null);
+  useEffect(() => {
+    const settingsPath = join(process.cwd(), '.tino', 'settings.json');
+    if (!existsSync(settingsPath)) return;
+
+    // Resolve daemon package: relative to the CLI install location
+    const cliDir = dirname(resolve(import.meta.dirname ?? '.'));
+    const daemonPkgDir = join(cliDir, 'python');
+    if (!existsSync(join(daemonPkgDir, 'pyproject.toml'))) return;
+
+    const manager = new DaemonManager({
+      projectDir: process.cwd(),
+      daemonPkgDir,
+    });
+    daemonRef.current = manager;
+    manager.start();
+
+    return () => {
+      manager.stop();
+    };
+  }, []);
+
   // Handle history navigation from Input component
   const handleHistoryNavigate = useCallback((direction: 'up' | 'down') => {
     if (direction === 'up') {

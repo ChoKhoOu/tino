@@ -7,7 +7,15 @@ import { CLI } from './cli.js';
 // Load environment variables
 config({ quiet: true });
 
-// Render the CLI app and wait for it to exit
-// This keeps the process alive until the user exits
-const { waitUntilExit } = render(<CLI />);
-await waitUntilExit();
+// Handle subcommands before launching the interactive Ink app
+const subcommand = process.argv[2];
+
+if (subcommand === 'init') {
+  // `tino init <project-name>` — one-shot command, no Ink rendering
+  const { runInitCommand } = await import('./commands/init.js');
+  await runInitCommand(process.argv.slice(3));
+} else {
+  // Default: launch interactive CLI
+  const { waitUntilExit } = render(<CLI />);
+  await waitUntilExit();
+}
