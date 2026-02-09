@@ -10,6 +10,7 @@ import { StructuredToolInterface } from '@langchain/core/tools';
 import { Runnable } from '@langchain/core/runnables';
 import { z } from 'zod';
 import { DEFAULT_SYSTEM_PROMPT } from '@/agent/prompts';
+import { loadSettings } from '@/utils/config';
 import type { TokenUsage } from '../agent/types.js';
 
 export const DEFAULT_PROVIDER = 'openai';
@@ -67,12 +68,14 @@ const MODEL_PROVIDERS: Record<string, ModelFactory> = {
       model: name,
       ...opts,
       apiKey: getApiKey('ANTHROPIC_API_KEY', 'Anthropic'),
+      ...(process.env.ANTHROPIC_BASE_URL ? { anthropicApiUrl: process.env.ANTHROPIC_BASE_URL } : {}),
     }),
   'gemini-': (name, opts) =>
     new ChatGoogleGenerativeAI({
       model: name,
       ...opts,
       apiKey: getApiKey('GOOGLE_API_KEY', 'Google'),
+      ...(process.env.GOOGLE_BASE_URL ? { baseUrl: process.env.GOOGLE_BASE_URL } : {}),
     }),
   'grok-': (name, opts) =>
     new ChatOpenAI({
@@ -80,7 +83,7 @@ const MODEL_PROVIDERS: Record<string, ModelFactory> = {
       ...opts,
       apiKey: getApiKey('XAI_API_KEY', 'xAI'),
       configuration: {
-        baseURL: 'https://api.x.ai/v1',
+        baseURL: process.env.XAI_BASE_URL || 'https://api.x.ai/v1',
       },
     }),
   'openrouter:': (name, opts) =>
@@ -89,7 +92,7 @@ const MODEL_PROVIDERS: Record<string, ModelFactory> = {
       ...opts,
       apiKey: getApiKey('OPENROUTER_API_KEY', 'OpenRouter'),
       configuration: {
-        baseURL: 'https://openrouter.ai/api/v1',
+        baseURL: process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1',
       },
     }),
   'kimi-': (name, opts) =>
@@ -101,6 +104,20 @@ const MODEL_PROVIDERS: Record<string, ModelFactory> = {
         baseURL: 'https://api.moonshot.cn/v1',
       },
     }),
+  'custom:': (name, opts) => {
+    const match = name.match(/^custom:([^/]+)\/?(.*)$/);
+    if (!match) throw new Error(`Invalid custom provider format: ${name}`);
+    const [, providerName, modelOverride] = match;
+    const settings = loadSettings();
+    const provider = settings.customProviders?.[providerName!];
+    if (!provider) throw new Error(`Custom provider "${providerName}" not found in .tino/settings.json`);
+    return new ChatOpenAI({
+      modelName: modelOverride || provider.defaultModel || 'gpt-4',
+      configuration: { baseURL: provider.baseURL },
+      apiKey: provider.apiKey || 'not-needed',
+      ...opts,
+    });
+  },
   'ollama:': (name, opts) =>
     new ChatOllama({
       model: name.replace(/^ollama:/, ''),
@@ -114,16 +131,42 @@ const DEFAULT_MODEL_FACTORY: ModelFactory = (name, opts) =>
     model: name,
     ...opts,
     apiKey: getApiKey('OPENAI_API_KEY', 'OpenAI'),
+    ...(process.env.OPENAI_BASE_URL ? { configuration: { baseURL: process.env.OPENAI_BASE_URL } } : {}),
   });
+
+const llmCache = new Map<string, BaseChatModel>();
+
+function buildCacheKey(modelName: string): string {
+  const prefix = Object.keys(MODEL_PROVIDERS).find((p) => modelName.startsWith(p));
+  if (prefix === 'custom:') {
+    const match = modelName.match(/^custom:([^/]+)\/?(.*)$/);
+    if (match) {
+      const settings = loadSettings();
+      const provider = settings.customProviders?.[match[1]!];
+      return `${modelName}::${provider?.baseURL ?? ''}`;
+    }
+  }
+  return modelName;
+}
 
 export function getChatModel(
   modelName: string = DEFAULT_MODEL,
   streaming: boolean = false
 ): BaseChatModel {
+  const cacheKey = `${buildCacheKey(modelName)}::streaming=${streaming}`;
+  const cached = llmCache.get(cacheKey);
+  if (cached) return cached;
+
   const opts: ModelOpts = { streaming };
   const prefix = Object.keys(MODEL_PROVIDERS).find((p) => modelName.startsWith(p));
   const factory = prefix ? MODEL_PROVIDERS[prefix] : DEFAULT_MODEL_FACTORY;
-  return factory(modelName, opts);
+  const model = factory(modelName, opts);
+  llmCache.set(cacheKey, model);
+  return model;
+}
+
+export function clearLlmCache(): void {
+  llmCache.clear();
 }
 
 interface CallLlmOptions {
