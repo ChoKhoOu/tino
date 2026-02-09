@@ -1,42 +1,175 @@
-"""DataService stub — returns UNIMPLEMENTED for all RPCs.
+"""DataService — ETL pipeline for market data ingestion and catalog management.
 
-Will be wired to proto-generated servicer base class after codegen (Task 3).
+Inherits from the proto-generated DataServiceServicer base class and implements:
+  - IngestData: server-streaming RPC for data ingestion pipeline
+  - ListCatalog: list available instruments and date ranges
+  - DeleteCatalog: remove specific data from catalog
 """
 
 from __future__ import annotations
 
+import logging
+from typing import AsyncIterator
+
 import grpc
 
+from tino_daemon.nautilus.catalog import DataCatalogWrapper
+from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
+from tino_daemon.wranglers.base import BaseWrangler
+from tino_daemon.wranglers.csv_wrangler import CsvWrangler
 
-class DataServiceStub:
-    """Placeholder for DataService.
+logger = logging.getLogger(__name__)
 
-    Once proto codegen generates the DataServiceServicer base class,
-    this will inherit from it and implement the actual data methods
-    (e.g., IngestData, QueryBars, StreamQuotes).
+_WRANGLERS: dict[str, BaseWrangler] = {}
+
+
+def _get_wrangler(source_type: str) -> BaseWrangler:
+    """Get or create a wrangler for the given source type."""
+    if source_type not in _WRANGLERS:
+        if source_type == "csv":
+            _WRANGLERS[source_type] = CsvWrangler()
+        else:
+            raise ValueError(f"Unsupported source type: {source_type}")
+    return _WRANGLERS[source_type]
+
+
+class DataServiceServicer(data_pb2_grpc.DataServiceServicer):
+    """gRPC DataService implementation using proto-generated servicer base.
+
+    Manages data ingestion pipeline: download → transform → catalog write.
     """
 
-    def register(self, server: grpc.aio.Server) -> None:
-        """Register this stub with the gRPC server."""
-        server.add_generic_rpc_handlers([_DataGenericHandler()])
+    def __init__(self, catalog: DataCatalogWrapper) -> None:
+        self._catalog = catalog
 
+    async def IngestData(
+        self,
+        request: data_pb2.IngestDataRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> AsyncIterator[data_pb2.IngestDataResponse]:
+        """Ingest data from a source into the ParquetDataCatalog.
 
-class _DataGenericHandler(grpc.GenericRpcHandler):
-    """Catches all DataService RPCs and returns UNIMPLEMENTED."""
+        Server-streaming RPC that yields progress events:
+          1. PROGRESS: downloading / transforming / writing
+          2. COMPLETED: final status with row count
+          3. ERROR: if anything fails
+        """
+        source = request.source
+        instrument = request.instrument
+        bar_type = request.bar_type
 
-    SERVICE_PREFIX = "/tino.data.v1.DataService/"
+        logger.info(
+            "IngestData: source=%s instrument=%s bar_type=%s range=%s..%s",
+            source,
+            instrument,
+            bar_type,
+            request.start_date,
+            request.end_date,
+        )
 
-    def service(self, handler_call_details: grpc.HandlerCallDetails):
-        if handler_call_details.method.startswith(self.SERVICE_PREFIX):
-            return grpc.unary_unary_rpc_method_handler(
-                _unimplemented_handler,
-                request_deserializer=None,
-                response_serializer=None,
+        try:
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_PROGRESS,
+                message=f"Initializing {source} wrangler",
+                progress_pct=0.0,
             )
-        return None
 
+            wrangler = _get_wrangler(source)
 
-async def _unimplemented_handler(
-    request: bytes, context: grpc.aio.ServicerContext
-) -> bytes:
-    await context.abort(grpc.StatusCode.UNIMPLEMENTED, "Not yet implemented")
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_PROGRESS,
+                message=f"Transforming data for {instrument}",
+                progress_pct=30.0,
+            )
+
+            if source == "csv":
+                data_input = instrument
+            else:
+                data_input = instrument
+
+            bars = wrangler.wrangle(
+                data=data_input,
+                instrument=instrument,
+                bar_type=bar_type,
+            )
+
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_PROGRESS,
+                message=f"Transformed {len(bars)} bars",
+                progress_pct=60.0,
+            )
+
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_PROGRESS,
+                message="Writing to ParquetDataCatalog",
+                progress_pct=80.0,
+            )
+
+            row_count = self._catalog.write_data(bars)
+
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_COMPLETED,
+                message=f"Ingested {row_count} bars for {bar_type}",
+                progress_pct=100.0,
+                rows_ingested=row_count,
+            )
+
+        except FileNotFoundError as exc:
+            logger.error("IngestData file not found: %s", exc)
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_ERROR,
+                message=f"File not found: {exc}",
+            )
+        except ValueError as exc:
+            logger.error("IngestData validation error: %s", exc)
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_ERROR,
+                message=f"Validation error: {exc}",
+            )
+        except Exception as exc:
+            logger.exception("IngestData unexpected error")
+            yield data_pb2.IngestDataResponse(
+                type=data_pb2.IngestDataResponse.EVENT_TYPE_ERROR,
+                message=f"Internal error: {exc}",
+            )
+
+    async def ListCatalog(
+        self,
+        request: data_pb2.ListCatalogRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.ListCatalogResponse:
+        """List all available data in the catalog."""
+        logger.info("ListCatalog requested")
+
+        entries = self._catalog.list_data()
+
+        proto_entries = [
+            data_pb2.CatalogEntry(
+                instrument=e.instrument,
+                bar_type=e.bar_type,
+                start_date=e.start_date,
+                end_date=e.end_date,
+                row_count=e.row_count,
+            )
+            for e in entries
+        ]
+
+        return data_pb2.ListCatalogResponse(entries=proto_entries)
+
+    async def DeleteCatalog(
+        self,
+        request: data_pb2.DeleteCatalogRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.DeleteCatalogResponse:
+        """Delete data for a specific instrument from the catalog."""
+        instrument = request.instrument
+        bar_type = request.bar_type or None
+
+        logger.info("DeleteCatalog: instrument=%s bar_type=%s", instrument, bar_type)
+
+        success = self._catalog.delete_data(instrument, bar_type)
+
+        if not success:
+            logger.warning("No data found to delete for %s", instrument)
+
+        return data_pb2.DeleteCatalogResponse(success=success)

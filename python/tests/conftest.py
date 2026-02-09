@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import sys
+from pathlib import Path
 from typing import AsyncGenerator
 
 import grpc
@@ -10,6 +12,12 @@ import pytest
 import pytest_asyncio
 
 from tino_daemon.config import DaemonConfig
+
+# Proto-generated code uses absolute imports like `from tino.data.v1 import data_pb2`
+# so the proto output root must be on sys.path.
+_PROTO_ROOT = str(Path(__file__).resolve().parent.parent / "tino_daemon" / "proto")
+if _PROTO_ROOT not in sys.path:
+    sys.path.insert(0, _PROTO_ROOT)
 
 
 @pytest.fixture

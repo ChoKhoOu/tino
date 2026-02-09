@@ -14,7 +14,10 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 
 from tino_daemon.config import DaemonConfig
+from tino_daemon.nautilus.catalog import DataCatalogWrapper
+from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.services.daemon import DaemonServicer
+from tino_daemon.services.data import DataServiceServicer
 
 logger = logging.getLogger(__name__)
 
@@ -56,11 +59,16 @@ async def serve(config: DaemonConfig) -> None:
     daemon_servicer = DaemonServicer(shutdown_event=shutdown_event)
     daemon_servicer.register(server)
 
+    # --- DataService (proto-generated servicer base) ---
+    catalog = DataCatalogWrapper()
+    data_servicer = DataServiceServicer(catalog=catalog)
+    data_pb2_grpc.add_DataServiceServicer_to_server(data_servicer, server)
+
     # --- Reflection (enables grpcurl discovery) ---
-    # Include health service + our daemon service descriptor names
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
         "tino.daemon.v1.DaemonService",
+        data_pb2.DESCRIPTOR.services_by_name["DataService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)
