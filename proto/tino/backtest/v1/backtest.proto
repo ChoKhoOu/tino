@@ -1,0 +1,65 @@
+syntax = "proto3";
+package tino.backtest.v1;
+
+service BacktestService {
+  rpc RunBacktest(RunBacktestRequest) returns (stream RunBacktestResponse);
+  rpc CancelBacktest(CancelBacktestRequest) returns (CancelBacktestResponse);
+  rpc GetResult(GetResultRequest) returns (GetResultResponse);
+  rpc ListResults(ListResultsRequest) returns (ListResultsResponse);
+}
+
+message RunBacktestRequest {
+  string strategy_path = 1;
+  string instrument = 2;
+  string bar_type = 3;
+  string start_date = 4;
+  string end_date = 5;
+  string config_json = 6;
+}
+
+message RunBacktestResponse {
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_PROGRESS = 1;
+    EVENT_TYPE_COMPLETED = 2;
+    EVENT_TYPE_ERROR = 3;
+  }
+  EventType type = 1;
+  string message = 2;
+  double progress_pct = 3;
+  BacktestResult result = 4;
+}
+
+message BacktestResult {
+  string id = 1;
+  double total_return = 2;
+  double sharpe_ratio = 3;
+  double max_drawdown = 4;
+  double sortino_ratio = 5;
+  int32 total_trades = 6;
+  int32 winning_trades = 7;
+  double win_rate = 8;
+  double profit_factor = 9;
+  string equity_curve_json = 10;
+  string trades_json = 11;
+  string created_at = 12;
+}
+
+message CancelBacktestRequest {
+  string id = 1;
+}
+message CancelBacktestResponse {
+  bool success = 1;
+}
+
+message GetResultRequest {
+  string id = 1;
+}
+message GetResultResponse {
+  BacktestResult result = 1;
+}
+
+message ListResultsRequest {}
+message ListResultsResponse {
+  repeated BacktestResult results = 1;
+}

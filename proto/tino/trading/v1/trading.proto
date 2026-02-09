@@ -1,0 +1,92 @@
+syntax = "proto3";
+package tino.trading.v1;
+
+service TradingService {
+  rpc StartTrading(StartTradingRequest) returns (stream StartTradingResponse);
+  rpc StopTrading(StopTradingRequest) returns (StopTradingResponse);
+  rpc GetPositions(GetPositionsRequest) returns (GetPositionsResponse);
+  rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
+  rpc SubmitOrder(SubmitOrderRequest) returns (SubmitOrderResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+}
+
+message StartTradingRequest {
+  string strategy_path = 1;
+  string mode = 2;
+  string venue = 3;
+  repeated string instruments = 4;
+  string config_json = 5;
+}
+
+message StartTradingResponse {
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_STARTED = 1;
+    EVENT_TYPE_ORDER_FILLED = 2;
+    EVENT_TYPE_POSITION_CHANGED = 3;
+    EVENT_TYPE_PNL_UPDATE = 4;
+    EVENT_TYPE_ERROR = 5;
+    EVENT_TYPE_STOPPED = 6;
+  }
+  EventType type = 1;
+  string message = 2;
+  string data_json = 3;
+  string timestamp = 4;
+}
+
+message StopTradingRequest {
+  bool flatten_positions = 1;
+}
+message StopTradingResponse {
+  bool success = 1;
+}
+
+message GetPositionsRequest {}
+message GetPositionsResponse {
+  repeated Position positions = 1;
+}
+
+message Position {
+  string instrument = 1;
+  double quantity = 2;
+  double avg_price = 3;
+  double unrealized_pnl = 4;
+  double realized_pnl = 5;
+}
+
+message GetOrdersRequest {
+  int32 limit = 1;
+}
+message GetOrdersResponse {
+  repeated Order orders = 1;
+}
+
+message Order {
+  string id = 1;
+  string instrument = 2;
+  string side = 3;
+  string type = 4;
+  double quantity = 5;
+  double price = 6;
+  string status = 7;
+  string timestamp = 8;
+}
+
+message SubmitOrderRequest {
+  string instrument = 1;
+  string side = 2;
+  string type = 3;
+  double quantity = 4;
+  double price = 5;
+}
+message SubmitOrderResponse {
+  string order_id = 1;
+  bool success = 2;
+}
+
+message CancelOrderRequest {
+  string order_id = 1;
+}
+message CancelOrderResponse {
+  bool success = 1;
+}

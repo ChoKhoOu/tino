@@ -1,0 +1,50 @@
+syntax = "proto3";
+package tino.data.v1;
+
+service DataService {
+  rpc IngestData(IngestDataRequest) returns (stream IngestDataResponse);
+  rpc ListCatalog(ListCatalogRequest) returns (ListCatalogResponse);
+  rpc DeleteCatalog(DeleteCatalogRequest) returns (DeleteCatalogResponse);
+}
+
+message IngestDataRequest {
+  string source = 1;
+  string instrument = 2;
+  string bar_type = 3;
+  string start_date = 4;
+  string end_date = 5;
+}
+
+message IngestDataResponse {
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_PROGRESS = 1;
+    EVENT_TYPE_COMPLETED = 2;
+    EVENT_TYPE_ERROR = 3;
+  }
+  EventType type = 1;
+  string message = 2;
+  double progress_pct = 3;
+  int64 rows_ingested = 4;
+}
+
+message ListCatalogRequest {}
+message ListCatalogResponse {
+  repeated CatalogEntry entries = 1;
+}
+
+message CatalogEntry {
+  string instrument = 1;
+  string bar_type = 2;
+  string start_date = 3;
+  string end_date = 4;
+  int64 row_count = 5;
+}
+
+message DeleteCatalogRequest {
+  string instrument = 1;
+  string bar_type = 2;
+}
+message DeleteCatalogResponse {
+  bool success = 1;
+}

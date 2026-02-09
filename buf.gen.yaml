@@ -1,0 +1,13 @@
+version: v2
+plugins:
+  # TypeScript (Protobuf-ES v2 — includes ConnectRPC service definitions)
+  - local: protoc-gen-es
+    out: src/grpc/gen
+    include_imports: true
+    opt: target=ts
+  # Python (protobuf messages)
+  - remote: buf.build/protocolbuffers/python
+    out: python/tino_daemon/proto
+  # Python (gRPC service stubs)
+  - remote: buf.build/grpc/python
+    out: python/tino_daemon/proto

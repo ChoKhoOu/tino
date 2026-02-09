@@ -1,0 +1,20 @@
+syntax = "proto3";
+package tino.daemon.v1;
+
+service DaemonService {
+  rpc GetSystemInfo(GetSystemInfoRequest) returns (GetSystemInfoResponse);
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
+}
+
+message GetSystemInfoRequest {}
+message GetSystemInfoResponse {
+  string python_version = 1;
+  string nautilus_version = 2;
+  uint64 memory_usage_bytes = 3;
+  string uptime = 4;
+}
+
+message ShutdownRequest {}
+message ShutdownResponse {
+  bool success = 1;
+}
