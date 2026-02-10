@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
+import {
+  searchFredSeries,
+  getFredSeries,
+  getFredSeriesInfo,
+} from '../finance/fred/index.js';
 
 const schema = z.object({
   action: z.enum([
@@ -22,7 +27,30 @@ export default definePlugin({
     'Access FRED macroeconomic data including series search, historical observations, and series metadata.',
   schema,
   execute: async (raw) => {
-    const { action } = schema.parse(raw);
-    return JSON.stringify({ error: `Not implemented: ${action}` });
+    const { action, query, seriesId, startDate, endDate, limit } = schema.parse(raw);
+
+    try {
+      switch (action) {
+        case 'search': {
+          if (!query) return JSON.stringify({ error: 'query is required for search action' });
+          const data = await searchFredSeries(query, limit);
+          return JSON.stringify({ data });
+        }
+        case 'series': {
+          if (!seriesId) return JSON.stringify({ error: 'seriesId is required for series action' });
+          const data = await getFredSeries(seriesId, startDate, endDate);
+          return JSON.stringify({ data });
+        }
+        case 'series_info': {
+          if (!seriesId) return JSON.stringify({ error: 'seriesId is required for series_info action' });
+          const data = await getFredSeriesInfo(seriesId);
+          return JSON.stringify({ data });
+        }
+        default:
+          return JSON.stringify({ error: `Unknown action: ${action}` });
+      }
+    } catch (err) {
+      return JSON.stringify({ error: err instanceof Error ? err.message : String(err) });
+    }
   },
 });
