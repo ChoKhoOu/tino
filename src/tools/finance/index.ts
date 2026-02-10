@@ -11,4 +11,5 @@ export { getCompanyFacts } from './company_facts.js';
 export { createFinancialSearch } from './financial-search.js';
 export { createFinancialMetrics } from './financial-metrics.js';
 export { createReadFilings } from './read-filings.js';
+export { createFinancialResearch } from './financial-research.js';
 

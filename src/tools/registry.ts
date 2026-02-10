@@ -3,8 +3,13 @@ import { createFinancialSearch, createFinancialMetrics, createReadFilings } from
 import { exaSearch, tavilySearch } from './search/index.js';
 import { skillTool, SKILL_TOOL_DESCRIPTION } from './skill.js';
 import { browserTool } from './browser/index.js';
-import { FINANCIAL_SEARCH_DESCRIPTION, FINANCIAL_METRICS_DESCRIPTION, WEB_SEARCH_DESCRIPTION, READ_FILINGS_DESCRIPTION, BROWSER_DESCRIPTION } from './descriptions/index.js';
+import { FINANCIAL_SEARCH_DESCRIPTION, FINANCIAL_METRICS_DESCRIPTION, WEB_SEARCH_DESCRIPTION, READ_FILINGS_DESCRIPTION, BROWSER_DESCRIPTION, QUANT_ANALYSIS_DESCRIPTION, TRADING_OPS_DESCRIPTION, FINANCIAL_RESEARCH_DESCRIPTION } from './descriptions/index.js';
+import { createFinancialResearch } from './finance/financial-research.js';
+import { createQuantAnalysis } from './quant/quant-analysis.js';
+import { createTradingOps } from './trading/index.js';
 import { discoverSkills } from '../skills/index.js';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 /**
  * A registered tool with its rich description for system prompt injection.
@@ -47,6 +52,16 @@ export function getToolRegistry(model: string): RegisteredTool[] {
       tool: browserTool,
       description: BROWSER_DESCRIPTION,
     },
+    {
+      name: 'quant_analysis',
+      tool: createQuantAnalysis(model),
+      description: QUANT_ANALYSIS_DESCRIPTION,
+    },
+    {
+      name: 'financial_research',
+      tool: createFinancialResearch(model),
+      description: FINANCIAL_RESEARCH_DESCRIPTION,
+    },
   ];
 
   // Include web_search if Exa or Tavily API key is configured (Exa preferred)
@@ -71,6 +86,16 @@ export function getToolRegistry(model: string): RegisteredTool[] {
       name: 'skill',
       tool: skillTool,
       description: SKILL_TOOL_DESCRIPTION,
+    });
+  }
+
+  // Include trading_ops if the Tino daemon PID file exists (daemon likely running)
+  const tinoPidFile = join(process.cwd(), '.tino', 'daemon.pid');
+  if (existsSync(tinoPidFile)) {
+    tools.push({
+      name: 'trading_ops',
+      tool: createTradingOps(model),
+      description: TRADING_OPS_DESCRIPTION,
     });
   }
 
