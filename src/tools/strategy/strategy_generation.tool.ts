@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import type { ModelBroker } from '@/runtime/model-broker.js';
 import { validateStrategyCode, extractStrategyClassName } from './validator.js';
 import type { StrategyGenerationRequest, StrategyValidationResult } from './types.js';
@@ -100,7 +100,7 @@ async function generate(req: StrategyGenerationRequest, broker: ModelBroker) {
   };
 }
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'strategy_generation',
   domain: 'strategy',
   riskLevel: 'moderate',

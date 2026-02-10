@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { searchFredSeries } from './fred/index.js';
 
 const schema = z.object({
@@ -7,7 +7,7 @@ const schema = z.object({
   limit: z.number().default(10).describe('Max results'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fred_search',
   domain: 'finance',
   riskLevel: 'safe',

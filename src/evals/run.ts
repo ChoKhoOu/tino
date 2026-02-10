@@ -11,12 +11,18 @@ import React from 'react';
 import { render } from 'ink';
 import { Client } from 'langsmith';
 import type { EvaluationResult } from 'langsmith/evaluation';
-import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { callLlm } from '../model/llm.js';
-import { Agent } from '../agent/agent.js';
+import { ModelBroker } from '../runtime/model-broker.js';
+import { ToolRegistry } from '../runtime/tool-registry.js';
+import { PermissionEngine } from '../runtime/permission-engine.js';
+import { HookRunner } from '../runtime/hook-runner.js';
+import { SessionRuntime } from '../runtime/session-runtime.js';
+import { buildSystemPrompt } from '../runtime/prompt-builder.js';
+import { loadPermissions } from '../config/permissions.js';
+import { loadHooks } from '../config/hooks.js';
+import { discoverPlugins } from '../plugins/discover.js';
 import { EvalApp, type EvalProgressEvent } from './components/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -138,19 +144,51 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // ============================================================================
-// Target function - wraps Tino agent
+// Runtime bootstrap + target function
 // ============================================================================
 
-async function target(inputs: { question: string }): Promise<{ answer: string }> {
-  const agent = Agent.create({ model: 'gpt-5.2', maxIterations: 10 });
+interface EvalRuntime {
+  runtime: SessionRuntime;
+  broker: ModelBroker;
+}
+
+async function createEvalRuntime(): Promise<EvalRuntime> {
+  const broker = new ModelBroker('gpt-5.2');
+  const registry = new ToolRegistry();
+  const permissions = new PermissionEngine(loadPermissions());
+  const hooks = new HookRunner(loadHooks());
+
+  const builtins = await registry.discoverTools(path.join(__dirname, '..', 'tools'));
+  registry.registerAll(builtins);
+  registry.registerAll(await discoverPlugins());
+  registry.validate();
+
+  const toolDescriptions = registry
+    .getAll()
+    .map((tool) => `### ${tool.id}\n\n${tool.description}`)
+    .join('\n\n');
+
+  return {
+    runtime: new SessionRuntime({
+      broker,
+      registry,
+      permissions,
+      hooks,
+      systemPrompt: buildSystemPrompt(toolDescriptions),
+    }),
+    broker,
+  };
+}
+
+async function target(inputs: { question: string }, runtime: SessionRuntime): Promise<{ answer: string }> {
   let answer = '';
-  
-  for await (const event of agent.run(inputs.question)) {
+
+  for await (const event of runtime.startRun(inputs.question)) {
     if (event.type === 'done') {
       answer = event.answer;
     }
   }
-  
+
   return { answer };
 }
 
@@ -158,18 +196,32 @@ async function target(inputs: { question: string }): Promise<{ answer: string }>
 // Correctness evaluator - LLM-as-judge using gpt-5.2
 // ============================================================================
 
-const EvaluatorOutputSchema = z.object({
-  score: z.number().min(0).max(1),
-  comment: z.string(),
-});
+function parseEvaluatorJson(text: string): { score: number; comment: string } | null {
+  const block = text.match(/```json\s*([\s\S]*?)\s*```/i);
+  const candidate = (block?.[1] ?? text).trim();
+  const start = candidate.indexOf('{');
+  const end = candidate.lastIndexOf('}');
+  if (start === -1 || end === -1 || start >= end) return null;
+
+  try {
+    const parsed = JSON.parse(candidate.slice(start, end + 1)) as { score?: unknown; comment?: unknown };
+    const score = parsed.score === 1 ? 1 : 0;
+    const comment = typeof parsed.comment === 'string' ? parsed.comment : 'No comment provided.';
+    return { score, comment };
+  } catch {
+    return null;
+  }
+}
 
 async function correctnessEvaluator({
   outputs,
   referenceOutputs,
+  broker,
 }: {
   inputs: Record<string, unknown>;
   outputs: Record<string, unknown>;
   referenceOutputs?: Record<string, unknown>;
+  broker: ModelBroker;
 }): Promise<EvaluationResult> {
   const actualAnswer = (outputs?.answer as string) || '';
   const expectedAnswer = (referenceOutputs?.answer as string) || '';
@@ -186,19 +238,29 @@ ${actualAnswer}
 
 Evaluate and provide:
 - score: 1 if the answer is correct (contains the key information), 0 if incorrect
-- comment: brief explanation of why the answer is correct or incorrect`;
+- comment: brief explanation of why the answer is correct or incorrect
+
+Return strict JSON only: {"score":0|1,"comment":"..."}`;
 
   try {
-    const { response } = await callLlm(prompt, {
-      model: 'gpt-5.2',
-      systemPrompt: 'You are an evaluation judge. Assess answer correctness.',
-      outputSchema: EvaluatorOutputSchema,
+    const result = await broker.generateText({
+      model: broker.getModel('summarize'),
+      system: 'You are an evaluation judge. Respond with strict JSON only.',
+      prompt,
     });
-    const result = response as z.infer<typeof EvaluatorOutputSchema>;
+    const parsed = parseEvaluatorJson((result as { text?: string }).text ?? '');
+    if (!parsed) {
+      return {
+        key: 'correctness',
+        score: 0,
+        comment: 'Evaluator returned invalid JSON.',
+      };
+    }
+
     return {
       key: 'correctness',
-      score: result.score,
-      comment: result.comment,
+      score: parsed.score,
+      comment: parsed.comment,
     };
   } catch (error) {
     return {
@@ -270,6 +332,7 @@ function createEvaluationRunner(sampleSize?: number) {
 
     // Generate experiment name for tracking
     const experimentName = `tino-eval-${Date.now().toString(36)}`;
+    const { runtime, broker } = await createEvalRuntime();
 
     // Run evaluation manually - process each example one by one
     for (const example of examples) {
@@ -283,7 +346,7 @@ function createEvaluationRunner(sampleSize?: number) {
 
       // Run the agent to get an answer
       const startTime = Date.now();
-      const outputs = await target(example.inputs);
+      const outputs = await target(example.inputs, runtime);
       const endTime = Date.now();
 
       // Run the correctness evaluator
@@ -291,6 +354,7 @@ function createEvaluationRunner(sampleSize?: number) {
         inputs: example.inputs,
         outputs,
         referenceOutputs: example.outputs,
+        broker,
       });
 
       // Log to LangSmith for tracking

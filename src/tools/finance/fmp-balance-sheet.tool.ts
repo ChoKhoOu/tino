@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFmpBalanceSheet } from './fmp/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   limit: z.number().default(5),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fmp_balance_sheet',
   domain: 'finance',
   riskLevel: 'safe',

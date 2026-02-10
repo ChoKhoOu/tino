@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getEdgarCompanyFacts } from './edgar/index.js';
 
 const schema = z.object({
   cik: z.string().describe('SEC CIK number (e.g. "320193" for Apple)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'edgar_company_facts',
   domain: 'finance',
   riskLevel: 'safe',

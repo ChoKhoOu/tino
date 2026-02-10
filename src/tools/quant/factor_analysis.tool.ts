@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { famaFrenchThreeFactorRegression, factorExposure } from './factors.js';
 
 const schema = z.object({
@@ -15,7 +15,7 @@ const schema = z.object({
     .describe('Risk-free rate: single number or array matching return length (default 0)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'run_factor_analysis',
   domain: 'quant',
   riskLevel: 'safe',

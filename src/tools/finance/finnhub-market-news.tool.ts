@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFinnhubNews } from './finnhub/index.js';
 
 const schema = z.object({
   category: z.enum(['general', 'forex', 'crypto', 'merger']).default('general'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'finnhub_market_news',
   domain: 'finance',
   riskLevel: 'safe',

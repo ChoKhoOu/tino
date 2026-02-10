@@ -3,7 +3,7 @@
  * riskLevel: moderate (no real money, but affects daemon state).
  */
 import { z } from 'zod';
-import { defineToolPlugin } from '../../domain/tool-plugin.js';
+import { definePlugin } from '../../domain/tool-plugin.js';
 import { getTradingClient } from './grpc-clients.js';
 import {
   StartTradingResponse_EventType,
@@ -18,7 +18,7 @@ const schema = z.object({
 
 type Input = z.infer<typeof schema>;
 
-export const tradingPaperPlugin = defineToolPlugin({
+export const tradingPaperPlugin = definePlugin({
   id: 'trading_paper',
   domain: 'trading',
   riskLevel: 'moderate',

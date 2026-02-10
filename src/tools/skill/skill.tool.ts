@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getSkill, discoverSkills } from '@/skills/index.js';
 
 const schema = z.object({
@@ -7,7 +7,7 @@ const schema = z.object({
   args: z.string().optional().describe('Optional arguments for the skill (e.g., ticker symbol)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'skill',
   domain: 'skill',
   riskLevel: 'safe',

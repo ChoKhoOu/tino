@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { validateStrategyCode, extractStrategyClassName } from './validator.js';
 import { formatToolResult } from '../types.js';
 
@@ -7,7 +7,7 @@ const schema = z.object({
   code: z.string().describe('Python strategy code to validate'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'strategy_validator',
   domain: 'strategy',
   riskLevel: 'safe',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { callApi } from './api.js';
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
   limit: z.number().default(10).describe('The number of news articles to retrieve. Max is 100.'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'get_news',
   domain: 'finance',
   riskLevel: 'safe',

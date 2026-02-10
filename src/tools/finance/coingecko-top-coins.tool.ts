@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getTopCoins } from './coingecko/index.js';
 
 const schema = z.object({
   limit: z.number().default(20).describe('Number of coins to return'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'coingecko_top_coins',
   domain: 'finance',
   riskLevel: 'safe',

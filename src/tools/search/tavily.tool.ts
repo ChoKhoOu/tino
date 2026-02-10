@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { formatToolResult, parseSearchResults } from '../types.js';
 
 const TAVILY_API_URL = 'https://api.tavily.com/search';
@@ -44,7 +44,7 @@ const schema = z.object({
   query: z.string().describe('The search query to look up on the web'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'web_search',
   domain: 'search',
   riskLevel: 'safe',

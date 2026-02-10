@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { callApi } from './api.js';
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
   ),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'get_analyst_estimates',
   domain: 'finance',
   riskLevel: 'safe',

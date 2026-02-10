@@ -3,7 +3,7 @@
  * riskLevel: safe (read-only simulation on historical data).
  */
 import { z } from 'zod';
-import { defineToolPlugin } from '../../domain/tool-plugin.js';
+import { definePlugin } from '../../domain/tool-plugin.js';
 import { getBacktestClient } from './grpc-clients.js';
 import {
   RunBacktestResponse_EventType,
@@ -20,7 +20,7 @@ const schema = z.object({
 
 type Input = z.infer<typeof schema>;
 
-export const tradingBacktestPlugin = defineToolPlugin({
+export const tradingBacktestPlugin = definePlugin({
   id: 'trading_backtest',
   domain: 'trading',
   riskLevel: 'safe',

@@ -3,12 +3,12 @@
  * riskLevel: safe (read-only query).
  */
 import { z } from 'zod';
-import { defineToolPlugin } from '../../domain/tool-plugin.js';
+import { definePlugin } from '../../domain/tool-plugin.js';
 import { getTradingClient } from './grpc-clients.js';
 
 const schema = z.object({});
 
-export const tradingPositionsPlugin = defineToolPlugin({
+export const tradingPositionsPlugin = definePlugin({
   id: 'trading_positions',
   domain: 'trading',
   riskLevel: 'safe',

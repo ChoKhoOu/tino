@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getPolygonBars } from './polygon/index.js';
 
 const schema = z.object({
@@ -10,7 +10,7 @@ const schema = z.object({
   multiplier: z.number().default(1).describe('Timespan multiplier'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'polygon_bars',
   domain: 'finance',
   riskLevel: 'safe',

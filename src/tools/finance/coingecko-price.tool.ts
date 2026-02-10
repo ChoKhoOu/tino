@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getCoinPrice } from './coingecko/index.js';
 
 const schema = z.object({
@@ -7,7 +7,7 @@ const schema = z.object({
   vsCurrency: z.string().default('usd').describe('Target currency'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'coingecko_price',
   domain: 'finance',
   riskLevel: 'safe',

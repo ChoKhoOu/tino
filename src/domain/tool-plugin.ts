@@ -20,3 +20,5 @@ export function defineToolPlugin<T extends z.ZodType>(
 ): ToolPlugin<T> {
   return def;
 }
+
+export const definePlugin = defineToolPlugin;

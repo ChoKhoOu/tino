@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFmpDcf } from './fmp/index.js';
 
 const schema = z.object({
   ticker: z.string().describe('Stock ticker symbol'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fmp_dcf',
   domain: 'finance',
   riskLevel: 'safe',

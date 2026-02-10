@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFredSeriesInfo } from './fred/index.js';
 
 const schema = z.object({
   seriesId: z.string().describe('FRED series ID'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fred_series_info',
   domain: 'finance',
   riskLevel: 'safe',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import {
   sharpeRatio,
   sortinoRatio,
@@ -25,7 +25,7 @@ const schema = z.object({
     .describe('Trading periods per year for annualization (default 252)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'calculate_risk_metrics',
   domain: 'quant',
   riskLevel: 'safe',

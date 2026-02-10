@@ -19,6 +19,7 @@ export {
 } from './events.js';
 
 export {
+  definePlugin,
   defineToolPlugin,
   type ToolContext,
   type ToolPlugin,

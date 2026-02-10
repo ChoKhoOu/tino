@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import {
   equalWeightPortfolio,
   minVariancePortfolio,
@@ -76,7 +76,7 @@ function compute(input: z.infer<typeof schema>): Record<string, unknown> {
   }
 }
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'optimize_portfolio',
   domain: 'quant',
   riskLevel: 'safe',

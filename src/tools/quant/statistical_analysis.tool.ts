@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { regression, descriptiveStats, rollingMean, rollingStd } from './stats.js';
 
 const schema = z.object({
@@ -42,7 +42,7 @@ function compute(input: z.infer<typeof schema>): Record<string, unknown> {
   }
 }
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'calculate_statistics',
   domain: 'quant',
   riskLevel: 'safe',

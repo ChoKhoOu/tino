@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFinnhubCompanyNews } from './finnhub/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   to: z.string().describe('End date (YYYY-MM-DD)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'finnhub_company_news',
   domain: 'finance',
   riskLevel: 'safe',

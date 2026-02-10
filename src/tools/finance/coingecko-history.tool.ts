@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getCoinHistory } from './coingecko/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   to: z.number().describe('End timestamp (Unix seconds)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'coingecko_history',
   domain: 'finance',
   riskLevel: 'safe',

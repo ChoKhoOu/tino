@@ -3,7 +3,7 @@
  * riskLevel: dangerous (mutates live trading state).
  */
 import { z } from 'zod';
-import { defineToolPlugin } from '../../domain/tool-plugin.js';
+import { definePlugin } from '../../domain/tool-plugin.js';
 import { getTradingClient } from './grpc-clients.js';
 
 const schema = z.object({
@@ -15,7 +15,7 @@ const schema = z.object({
 
 type Input = z.infer<typeof schema>;
 
-export const tradingKillswitchPlugin = defineToolPlugin({
+export const tradingKillswitchPlugin = definePlugin({
   id: 'trading_killswitch',
   domain: 'trading',
   riskLevel: 'dangerous',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFmpPrices } from './fmp/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   to: z.string().optional().describe('End date (YYYY-MM-DD)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fmp_prices',
   domain: 'finance',
   riskLevel: 'safe',

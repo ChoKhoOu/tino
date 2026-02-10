@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import {
   ensureBrowser,
   setActivePage,
@@ -74,7 +74,7 @@ async function handleAct(request: z.infer<typeof actRequestSchema>): Promise<str
   }
 }
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'browser',
   domain: 'browser',
   riskLevel: 'safe',

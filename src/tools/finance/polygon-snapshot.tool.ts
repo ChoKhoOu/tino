@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getPolygonSnapshot } from './polygon/index.js';
 
 const schema = z.object({
   ticker: z.string().describe('Stock ticker symbol'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'polygon_snapshot',
   domain: 'finance',
   riskLevel: 'safe',

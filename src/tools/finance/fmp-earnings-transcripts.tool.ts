@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getFmpEarningsTranscripts } from './fmp/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   quarter: z.number().min(1).max(4).describe('Quarter (1-4)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'fmp_earnings_transcripts',
   domain: 'finance',
   riskLevel: 'safe',

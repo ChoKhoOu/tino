@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { correlation, rollingCorrelation } from './stats.js';
 
 const schema = z.object({
@@ -15,7 +15,7 @@ const schema = z.object({
     .describe('If provided, compute rolling correlation between first two series with this window'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'analyze_correlation',
   domain: 'quant',
   riskLevel: 'safe',

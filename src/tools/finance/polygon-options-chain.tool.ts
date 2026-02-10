@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getPolygonOptionsChain } from './polygon/index.js';
 
 const schema = z.object({
@@ -7,7 +7,7 @@ const schema = z.object({
   expirationDate: z.string().optional().describe('Filter by expiration date (YYYY-MM-DD)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'polygon_options_chain',
   domain: 'finance',
   riskLevel: 'safe',

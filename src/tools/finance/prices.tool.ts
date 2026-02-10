@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { callApi } from './api.js';
 
 const schema = z.object({
@@ -16,7 +16,7 @@ const schema = z.object({
   end_date: z.string().describe('End date in YYYY-MM-DD format. Must be today or in the past. Required.'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'get_prices',
   domain: 'finance',
   riskLevel: 'safe',

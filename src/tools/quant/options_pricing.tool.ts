@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { blackScholesCall, blackScholesPut, blackScholesGreeks, impliedVolatility } from './options.js';
 
 const schema = z.object({
@@ -23,7 +23,7 @@ const schema = z.object({
     .describe('Market price of the option (used to calculate implied volatility when volatility is omitted)'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'price_option',
   domain: 'quant',
   riskLevel: 'safe',

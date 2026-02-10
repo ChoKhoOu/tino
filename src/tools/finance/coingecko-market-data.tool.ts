@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { getCoinMarketData } from './coingecko/index.js';
 
 const schema = z.object({
   coinId: z.string().describe('CoinGecko coin ID'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'coingecko_market_data',
   domain: 'finance',
   riskLevel: 'safe',

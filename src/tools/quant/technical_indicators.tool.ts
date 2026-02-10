@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/tool-plugin.js';
+import { definePlugin } from '@/domain/tool-plugin.js';
 import { sma, ema, rsi, macd, bollingerBands, atr, stochastic, obv, vwap } from './indicators.js';
 
 const schema = z.object({
@@ -53,7 +53,7 @@ function compute(input: z.infer<typeof schema>): Record<string, unknown> {
   }
 }
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'calculate_indicators',
   domain: 'quant',
   riskLevel: 'safe',

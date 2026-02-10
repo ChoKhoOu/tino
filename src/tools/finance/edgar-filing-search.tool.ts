@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { defineToolPlugin } from '@/domain/index.js';
+import { definePlugin } from '@/domain/index.js';
 import { searchEdgarFilings } from './edgar/index.js';
 
 const schema = z.object({
@@ -8,7 +8,7 @@ const schema = z.object({
   formTypes: z.string().optional().describe('Form type filter (e.g. "10-K,10-Q")'),
 });
 
-export default defineToolPlugin({
+export default definePlugin({
   id: 'edgar_filing_search',
   domain: 'finance',
   riskLevel: 'safe',
