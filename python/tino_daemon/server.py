@@ -19,9 +19,11 @@ from tino_daemon.config import DaemonConfig
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
+from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
 from tino_daemon.services.backtest import BacktestServiceServicer
 from tino_daemon.services.daemon import DaemonServicer
 from tino_daemon.services.data import DataServiceServicer
+from tino_daemon.services.trading import TradingServiceServicer
 
 logger = logging.getLogger(__name__)
 
@@ -72,12 +74,17 @@ async def serve(config: DaemonConfig) -> None:
     backtest_servicer = BacktestServiceServicer(catalog=catalog)
     backtest_pb2_grpc.add_BacktestServiceServicer_to_server(backtest_servicer, server)
 
+    # --- TradingService (proto-generated servicer base) ---
+    trading_servicer = TradingServiceServicer()
+    trading_pb2_grpc.add_TradingServiceServicer_to_server(trading_servicer, server)
+
     # --- Reflection (enables grpcurl discovery) ---
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
         "tino.daemon.v1.DaemonService",
         data_pb2.DESCRIPTOR.services_by_name["DataService"].full_name,
         backtest_pb2.DESCRIPTOR.services_by_name["BacktestService"].full_name,
+        trading_pb2.DESCRIPTOR.services_by_name["TradingService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)
