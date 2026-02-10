@@ -27,6 +27,7 @@
     "@langchain/ollama": "^1.0.3",
     "@langchain/openai": "^1.1.3",
     "@langchain/tavily": "^1.0.1",
+    "asciichart": "^1.5.25",
     "dotenv": "^17.2.3",
     "exa-js": "^2.2.0",
     "gray-matter": "^4.0.3",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/preset-env": "^7.28.5",
+    "@types/asciichart": "^1.5.8",
     "@types/bun": "latest",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.2.7",
