@@ -101,6 +101,14 @@ export interface AnswerStartEvent {
 }
 
 /**
+ * A chunk of the final answer (streamed incrementally)
+ */
+export interface AnswerChunkEvent {
+  type: 'answer_chunk';
+  content: string;
+}
+
+/**
  * Token usage statistics
  */
 export interface TokenUsage {
@@ -134,4 +142,5 @@ export type AgentEvent =
   | ToolLimitEvent
   | ContextClearedEvent
   | AnswerStartEvent
+  | AnswerChunkEvent
   | DoneEvent;

@@ -270,3 +270,48 @@ export async function callLlm(prompt: string, options: CallLlmOptions = {}): Pro
   }
   return { response: result as AIMessage, usage };
 }
+
+/**
+ * Stream LLM response as text chunks. Used for streaming final answers.
+ * Yields string chunks as they arrive from the model.
+ * Returns the accumulated usage stats after streaming completes.
+ */
+export async function* streamLlm(
+  prompt: string,
+  options: Omit<CallLlmOptions, 'outputSchema' | 'tools'> = {}
+): AsyncGenerator<string, TokenUsage | undefined, undefined> {
+  const { model = DEFAULT_MODEL, systemPrompt, signal } = options;
+  const finalSystemPrompt = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+
+  const llm = getChatModel(model, true);
+
+  const streamOpts = signal ? { signal } : undefined;
+  let stream: AsyncIterable<AIMessage>;
+
+  if (model.startsWith('claude-')) {
+    const messages = buildAnthropicMessages(finalSystemPrompt, prompt);
+    stream = await llm.stream(messages, streamOpts);
+  } else {
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      ['system', finalSystemPrompt],
+      ['user', '{prompt}'],
+    ]);
+    const chain = promptTemplate.pipe(llm);
+    stream = await chain.stream({ prompt }, streamOpts);
+  }
+
+  let lastChunk: AIMessage | undefined;
+  for await (const chunk of stream) {
+    lastChunk = chunk;
+    const text = typeof chunk.content === 'string'
+      ? chunk.content
+      : Array.isArray(chunk.content)
+        ? chunk.content.filter((c): c is { type: 'text'; text: string } => typeof c === 'object' && c !== null && 'type' in c && c.type === 'text').map(c => c.text).join('')
+        : '';
+    if (text) {
+      yield text;
+    }
+  }
+
+  return lastChunk ? extractUsage(lastChunk) : undefined;
+}

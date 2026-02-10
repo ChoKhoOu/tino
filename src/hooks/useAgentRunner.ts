@@ -116,6 +116,12 @@ export function useAgentRunner(
       case 'answer_start':
         setWorkingState({ status: 'answering', startTime: Date.now() });
         break;
+
+      case 'answer_chunk':
+        updateLastHistoryItem(item => ({
+          answer: (item.answer || '') + event.content,
+        }));
+        break;
         
       case 'done': {
         const doneEvent = event as DoneEvent;

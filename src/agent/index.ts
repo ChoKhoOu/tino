@@ -15,6 +15,7 @@ export type {
   ToolErrorEvent,
   ToolLimitEvent,
   AnswerStartEvent,
+  AnswerChunkEvent,
   DoneEvent,
 } from './types.js';
 

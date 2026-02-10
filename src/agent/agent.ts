@@ -1,6 +1,6 @@
 import { AIMessage } from '@langchain/core/messages';
 import { StructuredToolInterface } from '@langchain/core/tools';
-import { callLlm } from '../model/llm.js';
+import { callLlm, streamLlm } from '../model/llm.js';
 import { Scratchpad, type ToolContext } from './scratchpad.js';
 import { getTools } from '../tools/registry.js';
 import { buildSystemPrompt, buildIterationPrompt, buildFinalAnswerPrompt } from '../agent/prompts.js';
@@ -9,7 +9,7 @@ import { InMemoryChatHistory } from '../utils/in-memory-chat-history.js';
 import { getToolDescription } from '../utils/tool-description.js';
 import { estimateTokens, CONTEXT_THRESHOLD, KEEP_TOOL_USES } from '../utils/tokens.js';
 import { createProgressChannel } from '../utils/progress-channel.js';
-import type { AgentConfig, AgentEvent, ToolStartEvent, ToolProgressEvent, ToolEndEvent, ToolErrorEvent, ToolLimitEvent, ContextClearedEvent, TokenUsage } from '../agent/types.js';
+import type { AgentConfig, AgentEvent, ToolStartEvent, ToolProgressEvent, ToolEndEvent, ToolErrorEvent, ToolLimitEvent, ContextClearedEvent, AnswerChunkEvent, TokenUsage } from '../agent/types.js';
 import { TokenCounter } from './token-counter.js';
 
 
@@ -104,11 +104,8 @@ export class Agent {
         const finalPrompt = buildFinalAnswerPrompt(query, fullContext);
         
         yield { type: 'answer_start' };
-        const { response: finalResponse, usage: finalUsage } = await this.callModel(finalPrompt, false);
+        const { answer, usage: finalUsage } = yield* this.streamFinalAnswer(finalPrompt);
         tokenCounter.add(finalUsage);
-        const answer = typeof finalResponse === 'string' 
-          ? finalResponse 
-          : extractTextContent(finalResponse);
 
         const totalTime = Date.now() - startTime;
         yield { type: 'done', answer, toolCalls: scratchpad.getToolCallRecords(), iterations: iteration, totalTime, tokenUsage: tokenCounter.getUsage(), tokensPerSecond: tokenCounter.getTokensPerSecond(totalTime) };
@@ -152,11 +149,8 @@ export class Agent {
     const finalPrompt = buildFinalAnswerPrompt(query, fullContext);
     
     yield { type: 'answer_start' };
-    const { response: finalResponse, usage: finalUsage } = await this.callModel(finalPrompt, false);
+    const { answer, usage: finalUsage } = yield* this.streamFinalAnswer(finalPrompt);
     tokenCounter.add(finalUsage);
-    const answer = typeof finalResponse === 'string' 
-      ? finalResponse 
-      : extractTextContent(finalResponse);
 
     const totalTime = Date.now() - startTime;
     yield {
@@ -186,31 +180,81 @@ export class Agent {
   }
 
   /**
+   * Stream the final answer from the LLM, yielding AnswerChunkEvents.
+   * Returns the full accumulated answer text and token usage via `yield*`.
+   */
+  private async *streamFinalAnswer(prompt: string): AsyncGenerator<AnswerChunkEvent, { answer: string; usage?: TokenUsage }, undefined> {
+    const chunks: string[] = [];
+
+    const stream = streamLlm(prompt, {
+      model: this.model,
+      systemPrompt: this.systemPrompt,
+      signal: this.signal,
+    });
+
+    let streamResult = await stream.next();
+    while (!streamResult.done) {
+      const chunk = streamResult.value;
+      chunks.push(chunk);
+      yield { type: 'answer_chunk', content: chunk };
+      streamResult = await stream.next();
+    }
+
+    // streamResult.value is the TokenUsage returned from the generator
+    return { answer: chunks.join(''), usage: streamResult.value };
+  }
+
+  /**
    * Execute all tool calls from an LLM response and add results to scratchpad.
+   * When multiple tool calls are present, executes them in parallel using Promise.all.
    * Deduplicates skill calls - each skill can only be executed once per query.
-   * Includes graceful exit mechanism - checks tool limits before executing.
    */
   private async *executeToolCalls(
     response: AIMessage,
     query: string,
     scratchpad: Scratchpad
   ): AsyncGenerator<ToolStartEvent | ToolProgressEvent | ToolEndEvent | ToolErrorEvent | ToolLimitEvent, void> {
-    for (const toolCall of response.tool_calls!) {
-      const toolName = toolCall.name;
-      const toolArgs = toolCall.args as Record<string, unknown>;
-
+    const toolCalls = response.tool_calls!.filter(toolCall => {
       // Deduplicate skill calls - each skill can only run once per query
-      if (toolName === 'skill') {
-        const skillName = toolArgs.skill as string;
-        if (scratchpad.hasExecutedSkill(skillName)) continue;
+      if (toolCall.name === 'skill') {
+        const skillName = (toolCall.args as Record<string, unknown>).skill as string;
+        return !scratchpad.hasExecutedSkill(skillName);
       }
+      return true;
+    });
 
-      const generator = this.executeToolCall(toolName, toolArgs, query, scratchpad);
+    // Single tool call: execute sequentially (no overhead)
+    if (toolCalls.length <= 1) {
+      for (const toolCall of toolCalls) {
+        const generator = this.executeToolCall(toolCall.name, toolCall.args as Record<string, unknown>, query, scratchpad);
+        let result = await generator.next();
+        while (!result.done) {
+          yield result.value;
+          result = await generator.next();
+        }
+      }
+      return;
+    }
+
+    // Multiple tool calls: execute in parallel, collect events to yield in order
+    type ToolEvent = ToolStartEvent | ToolProgressEvent | ToolEndEvent | ToolErrorEvent | ToolLimitEvent;
+    const allEvents: ToolEvent[][] = new Array(toolCalls.length);
+
+    await Promise.all(toolCalls.map(async (toolCall, idx) => {
+      const events: ToolEvent[] = [];
+      const generator = this.executeToolCall(toolCall.name, toolCall.args as Record<string, unknown>, query, scratchpad);
       let result = await generator.next();
-
       while (!result.done) {
-        yield result.value;
+        events.push(result.value);
         result = await generator.next();
+      }
+      allEvents[idx] = events;
+    }));
+
+    // Yield all events in tool-call order for deterministic UI output
+    for (const events of allEvents) {
+      for (const event of events) {
+        yield event;
       }
     }
   }
