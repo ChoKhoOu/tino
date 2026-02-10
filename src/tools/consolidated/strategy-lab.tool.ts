@@ -1,14 +1,16 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
+import type { ModelBroker } from '@/runtime/model-broker.js';
+import { validateStrategyCode, extractStrategyClassName } from '../strategy/validator.js';
+import { formatToolResult } from '../types.js';
+import { generateStrategy } from './strategy-lab-generate.js';
 
 const schema = z.object({
-  action: z.enum([
-    'generate',
-    'validate',
-  ]).describe('The strategy lab action to perform'),
+  action: z.enum(['generate', 'validate']).describe('The strategy lab action to perform'),
   description: z.string().optional().describe('Natural language description of desired strategy'),
   code: z.string().optional().describe('Strategy code to validate'),
-  template: z.string().optional().describe('Strategy template to use as base'),
+  instrument: z.string().optional().describe('Instrument symbol, e.g., AAPL or BTCUSDT'),
+  constraints: z.string().optional().describe('Strategy constraints, e.g., max drawdown 10%'),
 });
 
 export default definePlugin({
@@ -18,8 +20,36 @@ export default definePlugin({
   description:
     'Generate and validate NautilusTrader trading strategies from natural language descriptions.',
   schema,
-  execute: async (raw) => {
-    const { action } = schema.parse(raw);
-    return JSON.stringify({ error: `Not implemented: ${action}` });
+  execute: async (raw, ctx) => {
+    const input = schema.parse(raw);
+
+    switch (input.action) {
+      case 'generate': {
+        const broker = ctx.config.broker as ModelBroker | undefined;
+        if (!broker) return formatToolResult({ error: 'ModelBroker not available in tool context' });
+        if (!input.description) return JSON.stringify({ error: 'description is required for generate action' });
+
+        ctx.onProgress('Generating strategy code...');
+        const result = await generateStrategy(
+          {
+            description: input.description,
+            instrument: input.instrument,
+            constraints: input.constraints,
+          },
+          broker,
+        );
+        return formatToolResult(result);
+      }
+
+      case 'validate': {
+        if (!input.code) return JSON.stringify({ error: 'code is required for validate action' });
+        const validation = validateStrategyCode(input.code);
+        const className = extractStrategyClassName(input.code);
+        return formatToolResult({ className, validation });
+      }
+
+      default:
+        return JSON.stringify({ error: `Unknown action: ${input.action}` });
+    }
   },
 });
