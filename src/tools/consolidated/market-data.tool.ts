@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { routeMarketData } from './market-data-router.js';
+import { MARKET_DATA_DESCRIPTION } from '../descriptions/market-data.js';
 
 const schema = z.object({
   action: z.enum([
@@ -30,8 +31,7 @@ export default definePlugin({
   id: 'market_data',
   domain: 'finance',
   riskLevel: 'safe',
-  description:
-    'Retrieve real-time and historical market data including stock prices, OHLCV bars, options chains, and cryptocurrency data.',
+  description: MARKET_DATA_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const input = schema.parse(raw);

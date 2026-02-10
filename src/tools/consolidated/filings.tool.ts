@@ -5,6 +5,7 @@ import {
   getEdgarSubmissions,
   getEdgarCompanyFacts,
 } from '../finance/edgar/index.js';
+import { FILINGS_DESCRIPTION } from '../descriptions/filings.js';
 
 const schema = z.object({
   action: z.enum([
@@ -26,8 +27,7 @@ export default definePlugin({
   id: 'filings',
   domain: 'finance',
   riskLevel: 'safe',
-  description:
-    'Search and retrieve SEC EDGAR filings including full-text search, company submissions history, and structured company facts.',
+  description: FILINGS_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const { action, query, ticker, dateRange, formType } = schema.parse(raw);

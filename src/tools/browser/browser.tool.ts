@@ -10,6 +10,7 @@ import {
   getRefsObject,
   fmt,
 } from './browser-state.js';
+import { BROWSER_DESCRIPTION } from '../descriptions/browser.js';
 
 const actRequestSchema = z.object({
   kind: z.enum(['click', 'type', 'press', 'hover', 'scroll', 'wait']).describe('The type of interaction'),
@@ -78,8 +79,7 @@ export default definePlugin({
   id: 'browser',
   domain: 'browser',
   riskLevel: 'safe',
-  description:
-    'Navigate websites, read content, and interact with pages. Use for accessing company websites, earnings reports, and dynamic content.',
+  description: BROWSER_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const { action, url, maxChars, request } = schema.parse(raw);

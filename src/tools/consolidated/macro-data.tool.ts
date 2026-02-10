@@ -5,6 +5,7 @@ import {
   getFredSeries,
   getFredSeriesInfo,
 } from '../finance/fred/index.js';
+import { MACRO_DATA_DESCRIPTION } from '../descriptions/macro-data.js';
 
 const schema = z.object({
   action: z.enum([
@@ -23,8 +24,7 @@ export default definePlugin({
   id: 'macro_data',
   domain: 'finance',
   riskLevel: 'safe',
-  description:
-    'Access FRED macroeconomic data including series search, historical observations, and series metadata.',
+  description: MACRO_DATA_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const { action, query, seriesId, startDate, endDate, limit } = schema.parse(raw);

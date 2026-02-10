@@ -4,6 +4,7 @@ import type { ModelBroker } from '@/runtime/model-broker.js';
 import { validateStrategyCode, extractStrategyClassName } from '../strategy/validator.js';
 import { formatToolResult } from '../types.js';
 import { generateStrategy } from './strategy-lab-generate.js';
+import { STRATEGY_LAB_DESCRIPTION } from '../descriptions/strategy-lab.js';
 
 const schema = z.object({
   action: z.enum(['generate', 'validate']).describe('The strategy lab action to perform'),
@@ -17,8 +18,7 @@ export default definePlugin({
   id: 'strategy_lab',
   domain: 'strategy',
   riskLevel: 'moderate',
-  description:
-    'Generate and validate NautilusTrader trading strategies from natural language descriptions.',
+  description: STRATEGY_LAB_DESCRIPTION,
   schema,
   execute: async (raw, ctx) => {
     const input = schema.parse(raw);

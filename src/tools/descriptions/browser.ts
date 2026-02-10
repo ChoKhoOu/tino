@@ -1,7 +1,3 @@
-/**
- * Rich description for the browser tool.
- * Used in the system prompt to guide the LLM on when and how to use this tool.
- */
 export const BROWSER_DESCRIPTION = `
 Control a web browser to navigate websites and extract information.
 
@@ -16,8 +12,8 @@ Control a web browser to navigate websites and extract information.
 ## When NOT to Use
 
 - Simple queries that web_search can already answer
-- Structured financial data (use financial_search instead)
-- SEC filings content (use read_filings instead)
+- Structured financial data (use market_data or fundamentals)
+- SEC filings content (use filings)
 - General knowledge questions
 
 ## CRITICAL: Navigate Returns NO Content

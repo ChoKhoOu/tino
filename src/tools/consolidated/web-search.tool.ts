@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { resolveProvider, executeSearch } from './web-search-providers.js';
+import { WEB_SEARCH_DESCRIPTION } from '../descriptions/web-search.js';
 
 const schema = z.object({
   query: z.string().describe('The search query to look up on the web'),
@@ -13,8 +14,7 @@ export default definePlugin({
   id: 'web_search',
   domain: 'search',
   riskLevel: 'safe',
-  description:
-    'Search the web for current information on any topic. Returns relevant search results with URLs and content snippets.',
+  description: WEB_SEARCH_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const { query, provider: providerPref, max_results, recency_days } = schema.parse(raw);

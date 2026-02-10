@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { routeFundamentals } from './fundamentals-router.js';
+import { FUNDAMENTALS_DESCRIPTION } from '../descriptions/fundamentals.js';
 
 const schema = z.object({
   action: z.enum([
@@ -29,8 +30,7 @@ export default definePlugin({
   id: 'fundamentals',
   domain: 'finance',
   riskLevel: 'safe',
-  description:
-    'Access company financial statements, ratios, analyst estimates, insider trades, news, and deep fundamental analysis.',
+  description: FUNDAMENTALS_DESCRIPTION,
   schema,
   execute: async (raw) => {
     const input = schema.parse(raw);

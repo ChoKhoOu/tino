@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { routeQuantCompute } from './quant-compute-router.js';
+import { QUANT_COMPUTE_DESCRIPTION } from '../descriptions/quant-compute.js';
 
 const schema = z.object({
   action: z.enum([
@@ -20,8 +21,7 @@ export default definePlugin({
   id: 'quant_compute',
   domain: 'quant',
   riskLevel: 'safe',
-  description:
-    'Perform quantitative computations including technical indicators, risk metrics, options pricing, factor analysis, and portfolio optimization.',
+  description: QUANT_COMPUTE_DESCRIPTION,
   schema,
   execute: async (raw) => {
     try {

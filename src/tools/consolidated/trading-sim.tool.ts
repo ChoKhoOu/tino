@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { getBacktestClient, getTradingClient } from '../trading/grpc-clients.js';
+import { TRADING_SIM_DESCRIPTION } from '../descriptions/trading-sim.js';
 import {
   RunBacktestResponse_EventType,
 } from '@/grpc/gen/tino/backtest/v1/backtest_pb.js';
@@ -146,8 +147,7 @@ export default definePlugin({
   id: 'trading_sim',
   domain: 'trading',
   riskLevel: 'moderate',
-  description:
-    'Run backtests and paper trading simulations. View simulated positions and performance metrics.',
+  description: TRADING_SIM_DESCRIPTION,
   schema,
   execute: async (raw, ctx) => {
     const input = schema.parse(raw);

@@ -1,7 +1,7 @@
 import { tool, type ToolSet } from 'ai';
 import type { ToolPlugin, ToolContext } from '@/domain/index.js';
 
-const MAX_TOOLS = 40;
+const MAX_TOOLS = 20;
 
 export class ToolRegistry {
   private plugins = new Map<string, ToolPlugin>();

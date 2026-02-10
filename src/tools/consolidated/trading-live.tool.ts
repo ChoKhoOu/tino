@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { getTradingClient } from '../trading/grpc-clients.js';
+import { TRADING_LIVE_DESCRIPTION } from '../descriptions/trading-live.js';
 import type { ToolContext } from '@/domain/tool-plugin.js';
 
 const schema = z.object({
@@ -65,8 +66,7 @@ export default definePlugin({
   id: 'trading_live',
   domain: 'trading',
   riskLevel: 'dangerous',
-  description:
-    'Submit live trading orders and activate emergency kill switch. Requires explicit user confirmation for all operations.',
+  description: TRADING_LIVE_DESCRIPTION,
   schema,
   execute: async (raw, ctx) => {
     const input = schema.parse(raw) as Input;
