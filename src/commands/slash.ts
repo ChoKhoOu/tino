@@ -8,13 +8,11 @@
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type SlashAction =
-  | 'export'
-  | 'backtest'
-  | 'positions'
-  | 'stop'
-  | 'data'
   | 'model'
-  | 'help';
+  | 'clear'
+  | 'skill'
+  | 'help'
+  | 'exit';
 
 export interface SlashCommandResult {
   /** Whether the command was recognized and handled */
@@ -23,20 +21,18 @@ export interface SlashCommandResult {
   output?: string;
   /** Action type for the CLI to dispatch */
   action?: SlashAction;
-  /** Reformulated query to send to the agent (for commands that delegate) */
-  agentQuery?: string;
+  /** Optional arguments passed to the command */
+  args?: string[];
 }
 
 // ─── Command registry ───────────────────────────────────────────────────────
 
 export const SLASH_COMMANDS: Record<string, string> = {
-  '/export': 'Save last result as markdown report',
-  '/backtest': 'Quick backtest shortcut — /backtest <strategy>',
-  '/positions': 'Show current positions',
-  '/stop': 'Kill switch — immediately stop all trading',
-  '/data': 'Show available data — /data <instrument>',
   '/model': 'Switch LLM model/provider',
+  '/clear': 'Clear conversation history',
+  '/skill': 'List or load a skill — /skill [name]',
   '/help': 'Show available commands',
+  '/exit': 'Quit the application',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -79,60 +75,28 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
       return {
         handled: true,
         action: 'model',
+        args,
       };
 
-    case '/export':
+    case '/clear':
       return {
         handled: true,
-        action: 'export',
-        output: 'Exporting last result as markdown report...',
+        action: 'clear',
+        output: 'Conversation cleared.',
       };
 
-    case '/backtest': {
-      const strategy = args.join(' ') || undefined;
-      if (!strategy) {
-        return {
-          handled: true,
-          action: 'backtest',
-          output: 'Usage: /backtest <strategy>',
-        };
-      }
+    case '/skill':
       return {
         handled: true,
-        action: 'backtest',
-        agentQuery: `Run a backtest for the "${strategy}" strategy. Use the backtest tool with strategy name "${strategy}".`,
-      };
-    }
-
-    case '/positions':
-      return {
-        handled: true,
-        action: 'positions',
-        agentQuery: 'Show all current open positions with P&L summary.',
+        action: 'skill',
+        args,
       };
 
-    case '/stop':
+    case '/exit':
       return {
         handled: true,
-        action: 'stop',
-        agentQuery: 'EMERGENCY: Immediately cancel all open orders and flatten all positions. This is a kill switch command.',
+        action: 'exit',
       };
-
-    case '/data': {
-      const instrument = args.join(' ') || undefined;
-      if (!instrument) {
-        return {
-          handled: true,
-          action: 'data',
-          agentQuery: 'List all available data sources and instruments in the data catalog.',
-        };
-      }
-      return {
-        handled: true,
-        action: 'data',
-        agentQuery: `Show available market data for "${instrument}" including price history, fundamentals, and any cached datasets.`,
-      };
-    }
 
     default:
       // Starts with / but not a recognized command
