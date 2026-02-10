@@ -23,6 +23,7 @@ export interface UseAgentRunnerResult {
   runQuery: (query: string) => Promise<RunQueryResult | undefined>;
   cancelExecution: () => void;
   setError: (error: string | null) => void;
+  addDirectResponse: (query: string, answer: string) => void;
 }
 
 // ============================================================================
@@ -231,6 +232,17 @@ export function useAgentRunner(
   // Check if currently processing
   const isProcessing = history.length > 0 && history[history.length - 1].status === 'processing';
   
+  const addDirectResponse = useCallback((query: string, answer: string) => {
+    setHistory(prev => [...prev, {
+      id: Date.now().toString(),
+      query,
+      events: [],
+      answer,
+      status: 'complete' as const,
+      startTime: Date.now(),
+    }]);
+  }, []);
+  
   return {
     history,
     workingState,
@@ -239,5 +251,6 @@ export function useAgentRunner(
     runQuery,
     cancelExecution,
     setError,
+    addDirectResponse,
   };
 }

@@ -21,6 +21,7 @@ import { getApiKeyNameForProvider, getProviderDisplayName } from './utils/env.js
 import { useModelSelection } from './hooks/useModelSelection.js';
 import { useAgentRunner } from './hooks/useAgentRunner.js';
 import { useInputHistory } from './hooks/useInputHistory.js';
+import { parseSlashCommand } from './commands/slash.js';
 
 // Load environment variables
 config({ quiet: true });
@@ -57,6 +58,7 @@ export function CLI() {
     runQuery,
     cancelExecution,
     setError,
+    addDirectResponse,
   } = useAgentRunner({ model, modelProvider: provider, maxIterations: 10 }, inMemoryChatHistoryRef);
   
   // Assign setError to ref so useModelSelection's callback can access it
@@ -113,9 +115,39 @@ export function CLI() {
       return;
     }
     
-    // Handle model selection command
-    if (query === '/model') {
-      startSelection();
+    // Handle slash commands
+    const slashResult = parseSlashCommand(query);
+    if (slashResult !== null) {
+      // /model delegates to existing selection flow
+      if (slashResult.action === 'model') {
+        startSelection();
+        return;
+      }
+      
+      // Unrecognized slash command
+      if (!slashResult.handled) {
+        setError(`Unknown command: ${query.trim().split(/\s+/)[0]}. Type /help for available commands.`);
+        return;
+      }
+      
+      // Commands with direct output (help, export without agent, backtest usage)
+      if (slashResult.output && !slashResult.agentQuery) {
+        addDirectResponse(query, slashResult.output!);
+        return;
+      }
+      
+      // Commands that delegate to the agent
+      if (slashResult.agentQuery) {
+        if (isInSelectionFlow() || workingState.status !== 'idle') return;
+        await saveMessage(query);
+        resetNavigation();
+        const result = await runQuery(slashResult.agentQuery);
+        if (result?.answer) {
+          await updateAgentResponse(result.answer);
+        }
+        return;
+      }
+      
       return;
     }
     
@@ -131,7 +163,7 @@ export function CLI() {
     if (result?.answer) {
       await updateAgentResponse(result.answer);
     }
-  }, [exit, startSelection, isInSelectionFlow, workingState.status, runQuery, saveMessage, updateAgentResponse, resetNavigation]);
+  }, [exit, startSelection, isInSelectionFlow, workingState.status, runQuery, saveMessage, updateAgentResponse, resetNavigation, setError, addDirectResponse]);
   
   // Handle keyboard shortcuts
   useInput((input, key) => {
