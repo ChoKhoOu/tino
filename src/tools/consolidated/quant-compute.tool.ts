@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
+import { routeQuantCompute } from './quant-compute-router.js';
 
 const schema = z.object({
   action: z.enum([
@@ -11,10 +12,8 @@ const schema = z.object({
     'correlation',
     'stats',
   ]).describe('The quantitative computation to perform'),
-  symbol: z.string().optional().describe('Ticker symbol for analysis'),
-  symbols: z.array(z.string()).optional().describe('Multiple tickers for portfolio/correlation analysis'),
-  period: z.number().optional().describe('Lookback period for calculations'),
-  indicator: z.string().optional().describe('Specific indicator name (e.g., RSI, MACD, SMA)'),
+  inputs: z.record(z.string(), z.unknown()).describe('Input parameters specific to the chosen action'),
+  config: z.record(z.string(), z.unknown()).optional().describe('Optional configuration overrides'),
 });
 
 export default definePlugin({
@@ -25,7 +24,12 @@ export default definePlugin({
     'Perform quantitative computations including technical indicators, risk metrics, options pricing, factor analysis, and portfolio optimization.',
   schema,
   execute: async (raw) => {
-    const { action } = schema.parse(raw);
-    return JSON.stringify({ error: `Not implemented: ${action}` });
+    try {
+      const { action, inputs } = schema.parse(raw);
+      const data = routeQuantCompute(action, inputs);
+      return JSON.stringify({ data });
+    } catch (err) {
+      return JSON.stringify({ error: err instanceof Error ? err.message : String(err) });
+    }
   },
 });
