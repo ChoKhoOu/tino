@@ -12,4 +12,6 @@ export { createFinancialSearch } from './financial-search.js';
 export { createFinancialMetrics } from './financial-metrics.js';
 export { createReadFilings } from './read-filings.js';
 export { createFinancialResearch } from './financial-research.js';
+export { getHkStockPrice, getHkStockHistory, getHkFundamentals } from './eodhd/index.js';
+export { normalizeHkTicker, getHkLotSize, isHkMarketOpen, HK_MARKET } from './hk-market.js';
 

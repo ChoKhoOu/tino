@@ -11,6 +11,7 @@ import type {
   PolygonBarsResponse,
   PolygonTickerDetails,
   PolygonOptionsContract,
+  PolygonOptionQuote,
   PolygonSnapshot,
 } from '../types.js';
 
@@ -123,6 +124,17 @@ export async function getPolygonOptionsChain(
     cacheOpts(endpoint, { underlying_ticker: underlyingTicker, expiration_date: expirationDate })
   );
   return data.results ?? [];
+}
+
+export async function getPolygonOptionQuote(optionTicker: string): Promise<PolygonOptionQuote> {
+  const endpoint = `/v2/last/trade/${optionTicker}`;
+  const url = buildUrl(endpoint);
+
+  const { data } = await fetchJson<{ results: PolygonOptionQuote }>(
+    url,
+    { source: SOURCE }
+  );
+  return data.results;
 }
 
 // ============================================================================

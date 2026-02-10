@@ -312,6 +312,18 @@ export interface PolygonOptionsContract {
   exercise_style: string;
 }
 
+export interface PolygonOptionQuote {
+  T: string;
+  t: number;
+  y: number;
+  q: number;
+  i: string;
+  p: number;
+  s: number;
+  x: number;
+  c: number[];
+}
+
 export interface PolygonSnapshot {
   ticker: {
     ticker: string;
@@ -380,4 +392,95 @@ export interface FinnhubInsiderTransaction {
 export interface FinnhubInsiderResponse {
   symbol: string;
   data: FinnhubInsiderTransaction[];
+}
+
+// ============================================================================
+// EODHD (HK Stock Data)
+// ============================================================================
+
+export interface EodhdRealTimeQuote {
+  code: string;
+  timestamp: number;
+  gmtoffset: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  previousClose: number;
+  change: number;
+  change_p: number;
+}
+
+export interface EodhdHistoricalPrice {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  adjusted_close: number;
+  volume: number;
+}
+
+export interface EodhdFundamentals {
+  General: {
+    Code: string;
+    Name: string;
+    Exchange: string;
+    CurrencyCode: string;
+    CurrencyName: string;
+    CountryName: string;
+    Sector: string;
+    Industry: string;
+    Description: string;
+    [key: string]: string | number | null | undefined;
+  };
+  Highlights: {
+    MarketCapitalization: number | null;
+    EBITDA: number | null;
+    PERatio: number | null;
+    PEGRatio: number | null;
+    DividendYield: number | null;
+    EarningsShare: number | null;
+    BookValue: number | null;
+    RevenueTTM: number | null;
+    ProfitMargin: number | null;
+    [key: string]: string | number | null | undefined;
+  };
+  [key: string]: unknown;
+}
+
+export interface HkStockPrice {
+  ticker: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  currency: 'HKD';
+}
+
+// ============================================================================
+// Options (US Derivatives)
+// ============================================================================
+
+export interface OptionsContract {
+  ticker: string;
+  underlyingTicker: string;
+  contractType: 'call' | 'put';
+  strikePrice: number;
+  expirationDate: string;
+  exerciseStyle: string;
+}
+
+export interface OptionQuote {
+  ticker: string;
+  price: number;
+  size: number;
+  timestamp: number;
+  conditions: number[];
+}
+
+export interface OptionsChainData {
+  underlyingTicker: string;
+  contracts: OptionsContract[];
 }
