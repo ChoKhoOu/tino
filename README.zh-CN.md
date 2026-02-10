@@ -1,197 +1,284 @@
-# Tino
+<p align="center">
+  <h1 align="center">Tino</h1>
+  <p align="center">
+    <strong>AI 驱动的量化交易工作台</strong>
+  </p>
+  <p align="center">
+    一个能自主研究、构建策略、回测验证和执行交易的 AI 终端工具 — 让你专注于 alpha。
+  </p>
+  <p align="center">
+    <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
+    <img src="https://img.shields.io/badge/runtime-Bun-f9f1e1?logo=bun" alt="Bun">
+    <img src="https://img.shields.io/badge/engine-NautilusTrader-0d1117" alt="NautilusTrader">
+    <img src="https://img.shields.io/badge/AI-Vercel%20AI%20SDK-000000" alt="Vercel AI SDK">
+  </p>
+  <p align="center">
+    <a href="./README.md">English</a>
+  </p>
+</p>
 
-Tino 是一个 AI 驱动的量化交易工作台。它通过任务规划、自我反思和实时市场数据进行金融研究与分析。基于 [Dexter](https://github.com/virattt/dexter) 构建，并扩展了量化交易能力。
+---
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/virattt?style=social)](https://twitter.com/virattt)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Tino 是什么？
 
-## 目录
+Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提问 — 它会拉取市场数据、计算指标、生成交易策略、运行回测、管理实盘执行，全部在终端内完成。
 
-- [👋 概述](#-概述)
-- [⚡ 快速开始](#-快速开始)
-- [🏗️ 架构](#-架构)
-- [✨ 功能特性](#-功能特性)
-- [🔑 数据源配置](#-数据源配置)
-- [🤖 自定义 LLM 设置](#-自定义-llm-设置)
-- [📈 策略开发](#-策略开发)
-- [🛡️ 交易安全](#-交易安全)
-- [💻 CLI 命令](#-cli-命令)
-- [🛠️ 开发指南](#-开发指南)
-- [🌍 环境变量](#-环境变量)
-- [🤝 致谢](#-致谢)
+底层架构将 **TypeScript CLI** (Bun + React/Ink) 与 **Python 守护进程** (NautilusTrader) 通过 gRPC 连接。基于 Vercel AI SDK 的 ReAct 风格 Agent 循环协调 11 个整合工具和 8 个金融数据源。
 
-## 👋 概述
+```
+ 你: "用 AAPL 过去两年的数据回测一个动量策略"
 
-Tino 能将复杂的金融问题转化为清晰的、分步骤的研究计划。它使用实时市场数据执行这些任务，自动检验研究结果，并反复迭代优化，直到给出一个有数据支撑的可靠答案。
+ Tino: 生成策略中... ✓
+       通过 NautilusTrader 运行回测... ✓
+       夏普比率: 1.42 | 最大回撤: -12.3% | 胜率: 58%
+```
 
-**核心能力：**
-- **智能任务规划**：自动将复杂查询分解为结构化的研究步骤
-- **自主执行**：选择并调用合适的工具来获取金融数据
-- **自我验证**：检查自身工作成果，持续迭代直至任务完成
-- **实时金融数据**：可访问利润表、资产负债表和现金流量表
-- **安全机制**：内置循环检测和步骤限制，防止失控执行
+## 功能特性
 
-## ⚡ 快速开始
+- **11 个整合工具** — 市场数据、基本面、SEC 文件、宏观数据、量化计算、模拟交易、实盘交易、策略实验室、网络搜索、浏览器自动化、技能工作流
+- **8 个金融数据源** — Polygon、FMP、Financial Datasets、FRED、Finnhub、CoinGecko、SEC EDGAR、EODHD，支持自动降级
+- **本地量化引擎** — 技术指标、风险指标、期权定价 (Black-Scholes/Greeks)、因子分析 (Fama-French)、投资组合优化 — 全部本地计算，无需 API
+- **NautilusTrader 后端** — 专业级回测和实盘交易引擎，通过 gRPC 通信
+- **8 个技能工作流** — 预置研究流程：回测、深度研究、DCF 估值、因子分析、期权分析、策略生成、模拟交易、实盘交易
+- **多 LLM 提供商** — OpenAI、Anthropic、Google、xAI、Moonshot、OpenRouter、Ollama 及自定义端点
+- **丰富的终端 UI** — ASCII 图表、流式响应、交互式输入、模型切换 — 基于 React/Ink 构建
+- **策略全生命周期** — 生成 → 验证 → 回测 → 模拟交易 → 实盘，全程由 AI 引导
 
-几分钟即可启动运行：
+## 快速开始
+
+### 前置条件
+
+- [Bun](https://bun.sh) v1.0+
+- [uv](https://docs.astral.sh/uv/) (Python 包管理器)
+- Python 3.10–3.12
+- 至少一个 LLM API Key（推荐 OpenAI）
+
+### 安装与运行
 
 ```bash
-# 安装依赖
+# 克隆并安装
+git clone https://github.com/penkzhou/tino.git
+cd tino
 bun install
 
-# 初始化新项目
-tino init my-project
-
-# 进入项目目录
+# 初始化交易项目
+bun run start init my-project
 cd my-project
 
-# 启动 Tino
+# 启动 Tino（确保 OPENAI_API_KEY 已设置）
+export OPENAI_API_KEY="sk-..."
 tino
 ```
 
-## 🏗️ 架构
+### 一行命令（全局安装后）
 
-Tino 采用混合架构，结合了 TypeScript CLI 作为智能体交互界面，以及 Python 守护进程承担繁重的量化计算。
-
-```ascii
-+----------------+      gRPC      +----------------+
-|  TypeScript    | <---------->   |    Python      |
-|  CLI (智能体)   |   (Connect)    |    守护进程     |
-+----------------+                +----------------+
-| - Ink UI       |                | - Nautilus     |
-| - LangChain    |                | - Pandas/Numpy |
-| - 工具管理      |                | - TA-Lib       |
-+----------------+                +----------------+
-```
-
-## ✨ 功能特性
-
-- **10+ 数据源**：集成 FMP、FRED、CoinGecko、EDGAR、Polygon、Finnhub 等多个数据提供商。
-- **自定义 LLM 支持**：通过 `OPENAI_BASE_URL` 使用任何 OpenAI 兼容的提供商（本地 Ollama、vLLM 等）。
-- **NautilusTrader 集成**：无缝对接回测、模拟交易和实盘交易功能。
-- **策略代码生成**：AI 辅助编写策略代码，内置安全防护机制。
-- **终端可视化**：丰富的 TUI 界面，直接在终端中显示图表、表格和迷你折线图。
-- **8 个专业工作流**：
-  - `backtest`：运行历史回测模拟
-  - `comprehensive-research`：深度研究分析
-  - `dcf`：现金流折现估值
-  - `factor-analysis`：多因子模型分析
-  - `live-trade`：实盘交易执行
-  - `options-analysis`：衍生品定价与希腊字母计算
-  - `paper-trade`：模拟前瞻性测试
-  - `strategy-generation`：创建新的交易策略
-
-## 🔑 数据源配置
-
-Tino 支持多种数据提供商，在 `.env` 文件中配置即可：
-
-| 提供商 | 环境变量 | 说明 |
-|--------|----------|------|
-| Financial Datasets | `FINANCIAL_DATASETS_API_KEY` | 机构级市场数据 |
-| Exa | `EXASEARCH_API_KEY` | 金融新闻神经搜索 |
-| Tavily | `TAVILY_API_KEY` | 备用网络搜索 |
-| Polygon | `POLYGON_API_KEY` | 股票、期权、外汇、加密货币数据 |
-| Finnhub | `FINNHUB_API_KEY` | 全球市场数据 |
-| FRED | `FRED_API_KEY` | 经济数据（美联储） |
-| FMP | `FMP_API_KEY` | Financial Modeling Prep |
-
-## 🤖 自定义 LLM 设置
-
-Tino 默认使用 OpenAI，但支持任何兼容的提供商。
-
-**使用本地模型 (Ollama)：**
 ```bash
-export OLLAMA_BASE_URL=http://127.0.0.1:11434
+tino init my-project && cd my-project && tino
 ```
 
-**使用自定义提供商：**
-可以在 `.tino/settings.json` 中配置自定义提供商，或在模型选择命令中使用 `custom:` 前缀。
+## 架构
 
-**环境变量：**
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
-- `GOOGLE_API_KEY`
-- `XAI_API_KEY`
-- `OPENROUTER_API_KEY`
+```
+┌────────────────────────────┐         gRPC (ConnectRPC)         ┌─────────────────────────┐
+│    TypeScript CLI (Bun)    │ ◄───────────────────────────────► │     Python 守护进程       │
+│                            │         127.0.0.1:50051           │                          │
+│  React/Ink TUI             │                                   │  NautilusTrader 引擎      │
+│  ReAct Agent 循环           │                                   │  回测 / 模拟 / 实盘        │
+│  11 个工具 + 8 个技能        │                                   │  数据转换器               │
+│  多 LLM 提供商              │                                   │  gRPC 服务               │
+└────────────────────────────┘                                   └─────────────────────────┘
+```
 
-## 📈 策略开发
+**Agent 循环**: `查询 → [调用模型 → 执行工具 → 写入草稿板 → 检查上下文] × N → 流式输出最终回答`
 
-Tino 帮助你编写和优化 NautilusTrader 策略。
+**上下文管理**: 100k token 阈值触发最旧结果清理。150k token 总预算。Agent 持续运行直到收集足够信息来回答。
 
-1. **生成**：让 Tino "创建一个 BTC/USDT 的动量策略"。
-2. **优化**：Tino 会起草代码，确保继承 `Strategy` 类并包含 `on_start` 和 `on_bar` 方法。
-3. **回测**：使用 `backtest` 技能对历史数据运行策略。
-4. **部署**：准备就绪后切换到模拟交易或实盘交易。
+## 工具
 
-参考 `examples/` 目录获取示例实现。
+| 工具 | 领域 | 说明 |
+|------|------|------|
+| `market_data` | 金融 | 股票价格、OHLCV K线、期权链、加密货币、标的详情 |
+| `fundamentals` | 金融 | 利润表、资产负债表、财务比率、分析师预估、内部交易、新闻 |
+| `filings` | 金融 | SEC EDGAR 全文搜索、XBRL 公司数据 |
+| `macro_data` | 金融 | FRED 经济数据 — GDP、CPI、利率、就业 |
+| `quant_compute` | 量化 | 技术指标、风险指标、期权定价、因子分析、投资组合优化 |
+| `trading_sim` | 交易 | 策略回测、模拟交易、查看持仓 |
+| `trading_live` | 交易 | 提交实盘订单、紧急停止（需明确确认） |
+| `strategy_lab` | 策略 | 生成和验证 NautilusTrader 策略代码 |
+| `web_search` | 搜索 | 通过 Exa 或 Tavily 进行网络搜索 |
+| `browser` | 浏览器 | 无头浏览器自动化（导航、读取、操作），基于 Playwright |
+| `skill` | 工作流 | 加载预置研究工作流 |
 
-## 🛡️ 交易安全
+## 技能
 
-在算法交易中，安全至关重要。Tino 内置了以下安全机制：
+技能是 AI 引导的多步骤工作流。在 Tino 中输入 `/skill` 浏览可用技能。
 
-- **紧急停止**：全局紧急按钮，可立即停止所有交易。
-- **仓位限制**：对持仓规模和杠杆设置硬性上限。
-- **二次确认**：关键操作（如提交实盘订单）需要用户明确批准。
-- **沙箱执行**：策略在隔离环境中运行，防止干扰系统。
+| 技能 | 功能 |
+|------|------|
+| `backtest` | 配置、运行和分析历史策略模拟 |
+| `comprehensive-research` | 结合基本面、技术面和风险的端到端投资分析 |
+| `dcf-valuation` | 现金流折现分析，估算内在价值 |
+| `factor-analysis` | Fama-French 因子暴露、风格偏差诊断、绩效归因 |
+| `options-analysis` | 期权定价、Greeks、策略对比、收益分析 |
+| `strategy-generation` | 根据自然语言描述生成 NautilusTrader 策略代码 |
+| `paper-trade` | 无真实资金的模拟实盘交易 |
+| `live-trade` | 使用真实资金部署策略（带安全防护） |
 
-## 💻 CLI 命令
+## LLM 提供商
 
-在 Tino CLI 中使用以下斜杠命令：
+默认模型：`gpt-5.2`。路由/摘要使用自动选择的快速模型。
+
+| 提供商 | 模型前缀 | API Key |
+|--------|---------|---------|
+| OpenAI | _（默认）_ | `OPENAI_API_KEY` |
+| Anthropic | `claude-` | `ANTHROPIC_API_KEY` |
+| Google | `gemini-` | `GOOGLE_API_KEY` |
+| xAI | `grok-` | `XAI_API_KEY` |
+| Moonshot | `kimi-` | `MOONSHOT_API_KEY` |
+| OpenRouter | `openrouter:` | `OPENROUTER_API_KEY` |
+| Ollama | `ollama:` | _（本地，无需 Key）_ |
+| 自定义 | `custom:name/` | 通过 `.tino/settings.json` |
+
+运行时使用 `/model <名称>` 切换模型。
+
+## 数据源
+
+提供商自动降级：Financial Datasets → FMP → Finnhub（基本面数据）。
+
+| 提供商 | API Key | 数据 |
+|--------|---------|------|
+| Financial Datasets | `FINANCIAL_DATASETS_API_KEY` | 财务报表、指标、内部交易、新闻 |
+| FMP | `FMP_API_KEY` | 报表、比率、DCF、价格、财报电话会议纪要 |
+| Polygon | `POLYGON_API_KEY` | OHLCV K线、快照、标的详情、期权链 |
+| FRED | `FRED_API_KEY` | GDP、CPI、利率、就业，800k+ 数据序列 |
+| Finnhub | `FINNHUB_API_KEY` | 新闻、情绪、财报日历 |
+| CoinGecko | _（免费）_ | 加密货币价格、市场数据、历史数据 |
+| SEC EDGAR | _（免费）_ | EFTS 全文搜索、XBRL 公司数据 |
+| EODHD | `EODHD_API_KEY` | 港股市场数据 |
+
+## 交易安全
+
+安全是 Tino 设计中不可妥协的底线：
+
+- **实盘订单确认** — 所有实盘订单需 `confirmed=true` 参数及用户明确同意
+- **Kill Switch** — 紧急停止所有活跃交易
+- **策略代码验证** — 禁止危险导入（`os`、`subprocess`、`socket`）和函数（`exec`、`eval`、`__import__`）
+- **沙箱执行** — 策略在受控 Python 环境中运行
+- **模拟优先** — Agent 始终建议先进行模拟交易再上实盘
+
+## 策略模板
+
+Tino 在 `templates/` 中提供即用型策略模板：
+
+| 模板 | 说明 |
+|------|------|
+| `ema_crossover.py` | 指数移动平均线交叉策略 |
+| `mean_reversion.py` | 均值回归策略 |
+| `momentum.py` | 动量策略 |
+
+更多策略变体参见 `examples/` 目录。
+
+## CLI 命令
 
 | 命令 | 说明 |
 |------|------|
-| `/model` | 切换 LLM 提供商/模型 |
-| `/clear` | 清除对话历史 |
-| `/skill` | 列出或加载特定技能 |
+| `/model [名称]` | 切换 LLM 提供商或模型 |
+| `/clear` | 清除对话上下文 |
+| `/skill [名称]` | 列出或激活技能工作流 |
 | `/help` | 显示可用命令 |
-| `/exit` | 退出应用 |
+| `/exit` | 退出 Tino |
 
-## 🛠️ 开发指南
+## 开发
 
-**构建：**
 ```bash
-bun run build
-```
+# 开发模式（热重载）
+bun run dev
 
-**测试：**
-```bash
+# 运行测试
 bun test
-```
 
-**类型检查：**
-```bash
+# 类型检查
 bun run typecheck
+
+# 手动运行 Python 守护进程
+cd python && uv run --python 3.12 python -m tino_daemon
+
+# 重新生成 Protobuf 代码
+buf generate
 ```
 
-## 🌍 环境变量
+### 项目结构
 
-支持的环境变量完整列表：
+```
+tino/
+├── src/                    # TypeScript CLI (Bun + Ink)
+│   ├── index.tsx           # 入口文件
+│   ├── cli.tsx             # 主 Ink 组件
+│   ├── agent/              # ReAct Agent 循环、提示词、草稿板
+│   ├── runtime/            # 模型代理、多提供商 LLM
+│   ├── tools/              # 11 个整合工具 + 数据源
+│   ├── grpc/               # gRPC 客户端 (ConnectRPC)
+│   ├── daemon/             # Python 守护进程生命周期管理
+│   ├── skills/             # 8 个技能工作流 (Markdown 驱动)
+│   ├── components/         # Ink TUI 组件
+│   ├── hooks/              # React Hooks
+│   ├── commands/           # 斜杠命令 + init
+│   └── config/             # 设置、环境变量、常量
+├── python/                 # Python 守护进程
+│   └── tino_daemon/        # NautilusTrader gRPC 包装器
+├── proto/                  # Protobuf 服务定义
+│   └── tino/               # trading, data, backtest, daemon 服务
+├── templates/              # 策略模板 (Python)
+├── examples/               # 示例策略
+└── scripts/                # 发布工具
+```
+
+## 环境变量
+
+创建 `.env` 文件或在 Shell 中导出：
 
 ```bash
-# LLM 提供商
+# LLM（至少需要一个）
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 GOOGLE_API_KEY=
 XAI_API_KEY=
+MOONSHOT_API_KEY=
 OPENROUTER_API_KEY=
-OLLAMA_BASE_URL=
 
-# 数据提供商
+# 数据源（按需配置）
 FINANCIAL_DATASETS_API_KEY=
+FMP_API_KEY=
+POLYGON_API_KEY=
+FRED_API_KEY=
+FINNHUB_API_KEY=
+EODHD_API_KEY=
+
+# 搜索（可选）
 EXASEARCH_API_KEY=
 TAVILY_API_KEY=
-POLYGON_API_KEY=
-FINNHUB_API_KEY=
-FRED_API_KEY=
-FMP_API_KEY=
 
-# 追踪 (LangSmith)
+# 自定义端点（可选）
+OPENAI_BASE_URL=
+OLLAMA_BASE_URL=
+
+# 追踪（可选）
 LANGSMITH_API_KEY=
 LANGSMITH_ENDPOINT=
 LANGSMITH_PROJECT=
 LANGSMITH_TRACING=
 ```
 
-## 🤝 致谢
+## 贡献
 
-Tino 基于 [virattt](https://twitter.com/virattt) 的 [Dexter](https://github.com/virattt/dexter) 项目构建。感谢 Dexter 项目提供的出色基础。
+欢迎贡献！请随时提交 Pull Request。
+
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feat/amazing-feature`)
+3. 提交变更 (`git commit -m 'feat: add amazing feature'`)
+4. 推送分支 (`git push origin feat/amazing-feature`)
+5. 发起 Pull Request
+
+## 许可证
+
+本项目基于 **GNU 通用公共许可证 v3.0** 授权 — 详见 [LICENSE](./LICENSE) 文件。
