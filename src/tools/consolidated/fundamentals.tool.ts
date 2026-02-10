@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
+import { routeFundamentals } from './fundamentals-router.js';
 
 const schema = z.object({
   action: z.enum([
@@ -15,9 +16,13 @@ const schema = z.object({
     'deep_dive',
   ]).describe('The fundamentals action to perform'),
   symbol: z.string().optional().describe('Ticker symbol (e.g., AAPL)'),
-  query: z.string().optional().describe('Search query for news or company lookup'),
   period: z.string().optional().describe('Reporting period (annual, quarterly)'),
   limit: z.number().optional().describe('Number of results to return'),
+  start_date: z.string().optional().describe('Start date filter (YYYY-MM-DD)'),
+  end_date: z.string().optional().describe('End date filter (YYYY-MM-DD)'),
+  metric: z.string().optional().describe('Deep dive metric (dcf, earnings_transcripts, segmented_revenues, key_metrics, sentiment)'),
+  year: z.number().optional().describe('Year for earnings transcripts'),
+  quarter: z.number().optional().describe('Quarter (1-4) for earnings transcripts'),
 });
 
 export default definePlugin({
@@ -28,7 +33,11 @@ export default definePlugin({
     'Access company financial statements, ratios, analyst estimates, insider trades, news, and deep fundamental analysis.',
   schema,
   execute: async (raw) => {
-    const { action } = schema.parse(raw);
-    return JSON.stringify({ error: `Not implemented: ${action}` });
+    const input = schema.parse(raw);
+    try {
+      return await routeFundamentals(input);
+    } catch (err) {
+      return JSON.stringify({ error: err instanceof Error ? err.message : String(err) });
+    }
   },
 });
