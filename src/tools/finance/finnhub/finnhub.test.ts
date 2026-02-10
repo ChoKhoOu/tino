@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { rmSync } from 'fs';
 import { getFinnhubNews, getFinnhubCompanyNews, getFinnhubEarningsCalendar, getFinnhubInsiderTransactions } from './index.js';
 
 function mockFetch(fn: (...args: Parameters<typeof fetch>) => Promise<Response>): void {
@@ -9,7 +10,10 @@ describe('Finnhub client', () => {
   const originalFetch = globalThis.fetch;
   const ORIGINAL_ENV = { ...process.env };
 
-  beforeEach(() => { process.env.FINNHUB_API_KEY = 'test-finnhub-key'; });
+  beforeEach(() => {
+    process.env.FINNHUB_API_KEY = 'test-finnhub-key';
+    rmSync('.tino/cache', { recursive: true, force: true });
+  });
   afterEach(() => { globalThis.fetch = originalFetch; process.env = { ...ORIGINAL_ENV }; });
 
   test('getFinnhubNews returns market news', async () => {

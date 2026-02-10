@@ -1,4 +1,5 @@
-import { describe, test, expect, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { rmSync } from 'fs';
 import { searchEdgarFilings, getEdgarCompanyFacts, getEdgarSubmissions } from './index.js';
 
 function mockFetch(fn: (...args: Parameters<typeof fetch>) => Promise<Response>): void {
@@ -8,6 +9,9 @@ function mockFetch(fn: (...args: Parameters<typeof fetch>) => Promise<Response>)
 describe('EDGAR client', () => {
   const originalFetch = globalThis.fetch;
 
+  beforeEach(() => {
+    rmSync('.tino/cache', { recursive: true, force: true });
+  });
   afterEach(() => { globalThis.fetch = originalFetch; });
 
   test('searchEdgarFilings returns search results', async () => {

@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { rmSync } from 'fs';
 import { getFmpIncomeStatement, getFmpDcf, getFmpPrices } from './index.js';
 
 function mockFetch(fn: (...args: Parameters<typeof fetch>) => Promise<Response>): void {
@@ -9,7 +10,10 @@ describe('FMP client', () => {
   const originalFetch = globalThis.fetch;
   const ORIGINAL_ENV = { ...process.env };
 
-  beforeEach(() => { process.env.FMP_API_KEY = 'test-fmp-key'; });
+  beforeEach(() => {
+    process.env.FMP_API_KEY = 'test-fmp-key';
+    rmSync('.tino/cache', { recursive: true, force: true });
+  });
   afterEach(() => { globalThis.fetch = originalFetch; process.env = { ...ORIGINAL_ENV }; });
 
   test('getFmpIncomeStatement parses response correctly', async () => {
