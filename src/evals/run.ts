@@ -11,11 +11,11 @@ import React from 'react';
 import { render } from 'ink';
 import { Client } from 'langsmith';
 import type { EvaluationResult } from 'langsmith/evaluation';
-import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { callLlm } from '../model/llm.js';
 import { Agent } from '../agent/agent.js';
 import { EvalApp, type EvalProgressEvent } from './components/index.js';
 
@@ -163,13 +163,6 @@ const EvaluatorOutputSchema = z.object({
   comment: z.string(),
 });
 
-const llm = new ChatOpenAI({
-  model: 'gpt-5.2',
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const structuredLlm = llm.withStructuredOutput(EvaluatorOutputSchema);
-
 async function correctnessEvaluator({
   outputs,
   referenceOutputs,
@@ -196,7 +189,12 @@ Evaluate and provide:
 - comment: brief explanation of why the answer is correct or incorrect`;
 
   try {
-    const result = await structuredLlm.invoke(prompt);
+    const { response } = await callLlm(prompt, {
+      model: 'gpt-5.2',
+      systemPrompt: 'You are an evaluation judge. Assess answer correctness.',
+      outputSchema: EvaluatorOutputSchema,
+    });
+    const result = response as z.infer<typeof EvaluatorOutputSchema>;
     return {
       key: 'correctness',
       score: result.score,
@@ -244,7 +242,7 @@ function createEvaluationRunner(sampleSize?: number) {
     };
 
     // Check if dataset exists (only for full runs)
-    let dataset;
+    let dataset: Awaited<ReturnType<typeof client.readDataset>> | null = null;
     if (!sampleSize) {
       try {
         dataset = await client.readDataset({ datasetName });
