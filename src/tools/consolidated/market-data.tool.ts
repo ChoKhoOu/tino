@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
+import { routeMarketData } from './market-data-router.js';
 
 const schema = z.object({
   action: z.enum([
@@ -18,7 +19,12 @@ const schema = z.object({
   to: z.string().optional().describe('End date (YYYY-MM-DD)'),
   timespan: z.string().optional().describe('Bar timespan (minute, hour, day, week, month)'),
   limit: z.number().optional().describe('Number of results to return'),
+  multiplier: z.number().optional().describe('Timespan multiplier for bars (default 1)'),
+  expiration_date: z.string().optional().describe('Options expiration date (YYYY-MM-DD)'),
+  vs_currency: z.string().optional().describe('Target currency for crypto (default usd)'),
 });
+
+export type MarketDataInput = z.infer<typeof schema>;
 
 export default definePlugin({
   id: 'market_data',
@@ -28,7 +34,7 @@ export default definePlugin({
     'Retrieve real-time and historical market data including stock prices, OHLCV bars, options chains, and cryptocurrency data.',
   schema,
   execute: async (raw) => {
-    const { action } = schema.parse(raw);
-    return JSON.stringify({ error: `Not implemented: ${action}` });
+    const input = schema.parse(raw);
+    return routeMarketData(input);
   },
 });
