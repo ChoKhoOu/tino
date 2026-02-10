@@ -167,7 +167,7 @@ export class DaemonManager {
   private monitorProcess(): void {
     if (!this.proc) return;
 
-    this.proc.exited.then((exitCode) => {
+    this.proc.exited.then(() => {
       // Process exited
       this.proc = null;
 
