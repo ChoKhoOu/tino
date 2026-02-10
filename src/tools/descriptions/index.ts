@@ -10,3 +10,4 @@ export { BROWSER_DESCRIPTION } from './browser.js';
 export { QUANT_ANALYSIS_DESCRIPTION } from './quant-analysis.js';
 export { TRADING_OPS_DESCRIPTION } from './trading-ops.js';
 export { FINANCIAL_RESEARCH_DESCRIPTION } from './financial-research.js';
+export { STRATEGY_GEN_DESCRIPTION } from './strategy.js';

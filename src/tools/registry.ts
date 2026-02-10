@@ -3,10 +3,21 @@ import { createFinancialSearch, createFinancialMetrics, createReadFilings } from
 import { exaSearch, tavilySearch } from './search/index.js';
 import { skillTool, SKILL_TOOL_DESCRIPTION } from './skill.js';
 import { browserTool } from './browser/index.js';
-import { FINANCIAL_SEARCH_DESCRIPTION, FINANCIAL_METRICS_DESCRIPTION, WEB_SEARCH_DESCRIPTION, READ_FILINGS_DESCRIPTION, BROWSER_DESCRIPTION, QUANT_ANALYSIS_DESCRIPTION, TRADING_OPS_DESCRIPTION, FINANCIAL_RESEARCH_DESCRIPTION } from './descriptions/index.js';
+import {
+  FINANCIAL_SEARCH_DESCRIPTION,
+  FINANCIAL_METRICS_DESCRIPTION,
+  WEB_SEARCH_DESCRIPTION,
+  READ_FILINGS_DESCRIPTION,
+  BROWSER_DESCRIPTION,
+  QUANT_ANALYSIS_DESCRIPTION,
+  STRATEGY_GEN_DESCRIPTION,
+  TRADING_OPS_DESCRIPTION,
+  FINANCIAL_RESEARCH_DESCRIPTION,
+} from './descriptions/index.js';
 import { createFinancialResearch } from './finance/financial-research.js';
 import { createQuantAnalysis } from './quant/quant-analysis.js';
 import { createTradingOps } from './trading/index.js';
+import { createStrategyTool } from './strategy/index.js';
 import { discoverSkills } from '../skills/index.js';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -56,6 +67,11 @@ export function getToolRegistry(model: string): RegisteredTool[] {
       name: 'quant_analysis',
       tool: createQuantAnalysis(model),
       description: QUANT_ANALYSIS_DESCRIPTION,
+    },
+    {
+      name: 'strategy_gen',
+      tool: createStrategyTool(model),
+      description: STRATEGY_GEN_DESCRIPTION,
     },
     {
       name: 'financial_research',
