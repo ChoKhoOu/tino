@@ -6,6 +6,8 @@ export { ProviderSelector, ModelSelector, PROVIDERS, getModelsForProvider, getDe
 export { ApiKeyConfirm, ApiKeyInput } from './ApiKeyPrompt.js';
 export { DebugPanel } from './DebugPanel.js';
 
+export { PermissionPrompt } from './PermissionPrompt.js';
+
 // V2 components
 export { EventListView } from './AgentEventView.js';
 export type { DisplayEvent } from './AgentEventView.js';

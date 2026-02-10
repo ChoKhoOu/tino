@@ -4,7 +4,7 @@ import { colors } from '../theme.js';
 import { EventListView } from './AgentEventView.js';
 import type { DisplayEvent } from './AgentEventView.js';
 import { AnswerBox } from './AnswerBox.js';
-import type { TokenUsage } from '../agent/types.js';
+import type { TokenUsage } from '@/domain/index.js';
 
 /**
  * Format duration in milliseconds to human-readable string

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import { colors } from '../theme.js';
-import type { AgentEvent } from '../agent/types.js';
+import type { RunEvent } from '@/domain/index.js';
 
 /**
  * Format tool name from snake_case to Title Case
@@ -131,18 +131,18 @@ export function ThinkingView({ message }: ThinkingViewProps) {
 }
 
 interface ToolStartViewProps {
-  tool: string;
+  toolId: string;
   args: Record<string, unknown>;
   isActive?: boolean;
   progressMessage?: string;
 }
 
-export function ToolStartView({ tool, args, isActive = false, progressMessage }: ToolStartViewProps) {
+export function ToolStartView({ toolId, args, isActive = false, progressMessage }: ToolStartViewProps) {
   return (
     <Box flexDirection="column">
       <Box>
         <Text>⏺ </Text>
-        <Text>{formatToolName(tool)}</Text>
+        <Text>{formatToolName(toolId)}</Text>
         <Text color={colors.muted}>({formatArgs(args)})</Text>
       </Box>
       {isActive && (
@@ -159,18 +159,18 @@ export function ToolStartView({ tool, args, isActive = false, progressMessage }:
 }
 
 interface ToolEndViewProps {
-  tool: string;
+  toolId: string;
   args: Record<string, unknown>;
   result: string;
   duration: number;
 }
 
-export function ToolEndView({ tool, args, result, duration }: ToolEndViewProps) {
+export function ToolEndView({ toolId, args, result, duration }: ToolEndViewProps) {
   // Parse result to get a summary
   let summary = 'Received data';
   
   // Special handling for skill tool
-  if (tool === 'skill') {
+  if (toolId === 'skill') {
     const skillName = args.skill as string;
     summary = `Loaded ${skillName} skill`;
   } else {
@@ -183,11 +183,11 @@ export function ToolEndView({ tool, args, result, duration }: ToolEndViewProps) 
           const keys = Object.keys(parsed.data).filter(k => !k.startsWith('_')); // Exclude _errors
           
           // Tool-specific summaries
-          if (tool === 'financial_search') {
+          if (toolId === 'financial_search') {
             summary = keys.length === 1 
               ? `Called 1 data source` 
               : `Called ${keys.length} data sources`;
-          } else if (tool === 'web_search') {
+          } else if (toolId === 'web_search') {
             summary = `Did 1 search`;
           } else {
             summary = `Received ${keys.length} fields`;
@@ -204,7 +204,7 @@ export function ToolEndView({ tool, args, result, duration }: ToolEndViewProps) 
     <Box flexDirection="column">
       <Box>
         <Text>⏺ </Text>
-        <Text>{formatToolName(tool)}</Text>
+        <Text>{formatToolName(toolId)}</Text>
         <Text color={colors.muted}>({formatArgs(args)})</Text>
       </Box>
       <Box marginLeft={2}>
@@ -217,43 +217,20 @@ export function ToolEndView({ tool, args, result, duration }: ToolEndViewProps) 
 }
 
 interface ToolErrorViewProps {
-  tool: string;
+  toolId: string;
   error: string;
 }
 
-export function ToolErrorView({ tool, error }: ToolErrorViewProps) {
+export function ToolErrorView({ toolId, error }: ToolErrorViewProps) {
   return (
     <Box flexDirection="column">
       <Box>
         <Text>⏺ </Text>
-        <Text>{formatToolName(tool)}</Text>
+        <Text>{formatToolName(toolId)}</Text>
       </Box>
       <Box marginLeft={2}>
         <Text color={colors.muted}>⎿  </Text>
         <Text color={colors.error}>Error: {truncateResult(error, 80)}</Text>
-      </Box>
-    </Box>
-  );
-}
-
-interface ToolLimitViewProps {
-  tool: string;
-  warning?: string;
-}
-
-export function ToolLimitView({ tool, warning }: ToolLimitViewProps) {
-  return (
-    <Box flexDirection="column">
-      <Box>
-        <Text>⏺ </Text>
-        <Text>{formatToolName(tool)}</Text>
-        <Text color={colors.warning}> [NOTE]</Text>
-      </Box>
-      <Box marginLeft={2}>
-        <Text color={colors.muted}>⎿  </Text>
-        <Text color={colors.warning}>
-          {truncateResult(warning || 'Approaching suggested limit', 100)}
-        </Text>
       </Box>
     </Box>
   );
@@ -279,9 +256,9 @@ export function ContextClearedView({ clearedCount, keptCount }: ContextClearedVi
  */
 export interface DisplayEvent {
   id: string;
-  event: AgentEvent;
+  event: RunEvent;
   completed?: boolean;
-  endEvent?: AgentEvent;
+  endEvent?: RunEvent;
   progressMessage?: string;
 }
 
@@ -341,7 +318,7 @@ function BrowserSessionView({ events, activeStepId }: BrowserSessionViewProps) {
 }
 
 interface AgentEventViewProps {
-  event: AgentEvent;
+  event: RunEvent;
   isActive?: boolean;
   progressMessage?: string;
 }
@@ -355,20 +332,23 @@ export function AgentEventView({ event, isActive = false, progressMessage }: Age
       return <ThinkingView message={event.message} />;
     
     case 'tool_start':
-      return <ToolStartView tool={event.tool} args={event.args} isActive={isActive} progressMessage={progressMessage} />;
+      return <ToolStartView toolId={event.toolId} args={event.args} isActive={isActive} progressMessage={progressMessage} />;
     
     case 'tool_end':
-      return <ToolEndView tool={event.tool} args={event.args} result={event.result} duration={event.duration} />;
+      return <ToolEndView toolId={event.toolId} args={{}} result={event.result} duration={event.duration} />;
     
     case 'tool_error':
-      return <ToolErrorView tool={event.tool} error={event.error} />;
-    
-    case 'tool_limit':
-      return <ToolLimitView tool={event.tool} warning={event.warning} />;
+      return <ToolErrorView toolId={event.toolId} error={event.error} />;
     
     case 'context_cleared':
       return <ContextClearedView clearedCount={event.clearedCount} keptCount={event.keptCount} />;
     
+    case 'permission_request':
+      return null;
+
+    case 'permission_response':
+      return null;
+
     case 'answer_start':
     case 'done':
       // These are handled separately by the parent component
@@ -406,7 +386,7 @@ function groupBrowserEvents(events: DisplayEvent[], activeToolId?: string): Even
   };
 
   for (const event of events) {
-    if (event.event.type === 'tool_start' && event.event.tool === 'browser') {
+    if (event.event.type === 'tool_start' && event.event.toolId === 'browser') {
       browserGroup.push(event);
     } else {
       flushBrowserGroup();
@@ -452,7 +432,7 @@ export function EventListView({ events, activeToolId }: EventListViewProps) {
           return (
             <Box key={id} marginBottom={1}>
               <ToolEndView 
-                tool={endEvent.tool} 
+                toolId={endEvent.toolId} 
                 args={event.args} 
                 result={endEvent.result} 
                 duration={endEvent.duration} 
@@ -464,7 +444,7 @@ export function EventListView({ events, activeToolId }: EventListViewProps) {
         if (event.type === 'tool_start' && completed && endEvent?.type === 'tool_error') {
           return (
             <Box key={id} marginBottom={1}>
-              <ToolErrorView tool={endEvent.tool} error={endEvent.error} />
+              <ToolErrorView toolId={endEvent.toolId} error={endEvent.error} />
             </Box>
           );
         }
