@@ -54,7 +54,7 @@ export function CLI() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const builtins = await registry.discoverTools(join(import.meta.dirname ?? '.', 'tools'));
+      const builtins = await registry.discoverTools(join(import.meta.dirname ?? '.', 'tools', 'consolidated'));
       registry.registerAll(builtins);
 
       const plugins = await discoverPlugins();

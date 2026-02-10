@@ -158,7 +158,7 @@ async function createEvalRuntime(): Promise<EvalRuntime> {
   const permissions = new PermissionEngine(loadPermissions());
   const hooks = new HookRunner(loadHooks());
 
-  const builtins = await registry.discoverTools(path.join(__dirname, '..', 'tools'));
+  const builtins = await registry.discoverTools(path.join(__dirname, '..', 'tools', 'consolidated'));
   registry.registerAll(builtins);
   registry.registerAll(await discoverPlugins());
   registry.validate();
