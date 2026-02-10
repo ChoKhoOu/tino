@@ -1,5 +1,7 @@
 """gRPC server setup with health checking, reflection, and graceful shutdown."""
 
+# pyright: reportAttributeAccessIssue=false
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +17,9 @@ from grpc_reflection.v1alpha import reflection
 
 from tino_daemon.config import DaemonConfig
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
+from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
+from tino_daemon.services.backtest import BacktestServiceServicer
 from tino_daemon.services.daemon import DaemonServicer
 from tino_daemon.services.data import DataServiceServicer
 
@@ -46,7 +50,7 @@ async def serve(config: DaemonConfig) -> None:
     server = grpc.aio.server()
 
     # --- Health service ---
-    health_servicer = health.aio.HealthServicer()
+    health_servicer = health.aio.HealthServicer()  # type: ignore[attr-defined]
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
 
     # Mark overall server as SERVING
@@ -64,11 +68,16 @@ async def serve(config: DaemonConfig) -> None:
     data_servicer = DataServiceServicer(catalog=catalog)
     data_pb2_grpc.add_DataServiceServicer_to_server(data_servicer, server)
 
+    # --- BacktestService (proto-generated servicer base) ---
+    backtest_servicer = BacktestServiceServicer(catalog=catalog)
+    backtest_pb2_grpc.add_BacktestServiceServicer_to_server(backtest_servicer, server)
+
     # --- Reflection (enables grpcurl discovery) ---
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
         "tino.daemon.v1.DaemonService",
         data_pb2.DESCRIPTOR.services_by_name["DataService"].full_name,
+        backtest_pb2.DESCRIPTOR.services_by_name["BacktestService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)
