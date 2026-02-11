@@ -1,0 +1,51 @@
+syntax = "proto3";
+package tino.streaming.v1;
+
+service StreamingService {
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse);
+  rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+}
+
+message SubscribeRequest {
+  string instrument = 1;
+  string source = 2;
+  string event_type = 3;
+}
+
+message SubscribeResponse {
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_QUOTE = 1;
+    EVENT_TYPE_TRADE = 2;
+    EVENT_TYPE_BAR = 3;
+    EVENT_TYPE_STATUS = 4;
+    EVENT_TYPE_ERROR = 5;
+  }
+  EventType type = 1;
+  string instrument = 2;
+  string data_json = 3;
+  string timestamp = 4;
+  string source = 5;
+}
+
+message UnsubscribeRequest {
+  string instrument = 1;
+  string source = 2;
+}
+
+message UnsubscribeResponse {
+  bool success = 1;
+}
+
+message ListSubscriptionsRequest {}
+
+message ListSubscriptionsResponse {
+  repeated Subscription subscriptions = 1;
+}
+
+message Subscription {
+  string instrument = 1;
+  string source = 2;
+  string event_type = 3;
+}
