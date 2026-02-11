@@ -1,0 +1,67 @@
+name: Build & Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: bun-darwin-arm64
+            artifact: tino-darwin-arm64
+          - os: macos-13
+            target: bun-darwin-x64
+            artifact: tino-darwin-x64
+          - os: ubuntu-latest
+            target: bun-linux-x64
+            artifact: tino-linux-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Build binary
+        run: bash scripts/build.sh --target ${{ matrix.target }}
+
+      - name: Create tarball
+        run: tar -czf ${{ matrix.artifact }}.tar.gz -C dist ${{ matrix.artifact }} python/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.tar.gz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Tino ${{ github.ref_name }}" \
+            --generate-notes \
+            artifacts/*.tar.gz
