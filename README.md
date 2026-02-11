@@ -50,22 +50,27 @@ Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Py
 
 ## Quick Start
 
-### Prerequisites
-
-- [Bun](https://bun.sh) v1.0+
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Python 3.10–3.12
-- At least one LLM API key (OpenAI recommended)
-
-### Install & Run
+### Binary Install (Recommended)
 
 ```bash
-# Clone and install
-git clone https://github.com/penkzhou/tino.git
+curl -sSL https://raw.githubusercontent.com/ChoKhoOu/tino/main/scripts/install.sh | bash
+```
+
+Prerequisites: [uv](https://docs.astral.sh/uv/) (Python package manager) and at least one LLM API key (OpenAI recommended).
+
+```bash
+export OPENAI_API_KEY="sk-..."
+tino
+```
+
+### From Source (Development)
+
+```bash
+# Prerequisites: Bun v1.0+, uv, Python 3.10–3.12
+git clone https://github.com/ChoKhoOu/tino.git
 cd tino
 bun install
 
-# Start Tino (make sure OPENAI_API_KEY is set)
 export OPENAI_API_KEY="sk-..."
 tino
 ```

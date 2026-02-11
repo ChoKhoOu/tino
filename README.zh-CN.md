@@ -50,33 +50,32 @@ Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提
 
 ## 快速开始
 
-### 前置条件
-
-- [Bun](https://bun.sh) v1.0+
-- [uv](https://docs.astral.sh/uv/) (Python 包管理器)
-- Python 3.10–3.12
-- 至少一个 LLM API Key（推荐 OpenAI）
-
-### 安装与运行
+### 二进制安装（推荐）
 
 ```bash
-# 克隆并安装
-git clone https://github.com/penkzhou/tino.git
+curl -sSL https://raw.githubusercontent.com/ChoKhoOu/tino/main/scripts/install.sh | bash
+```
+
+前置条件：[uv](https://docs.astral.sh/uv/)（Python 包管理器）和至少一个 LLM API Key（推荐 OpenAI）。
+
+```bash
+export OPENAI_API_KEY="sk-..."
+tino
+```
+
+### 从源码安装（开发）
+
+```bash
+# 前置条件：Bun v1.0+、uv、Python 3.10–3.12
+git clone https://github.com/ChoKhoOu/tino.git
 cd tino
 bun install
 
-# 启动 Tino（确保 OPENAI_API_KEY 已设置）
 export OPENAI_API_KEY="sk-..."
 tino
 ```
 
 > **注意**：Tino 会在首次启动时自动在 `~/.tino/settings.json` 创建全局配置文件。
-
-### 一行命令（全局安装后）
-
-```bash
-tino
-```
 
 ## 设置
 
