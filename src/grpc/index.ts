@@ -8,3 +8,4 @@ export { BacktestClient } from "./backtest-client.js";
 export { TradingClient } from "./trading-client.js";
 export { PortfolioClient } from "./portfolio-client.js";
 export { ChartClient } from "./chart-client.js";
+export { StreamingClient } from "./streaming-client.js";

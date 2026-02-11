@@ -16,20 +16,21 @@ const EXPECTED_TOOL_IDS = [
   'skill',
   'portfolio',
   'chart',
+  'streaming',
 ] as const;
 
 const CONSOLIDATED_DIR = join(import.meta.dirname ?? '.', '..', 'consolidated');
 
 describe('consolidated tool registry', () => {
-  test('discovers exactly 13 tools', async () => {
+  test('discovers exactly 14 tools', async () => {
     const registry = new ToolRegistry();
     const plugins = await registry.discoverTools(CONSOLIDATED_DIR);
     registry.registerAll(plugins);
 
-    expect(plugins.length).toBe(13);
+    expect(plugins.length).toBe(14);
   });
 
-  test('all 13 expected tool IDs are present', async () => {
+  test('all 14 expected tool IDs are present', async () => {
     const registry = new ToolRegistry();
     const plugins = await registry.discoverTools(CONSOLIDATED_DIR);
     registry.registerAll(plugins);
