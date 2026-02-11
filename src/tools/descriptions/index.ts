@@ -8,3 +8,4 @@ export { TRADING_LIVE_DESCRIPTION } from './trading-live.js';
 export { STRATEGY_LAB_DESCRIPTION } from './strategy-lab.js';
 export { WEB_SEARCH_DESCRIPTION } from './web-search.js';
 export { BROWSER_DESCRIPTION } from './browser.js';
+export { PORTFOLIO_DESCRIPTION } from './portfolio.js';

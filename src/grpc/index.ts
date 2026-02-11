@@ -6,3 +6,4 @@ export { GrpcClient, createTinoTransport, type GrpcClientOptions } from "./clien
 export { DataClient } from "./data-client.js";
 export { BacktestClient } from "./backtest-client.js";
 export { TradingClient } from "./trading-client.js";
+export { PortfolioClient } from "./portfolio-client.js";
