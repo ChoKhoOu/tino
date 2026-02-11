@@ -23,7 +23,7 @@
 
 Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提问 — 它会拉取市场数据、计算指标、生成交易策略、运行回测、管理实盘执行，全部在终端内完成。
 
-底层架构将 **TypeScript CLI** (Bun + React/Ink) 与 **Python 守护进程** (NautilusTrader) 通过 gRPC 连接。基于 Vercel AI SDK 的 ReAct 风格 Agent 循环协调 11 个整合工具和 8 个金融数据源。
+底层架构将 **TypeScript CLI** (Bun + React/Ink) 与 **Python 守护进程** (NautilusTrader) 通过 gRPC 连接。基于 Vercel AI SDK 的 ReAct 风格 Agent 循环协调 14 个整合工具和 9 个金融数据源。
 
 ```
  你: "用 AAPL 过去两年的数据回测一个动量策略"
@@ -35,13 +35,17 @@ Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提
 
 ## 功能特性
 
-- **11 个整合工具** — 市场数据、基本面、SEC 文件、宏观数据、量化计算、模拟交易、实盘交易、策略实验室、网络搜索、浏览器自动化、技能工作流
-- **8 个金融数据源** — Polygon、FMP、Financial Datasets、FRED、Finnhub、CoinGecko、SEC EDGAR、EODHD，支持自动降级
+- **14 个整合工具** — 市场数据、基本面、SEC 文件、宏观数据、量化计算、模拟交易、实盘交易、策略实验室、投资组合追踪、终端图表、实时行情流、网络搜索、浏览器自动化、技能工作流
+- **9 个金融数据源** — Polygon、FMP、Financial Datasets、FRED、Finnhub、CoinGecko、SEC EDGAR、EODHD、Binance，支持自动降级
+- **投资组合追踪** — 基于 SQLite 的交易记录、持仓、每日盈亏和组合概览，支持守护进程重启后数据持久化
+- **终端图表** — 通过 plotext 在终端内直接渲染 ANSI K线图、折线图和子图
+- **实时行情流** — 通过 WebSocket（Polygon + Binance）获取实时市场数据，支持自动重连和订阅管理
+- **币安交易所** — 支持现货和 USDT 合约在测试网和主网的交易，含标的标准化
 - **本地量化引擎** — 技术指标、风险指标、期权定价 (Black-Scholes/Greeks)、因子分析 (Fama-French)、投资组合优化 — 全部本地计算，无需 API
 - **NautilusTrader 后端** — 专业级回测和实盘交易引擎，通过 gRPC 通信
 - **8 个技能工作流** — 预置研究流程：回测、深度研究、DCF 估值、因子分析、期权分析、策略生成、模拟交易、实盘交易
 - **多 LLM 提供商** — OpenAI、Anthropic、Google、xAI、Moonshot、OpenRouter、Ollama 及自定义端点
-- **丰富的终端 UI** — ASCII 图表、流式响应、交互式输入、模型切换 — 基于 React/Ink 构建
+- **丰富的终端 UI** — ANSI 图表、实时行情、交互式输入、模型切换 — 基于 React/Ink 构建
 - **策略全生命周期** — 生成 → 验证 → 回测 → 模拟交易 → 实盘，全程由 AI 引导
 
 ## 快速开始
@@ -84,8 +88,9 @@ tino init my-project && cd my-project && tino
 │                            │         127.0.0.1:50051           │                          │
 │  React/Ink TUI             │                                   │  NautilusTrader 引擎      │
 │  ReAct Agent 循环           │                                   │  回测 / 模拟 / 实盘        │
-│  11 个工具 + 8 个技能        │                                   │  数据转换器               │
-│  多 LLM 提供商              │                                   │  gRPC 服务               │
+│  14 个工具 + 8 个技能        │                                   │  投资组合 (SQLite)        │
+│  多 LLM 提供商              │                                   │  图表 / 实时行情          │
+│  组合 / 图表 / 实时行情      │                                   │  8 个 gRPC 服务           │
 └────────────────────────────┘                                   └─────────────────────────┘
 ```
 
@@ -108,6 +113,9 @@ tino init my-project && cd my-project && tino
 | `web_search` | 搜索 | 通过 Exa 或 Tavily 进行网络搜索 |
 | `browser` | 浏览器 | 无头浏览器自动化（导航、读取、操作），基于 Playwright |
 | `skill` | 工作流 | 加载预置研究工作流 |
+| `portfolio` | 交易 | 交易记录、持仓、盈亏追踪、投资组合概览 |
+| `chart` | 可视化 | 终端内 ANSI K线图、折线图和子图 |
+| `streaming` | 实时 | 通过 WebSocket 获取实时市场数据（Polygon、Binance） |
 
 ## 技能
 
@@ -155,6 +163,7 @@ tino init my-project && cd my-project && tino
 | CoinGecko | _（免费）_ | 加密货币价格、市场数据、历史数据 |
 | SEC EDGAR | _（免费）_ | EFTS 全文搜索、XBRL 公司数据 |
 | EODHD | `EODHD_API_KEY` | 港股市场数据 |
+| Binance | `BINANCE_API_KEY` | 现货和 USDT 合约交易、实时 WebSocket 行情流 |
 
 ## 交易安全
 
@@ -165,6 +174,7 @@ tino init my-project && cd my-project && tino
 - **策略代码验证** — 禁止危险导入（`os`、`subprocess`、`socket`）和函数（`exec`、`eval`、`__import__`）
 - **沙箱执行** — 策略在受控 Python 环境中运行
 - **模拟优先** — Agent 始终建议先进行模拟交易再上实盘
+- **测试网优先** — 币安交易默认使用测试网；主网需要显式配置
 
 ## 策略模板
 
@@ -216,7 +226,7 @@ tino/
 │   ├── cli.tsx             # 主 Ink 组件
 │   ├── agent/              # ReAct Agent 循环、提示词、草稿板
 │   ├── runtime/            # 模型代理、多提供商 LLM
-│   ├── tools/              # 11 个整合工具 + 数据源
+│   ├── tools/              # 14 个整合工具 + 数据源
 │   ├── grpc/               # gRPC 客户端 (ConnectRPC)
 │   ├── daemon/             # Python 守护进程生命周期管理
 │   ├── skills/             # 8 个技能工作流 (Markdown 驱动)
@@ -227,7 +237,7 @@ tino/
 ├── python/                 # Python 守护进程
 │   └── tino_daemon/        # NautilusTrader gRPC 包装器
 ├── proto/                  # Protobuf 服务定义
-│   └── tino/               # trading, data, backtest, daemon 服务
+│   └── tino/               # trading, data, backtest, daemon, portfolio, chart, streaming 服务
 ├── templates/              # 策略模板 (Python)
 ├── examples/               # 示例策略
 └── scripts/                # 发布工具
@@ -253,6 +263,11 @@ POLYGON_API_KEY=
 FRED_API_KEY=
 FINNHUB_API_KEY=
 EODHD_API_KEY=
+
+# 币安（加密货币交易）
+BINANCE_API_KEY=
+BINANCE_API_SECRET=
+BINANCE_TESTNET=true
 
 # 搜索（可选）
 EXASEARCH_API_KEY=

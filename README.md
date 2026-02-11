@@ -23,7 +23,7 @@
 
 Tino is a terminal-native AI agent built for quantitative finance. Ask it a question in plain English — it will pull market data, crunch numbers, generate trading strategies, run backtests, and manage live execution, all from your terminal.
 
-Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 11 consolidated tools across 8 financial data providers.
+Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 14 consolidated tools across 9 financial data providers.
 
 ```
  You: "Backtest a momentum strategy on AAPL over the last 2 years"
@@ -35,13 +35,17 @@ Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Py
 
 ## Features
 
-- **11 Consolidated Tools** — Market data, fundamentals, SEC filings, macro data, quant compute, simulated trading, live trading, strategy lab, web search, browser automation, and skill workflows
-- **8 Financial Data Providers** — Polygon, FMP, Financial Datasets, FRED, Finnhub, CoinGecko, SEC EDGAR, EODHD with automatic fallback chains
+- **14 Consolidated Tools** — Market data, fundamentals, SEC filings, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, and skill workflows
+- **9 Financial Data Providers** — Polygon, FMP, Financial Datasets, FRED, Finnhub, CoinGecko, SEC EDGAR, EODHD, Binance with automatic fallback chains
+- **Portfolio Tracking** — SQLite-backed trade history, positions, daily PnL, and portfolio summaries with daemon restart persistence
+- **Terminal Charts** — ANSI candlestick, line, and subplot charts rendered directly in the terminal via plotext
+- **Real-Time Streaming** — Live market data via WebSocket (Polygon + Binance) with auto-reconnect and subscription management
+- **Binance Exchange** — Spot and USDT-M Futures trading on testnet and mainnet with instrument normalization
 - **Local Quant Engine** — Technical indicators, risk metrics, options pricing (Black-Scholes/Greeks), factor analysis (Fama-French), portfolio optimization — all computed locally, no API calls
 - **NautilusTrader Backend** — Professional-grade backtesting and live trading engine via gRPC
 - **8 Skill Workflows** — Pre-built research pipelines: backtest, comprehensive research, DCF valuation, factor analysis, options analysis, strategy generation, paper trading, live trading
 - **Multi-Provider LLM** — OpenAI, Anthropic, Google, xAI, Moonshot, OpenRouter, Ollama, and custom endpoints
-- **Rich Terminal UI** — ASCII charts, streaming responses, interactive input, model switching — built with React/Ink
+- **Rich Terminal UI** — ANSI charts, streaming tickers, interactive input, model switching — built with React/Ink
 - **Strategy Lifecycle** — Generate → validate → backtest → paper trade → go live, all guided by AI
 
 ## Quick Start
@@ -84,8 +88,9 @@ tino init my-project && cd my-project && tino
 │                            │         127.0.0.1:50051           │                          │
 │  React/Ink TUI             │                                   │  NautilusTrader Engine   │
 │  ReAct Agent Loop          │                                   │  Backtest / Paper / Live │
-│  11 Tools + 8 Skills       │                                   │  Data Wranglers          │
-│  Multi-Provider LLM        │                                   │  gRPC Services           │
+│  14 Tools + 8 Skills       │                                   │  Portfolio (SQLite)      │
+│  Multi-Provider LLM        │                                   │  Charts / Streaming      │
+│  Portfolio / Charts / Live │                                   │  8 gRPC Services         │
 └────────────────────────────┘                                   └─────────────────────────┘
 ```
 
@@ -108,6 +113,9 @@ tino init my-project && cd my-project && tino
 | `web_search` | Search | Web search via Exa or Tavily |
 | `browser` | Browser | Headless browser automation (navigate, read, act) via Playwright |
 | `skill` | Workflow | Load pre-built research workflows |
+| `portfolio` | Trading | Trade history, positions, PnL tracking, portfolio summaries |
+| `chart` | Visualization | ANSI candlestick, line, and subplot charts in the terminal |
+| `streaming` | Real-time | Live market data via WebSocket (Polygon, Binance) |
 
 ## Skills
 
@@ -155,6 +163,7 @@ Providers with automatic fallback: Financial Datasets → FMP → Finnhub for fu
 | CoinGecko | _(free)_ | Crypto prices, market data, historical data |
 | SEC EDGAR | _(free)_ | EFTS full-text search, XBRL company facts |
 | EODHD | `EODHD_API_KEY` | Hong Kong market data |
+| Binance | `BINANCE_API_KEY` | Spot and USDT-M Futures trading, real-time WebSocket streams |
 
 ## Trading Safety
 
@@ -165,6 +174,7 @@ Safety is non-negotiable in Tino's design:
 - **Strategy Validation** — Blocks dangerous imports (`os`, `subprocess`, `socket`) and functions (`exec`, `eval`, `__import__`)
 - **Sandboxed Execution** — Strategies run in a controlled Python environment
 - **Paper Trading First** — The agent always recommends paper trading before going live
+- **Testnet Default** — Binance trading defaults to testnet; mainnet requires explicit configuration
 
 ## Strategy Templates
 
@@ -216,7 +226,7 @@ tino/
 │   ├── cli.tsx             # Main Ink component
 │   ├── agent/              # ReAct agent loop, prompts, scratchpad
 │   ├── runtime/            # Model broker, multi-provider LLM
-│   ├── tools/              # 11 consolidated tools + providers
+│   ├── tools/              # 14 consolidated tools + providers
 │   ├── grpc/               # gRPC clients (ConnectRPC)
 │   ├── daemon/             # Python daemon lifecycle management
 │   ├── skills/             # 8 skill workflows (markdown-driven)
@@ -227,7 +237,7 @@ tino/
 ├── python/                 # Python daemon
 │   └── tino_daemon/        # NautilusTrader gRPC wrapper
 ├── proto/                  # Protobuf service definitions
-│   └── tino/               # trading, data, backtest, daemon services
+│   └── tino/               # trading, data, backtest, daemon, portfolio, chart, streaming services
 ├── templates/              # Strategy templates (Python)
 ├── examples/               # Example strategies
 └── scripts/                # Release tooling
@@ -253,6 +263,11 @@ POLYGON_API_KEY=
 FRED_API_KEY=
 FINNHUB_API_KEY=
 EODHD_API_KEY=
+
+# Binance (for crypto trading)
+BINANCE_API_KEY=
+BINANCE_API_SECRET=
+BINANCE_TESTNET=true
 
 # Search (optional)
 EXASEARCH_API_KEY=
