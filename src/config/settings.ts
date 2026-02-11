@@ -1,8 +1,13 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
+import { homedir } from 'os';
 import { z } from 'zod';
 
-const SETTINGS_FILE = '.tino/settings.json';
+const GLOBAL_SETTINGS_DIR = join(homedir(), '.tino');
+const GLOBAL_SETTINGS_FILE = join(GLOBAL_SETTINGS_DIR, 'settings.json');
+const PROJECT_SETTINGS_FILE = '.tino/settings.json';
+
+const DEFAULT_GLOBAL_SETTINGS = { provider: 'openai' };
 
 const MODEL_TO_PROVIDER_MAP: Record<string, string> = {
   'gpt-5.2': 'openai',
@@ -34,28 +39,50 @@ interface SettingsData {
   [key: string]: unknown;
 }
 
+function readJsonFile(path: string): Record<string, unknown> | null {
+  try {
+    if (!existsSync(path)) return null;
+    return JSON.parse(readFileSync(path, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function ensureGlobalSettings(): Record<string, unknown> {
+  const existing = readJsonFile(GLOBAL_SETTINGS_FILE);
+  if (existing) return existing;
+  try {
+    mkdirSync(GLOBAL_SETTINGS_DIR, { recursive: true });
+    writeFileSync(GLOBAL_SETTINGS_FILE, JSON.stringify(DEFAULT_GLOBAL_SETTINGS, null, 2));
+  } catch { /* non-fatal */ }
+  return { ...DEFAULT_GLOBAL_SETTINGS };
+}
+
 export function loadSettings(): TinoSettings {
-  if (!existsSync(SETTINGS_FILE)) {
-    return {};
+  const global = ensureGlobalSettings();
+  const project = readJsonFile(PROJECT_SETTINGS_FILE) ?? {};
+
+  const merged: Record<string, unknown> = { ...global, ...project };
+  const gcp = (global.customProviders ?? {}) as Record<string, unknown>;
+  const pcp = (project.customProviders ?? {}) as Record<string, unknown>;
+  if (Object.keys(gcp).length || Object.keys(pcp).length) {
+    merged.customProviders = { ...gcp, ...pcp };
   }
 
-  try {
-    const content = readFileSync(SETTINGS_FILE, 'utf-8');
-    const raw = JSON.parse(content);
-    const result = SettingsSchema.safeParse(raw);
-    return result.success ? result.data : raw;
-  } catch {
-    return {};
-  }
+  const result = SettingsSchema.safeParse(merged);
+  return result.success ? result.data : (merged as TinoSettings);
 }
 
 export function saveSettings(settings: SettingsData): boolean {
   try {
-    const dir = dirname(SETTINGS_FILE);
+    const target = existsSync(PROJECT_SETTINGS_FILE)
+      ? PROJECT_SETTINGS_FILE
+      : GLOBAL_SETTINGS_FILE;
+    const dir = dirname(target);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+    writeFileSync(target, JSON.stringify(settings, null, 2));
     return true;
   } catch {
     return false;

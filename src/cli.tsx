@@ -126,8 +126,6 @@ export function CLI() {
   // ── Daemon auto-start ──────────────────────────────────────────────
   const daemonRef = useRef<DaemonManager | null>(null);
   useEffect(() => {
-    const settingsPath = join(process.cwd(), '.tino', 'settings.json');
-    if (!existsSync(settingsPath)) return;
     const cliDir = dirname(resolve(import.meta.dirname ?? '.'));
     const daemonPkgDir = join(cliDir, 'python');
     if (!existsSync(join(daemonPkgDir, 'pyproject.toml'))) return;

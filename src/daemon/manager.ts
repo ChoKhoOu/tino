@@ -4,6 +4,7 @@
  */
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join, resolve } from 'path';
+import { homedir } from 'os';
 
 /** Default gRPC port the daemon listens on */
 const DEFAULT_PORT = 50051;
@@ -50,7 +51,9 @@ export class DaemonManager {
     this.daemonPkgDir = resolve(options.daemonPkgDir);
     this.port = options.port ?? DEFAULT_PORT;
     this.autoRestart = options.autoRestart ?? true;
-    this.pidFilePath = join(this.projectDir, '.tino', 'daemon.pid');
+    this.pidFilePath = existsSync(join(this.projectDir, '.tino'))
+      ? join(this.projectDir, '.tino', 'daemon.pid')
+      : join(homedir(), '.tino', 'daemon.pid');
   }
 
   /**
