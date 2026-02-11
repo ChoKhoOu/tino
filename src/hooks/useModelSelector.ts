@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ModelBroker, DEFAULT_MODEL, DEFAULT_PROVIDER } from '@/runtime/model-broker.js';
-import { getSetting, setSetting } from '@/utils/config.js';
+import { getSetting, setSetting } from '@/config/settings.js';
 
 // ============================================================================
 // Types

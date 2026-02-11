@@ -1,4 +1,3 @@
-export { loadConfig, saveConfig, getSetting, setSetting } from './config.js';
 export {
   getApiKeyNameForProvider,
   getProviderDisplayName,
