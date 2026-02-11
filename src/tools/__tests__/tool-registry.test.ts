@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { ToolRegistry } from '@/runtime/tool-registry.js';
+import { resolveSrcDir } from '@/utils/resolve-app-dir.js';
 
 const EXPECTED_TOOL_IDS = [
   'market_data',
@@ -19,7 +20,7 @@ const EXPECTED_TOOL_IDS = [
   'streaming',
 ] as const;
 
-const CONSOLIDATED_DIR = join(import.meta.dirname ?? '.', '..', 'consolidated');
+const CONSOLIDATED_DIR = join(resolveSrcDir(), 'tools', 'consolidated');
 
 describe('consolidated tool registry', () => {
   test('discovers exactly 14 tools', async () => {

@@ -6,11 +6,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
 import { existsSync } from 'fs';
-import { join, resolve, dirname } from 'path';
+import { join } from 'path';
 import { DaemonManager } from './daemon/index.js';
+import { resolveAppDir, resolveSrcDir } from './utils/resolve-app-dir.js';
 
 import { Input } from './components/Input.js';
 import { Intro } from './components/Intro.js';
+import { DaemonStatusBar } from './components/DaemonStatusBar.js';
 import { ProviderSelector, ModelSelector, ModelInputField } from './components/ModelSelector.js';
 import { ApiKeyConfirm, ApiKeyInput } from './components/ApiKeyPrompt.js';
 import { DebugPanel } from './components/DebugPanel.js';
@@ -23,6 +25,7 @@ import { getApiKeyNameForProvider, getProviderDisplayName } from './utils/env.js
 import { useSessionRunner } from './hooks/useSessionRunner.js';
 import { useModelSelector } from './hooks/useModelSelector.js';
 import { useInputHistory } from './hooks/useInputHistory.js';
+import { useDaemonStatus } from './hooks/useDaemonStatus.js';
 import { parseSlashCommand } from './commands/slash.js';
 import type { DoneEvent, RunEvent } from './domain/events.js';
 
@@ -54,7 +57,7 @@ export function CLI() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const builtins = await registry.discoverTools(join(import.meta.dirname ?? '.', 'tools', 'consolidated'));
+      const builtins = await registry.discoverTools(join(resolveSrcDir(), 'tools', 'consolidated'));
       registry.registerAll(builtins);
 
       const plugins = await discoverPlugins();
@@ -126,7 +129,7 @@ export function CLI() {
   // ── Daemon auto-start ──────────────────────────────────────────────
   const daemonRef = useRef<DaemonManager | null>(null);
   useEffect(() => {
-    const cliDir = dirname(resolve(import.meta.dirname ?? '.'));
+    const cliDir = resolveAppDir();
     const daemonPkgDir = join(cliDir, 'python');
     if (!existsSync(join(daemonPkgDir, 'pyproject.toml'))) return;
     const manager = new DaemonManager({ projectDir: process.cwd(), daemonPkgDir });
@@ -134,6 +137,8 @@ export function CLI() {
     manager.start();
     return () => { manager.stop(); };
   }, []);
+
+  const daemonStatus = useDaemonStatus(daemonRef);
 
   // ── UI history items (bridge RunState events → HistoryItem[]) ──────
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -339,6 +344,7 @@ export function CLI() {
   return (
     <Box flexDirection="column">
       <Intro provider={modelState.currentProvider} model={modelState.currentModel} />
+      <DaemonStatusBar status={daemonStatus.status} info={daemonStatus.info} />
 
       {history.map((item) => (
         <HistoryItemView key={item.id} item={item} />
