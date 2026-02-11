@@ -18,12 +18,17 @@ from grpc_reflection.v1alpha import reflection
 from tino_daemon.config import DaemonConfig
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.node_registry import NodeRegistry
+from tino_daemon.persistence.portfolio_db import PortfolioDB
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
+from tino_daemon.proto.tino.chart.v1 import chart_pb2, chart_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
+from tino_daemon.proto.tino.portfolio.v1 import portfolio_pb2, portfolio_pb2_grpc
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
 from tino_daemon.services.backtest import BacktestServiceServicer
+from tino_daemon.services.chart import ChartServiceServicer
 from tino_daemon.services.daemon import DaemonServicer
 from tino_daemon.services.data import DataServiceServicer
+from tino_daemon.services.portfolio import PortfolioServiceServicer
 from tino_daemon.services.trading import TradingServiceServicer
 
 logger = logging.getLogger(__name__)
@@ -80,6 +85,18 @@ async def serve(config: DaemonConfig) -> None:
     trading_servicer = TradingServiceServicer(registry=node_registry)
     trading_pb2_grpc.add_TradingServiceServicer_to_server(trading_servicer, server)
 
+    # --- PortfolioService (proto-generated servicer base) ---
+    Path(".tino").mkdir(parents=True, exist_ok=True)
+    portfolio_db = PortfolioDB(db_path=".tino/portfolio.db")
+    portfolio_servicer = PortfolioServiceServicer(db=portfolio_db)
+    portfolio_pb2_grpc.add_PortfolioServiceServicer_to_server(
+        portfolio_servicer, server
+    )
+
+    # --- ChartService (proto-generated servicer base) ---
+    chart_servicer = ChartServiceServicer()
+    chart_pb2_grpc.add_ChartServiceServicer_to_server(chart_servicer, server)
+
     # --- Reflection (enables grpcurl discovery) ---
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
@@ -87,6 +104,8 @@ async def serve(config: DaemonConfig) -> None:
         data_pb2.DESCRIPTOR.services_by_name["DataService"].full_name,
         backtest_pb2.DESCRIPTOR.services_by_name["BacktestService"].full_name,
         trading_pb2.DESCRIPTOR.services_by_name["TradingService"].full_name,
+        portfolio_pb2.DESCRIPTOR.services_by_name["PortfolioService"].full_name,
+        chart_pb2.DESCRIPTOR.services_by_name["ChartService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)
