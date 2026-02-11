@@ -155,6 +155,46 @@ Default model: `gpt-5.2`. Fast model used for routing/summarization is auto-sele
 
 Switch models at runtime with `/model <name>`.
 
+You can also override provider credentials and base URLs in settings files (`~/.tino/settings.json` or `.tino/settings.json`) without relying on shell environment variables.
+
+Use `providers` (recommended), or `providerOverrides` (backward-compatible alias):
+
+```json
+{
+  "providers": {
+    "openai": {
+      "baseURL": "https://your-gateway.example.com/v1",
+      "apiKey": "your-openai-compatible-key"
+    },
+    "anthropic": {
+      "baseURL": "https://api.anthropic.com/v1",
+      "apiKey": "your-anthropic-key"
+    },
+    "google": {
+      "baseURL": "https://generativelanguage.googleapis.com/v1beta",
+      "apiKey": "your-google-key"
+    },
+    "xai": {
+      "baseURL": "https://api.x.ai/v1",
+      "apiKey": "your-xai-key"
+    },
+    "moonshot": {
+      "baseURL": "https://api.moonshot.cn/v1",
+      "apiKey": "your-moonshot-key"
+    },
+    "openrouter": {
+      "baseURL": "https://openrouter.ai/api/v1",
+      "apiKey": "your-openrouter-key"
+    },
+    "ollama": {
+      "baseURL": "http://127.0.0.1:11434/v1"
+    }
+  }
+}
+```
+
+For each provider, values in `providers` (or `providerOverrides`) take precedence over environment variables.
+
 ## Data Providers
 
 Providers with automatic fallback: Financial Datasets → FMP → Finnhub for fundamental data.

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { config } from 'dotenv';
+import { loadSettings } from './settings.js';
 
 config({ quiet: true });
 
@@ -18,6 +19,13 @@ const PROVIDERS: Record<string, ProviderConfig> = {
   ollama: { displayName: 'Ollama' },
 };
 
+function hasConfiguredApiKeyForProvider(providerId: string): boolean {
+  const settings = loadSettings();
+  const value = settings.providers?.[providerId]?.apiKey
+    ?? settings.providerOverrides?.[providerId]?.apiKey;
+  return Boolean(value && value.trim() && !value.trim().startsWith('your-'));
+}
+
 export function getApiKeyNameForProvider(providerId: string): string | undefined {
   return PROVIDERS[providerId]?.apiKeyEnvVar;
 }
@@ -29,6 +37,7 @@ export function getProviderDisplayName(providerId: string): string {
 export function checkApiKeyExistsForProvider(providerId: string): boolean {
   const apiKeyName = getApiKeyNameForProvider(providerId);
   if (!apiKeyName) return true;
+  if (hasConfiguredApiKeyForProvider(providerId)) return true;
   return checkApiKeyExists(apiKeyName);
 }
 

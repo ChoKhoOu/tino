@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { config } from 'dotenv';
+import { loadSettings } from '@/config/settings.js';
 
 // Load .env on module import
 config({ quiet: true });
@@ -14,10 +15,18 @@ const PROVIDERS: Record<string, ProviderConfig> = {
   openai: { displayName: 'OpenAI', apiKeyEnvVar: 'OPENAI_API_KEY' },
   anthropic: { displayName: 'Anthropic', apiKeyEnvVar: 'ANTHROPIC_API_KEY' },
   google: { displayName: 'Google', apiKeyEnvVar: 'GOOGLE_API_KEY' },
+  xai: { displayName: 'xAI', apiKeyEnvVar: 'XAI_API_KEY' },
   moonshot: { displayName: 'Moonshot', apiKeyEnvVar: 'MOONSHOT_API_KEY' },
   openrouter: { displayName: 'OpenRouter', apiKeyEnvVar: 'OPENROUTER_API_KEY' },
   ollama: { displayName: 'Ollama' },
 };
+
+function hasConfiguredApiKeyForProvider(providerId: string): boolean {
+  const settings = loadSettings();
+  const value = settings.providers?.[providerId]?.apiKey
+    ?? settings.providerOverrides?.[providerId]?.apiKey;
+  return Boolean(value && value.trim() && !value.trim().startsWith('your-'));
+}
 
 export function getApiKeyNameForProvider(providerId: string): string | undefined {
   return PROVIDERS[providerId]?.apiKeyEnvVar;
@@ -30,6 +39,7 @@ export function getProviderDisplayName(providerId: string): string {
 export function checkApiKeyExistsForProvider(providerId: string): boolean {
   const apiKeyName = getApiKeyNameForProvider(providerId);
   if (!apiKeyName) return true;
+  if (hasConfiguredApiKeyForProvider(providerId)) return true;
   return checkApiKeyExists(apiKeyName);
 }
 

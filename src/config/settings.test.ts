@@ -35,6 +35,27 @@ async function loadModule() {
   const origLoad = mod.loadSettings;
   const origSave = mod.saveSettings;
 
+  function deepMergeRecordValues(
+    left: Record<string, unknown>,
+    right: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const merged: Record<string, unknown> = { ...left };
+
+    for (const [key, value] of Object.entries(right)) {
+      const prev = merged[key];
+      if (
+        value && typeof value === 'object' && !Array.isArray(value)
+        && prev && typeof prev === 'object' && !Array.isArray(prev)
+      ) {
+        merged[key] = { ...(prev as Record<string, unknown>), ...(value as Record<string, unknown>) };
+        continue;
+      }
+      merged[key] = value;
+    }
+
+    return merged;
+  }
+
   function loadSettings() {
     function readJson(path: string): Record<string, unknown> | null {
       try {
@@ -57,17 +78,35 @@ async function loadModule() {
     const gcp = (global.customProviders ?? {}) as Record<string, unknown>;
     const pcp = (project.customProviders ?? {}) as Record<string, unknown>;
     if (Object.keys(gcp).length || Object.keys(pcp).length) {
-      merged.customProviders = { ...gcp, ...pcp };
+      merged.customProviders = deepMergeRecordValues(gcp, pcp);
+    }
+
+    const gpoAlias = (global.providers ?? {}) as Record<string, unknown>;
+    const gpoCanonical = (global.providerOverrides ?? {}) as Record<string, unknown>;
+    const ppoAlias = (project.providers ?? {}) as Record<string, unknown>;
+    const ppoCanonical = (project.providerOverrides ?? {}) as Record<string, unknown>;
+    const gpo = deepMergeRecordValues(gpoAlias, gpoCanonical);
+    const ppo = deepMergeRecordValues(ppoAlias, ppoCanonical);
+    if (Object.keys(gpo).length || Object.keys(ppo).length) {
+      merged.providers = deepMergeRecordValues(gpo, ppo);
     }
     return merged;
   }
 
   function saveSettings(settings: Record<string, unknown>): boolean {
     try {
+      const normalized: Record<string, unknown> = { ...settings };
+      const providerOverrides = (normalized.providerOverrides ?? {}) as Record<string, unknown>;
+      const providers = (normalized.providers ?? {}) as Record<string, unknown>;
+      if (Object.keys(providerOverrides).length || Object.keys(providers).length) {
+        normalized.providers = deepMergeRecordValues(providerOverrides, providers);
+        delete normalized.providerOverrides;
+      }
+
       const target = existsSync(projectFile) ? projectFile : globalFile;
       const dir = join(target, '..');
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-      writeFileSync(target, JSON.stringify(settings, null, 2));
+      writeFileSync(target, JSON.stringify(normalized, null, 2));
       return true;
     } catch {
       return false;
@@ -129,6 +168,83 @@ describe('settings hierarchy', () => {
     expect(cp.shared.baseURL).toBe('https://shared-project.example.com');
   });
 
+  test('deep merges providerOverrides from global and project', async () => {
+    const { loadSettings, globalFile, projectFile } = await loadModule();
+
+    writeFileSync(globalFile, JSON.stringify({
+      providerOverrides: {
+        openai: {
+          baseURL: 'https://global-openai.example.com/v1',
+          apiKey: 'global-openai-key',
+        },
+        anthropic: {
+          apiKey: 'global-anthropic-key',
+        },
+      },
+    }, null, 2));
+
+    mkdirSync(join(fakeProject, '.tino'), { recursive: true });
+    writeFileSync(projectFile, JSON.stringify({
+      providerOverrides: {
+        openai: {
+          apiKey: 'project-openai-key',
+        },
+        google: {
+          apiKey: 'project-google-key',
+        },
+      },
+    }, null, 2));
+
+    const settings = loadSettings();
+    const overrides = settings.providers as Record<string, { baseURL?: string; apiKey?: string }>;
+
+    expect(overrides.openai.baseURL).toBe('https://global-openai.example.com/v1');
+    expect(overrides.openai.apiKey).toBe('project-openai-key');
+    expect(overrides.anthropic.apiKey).toBe('global-anthropic-key');
+    expect(overrides.google.apiKey).toBe('project-google-key');
+  });
+
+  test('supports providers alias for providerOverrides', async () => {
+    const { loadSettings, globalFile } = await loadModule();
+
+    writeFileSync(globalFile, JSON.stringify({
+      providers: {
+        openai: {
+          baseURL: 'https://alias-openai.example.com/v1',
+          apiKey: 'alias-openai-key',
+        },
+      },
+    }, null, 2));
+
+    const settings = loadSettings();
+    const overrides = settings.providers as Record<string, { baseURL?: string; apiKey?: string }>;
+
+    expect(overrides.openai.baseURL).toBe('https://alias-openai.example.com/v1');
+    expect(overrides.openai.apiKey).toBe('alias-openai-key');
+  });
+
+  test('providerOverrides takes precedence over providers alias', async () => {
+    const { loadSettings, globalFile } = await loadModule();
+
+    writeFileSync(globalFile, JSON.stringify({
+      providerOverrides: {
+        openai: {
+          apiKey: 'canonical-key',
+        },
+      },
+      providers: {
+        openai: {
+          apiKey: 'alias-key',
+        },
+      },
+    }, null, 2));
+
+    const settings = loadSettings();
+    const overrides = settings.providers as Record<string, { apiKey?: string }>;
+
+    expect(overrides.openai.apiKey).toBe('canonical-key');
+  });
+
   test('saveSettings writes to project file when it exists', async () => {
     const { saveSettings, globalFile, projectFile } = await loadModule();
 
@@ -163,5 +279,25 @@ describe('settings hierarchy', () => {
     expect(settings.provider).toBe('openai');
     expect(settings.modelId).toBeUndefined();
     expect(settings.customProviders).toBeUndefined();
+  });
+
+  test('saveSettings persists providers as canonical field', async () => {
+    const { saveSettings, globalFile } = await loadModule();
+    writeFileSync(globalFile, JSON.stringify({ provider: 'openai' }, null, 2));
+
+    saveSettings({
+      providerOverrides: {
+        openai: {
+          apiKey: 'from-legacy-field',
+        },
+      },
+    });
+
+    const saved = JSON.parse(readFileSync(globalFile, 'utf-8')) as {
+      providers?: Record<string, { apiKey?: string }>;
+      providerOverrides?: unknown;
+    };
+    expect(saved.providers?.openai.apiKey).toBe('from-legacy-field');
+    expect(saved.providerOverrides).toBeUndefined();
   });
 });

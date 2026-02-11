@@ -155,6 +155,46 @@ Tino 使用两级配置系统：
 
 运行时使用 `/model <名称>` 切换模型。
 
+你也可以在配置文件（`~/.tino/settings.json` 或 `.tino/settings.json`）里覆盖各 Provider 的鉴权和网关地址，不依赖 shell 环境变量。
+
+推荐使用 `providers`，`providerOverrides` 仍可继续使用（向后兼容别名）：
+
+```json
+{
+  "providers": {
+    "openai": {
+      "baseURL": "https://your-gateway.example.com/v1",
+      "apiKey": "your-openai-compatible-key"
+    },
+    "anthropic": {
+      "baseURL": "https://api.anthropic.com/v1",
+      "apiKey": "your-anthropic-key"
+    },
+    "google": {
+      "baseURL": "https://generativelanguage.googleapis.com/v1beta",
+      "apiKey": "your-google-key"
+    },
+    "xai": {
+      "baseURL": "https://api.x.ai/v1",
+      "apiKey": "your-xai-key"
+    },
+    "moonshot": {
+      "baseURL": "https://api.moonshot.cn/v1",
+      "apiKey": "your-moonshot-key"
+    },
+    "openrouter": {
+      "baseURL": "https://openrouter.ai/api/v1",
+      "apiKey": "your-openrouter-key"
+    },
+    "ollama": {
+      "baseURL": "http://127.0.0.1:11434/v1"
+    }
+  }
+}
+```
+
+同一 Provider 下，`providers`（或 `providerOverrides`）中的值优先级高于环境变量。
+
 ## 数据源
 
 提供商自动降级：Financial Datasets → FMP → Finnhub（基本面数据）。

@@ -21,14 +21,23 @@ const CustomProviderSchema = z.object({
   defaultModel: z.string().optional(),
 });
 
+const ProviderOverrideSchema = z.object({
+  baseURL: z.string().url().optional(),
+  apiKey: z.string().optional(),
+  defaultModel: z.string().optional(),
+});
+
 const SettingsSchema = z.object({
   provider: z.string().optional(),
   modelId: z.string().optional(),
   model: z.string().optional(),
   customProviders: z.record(z.string(), CustomProviderSchema).optional(),
+  providers: z.record(z.string(), ProviderOverrideSchema).optional(),
+  providerOverrides: z.record(z.string(), ProviderOverrideSchema).optional(),
 }).passthrough(); // Allow additional unknown keys for forward compatibility
 
 export type CustomProviderConfig = z.infer<typeof CustomProviderSchema>;
+export type ProviderOverrideConfig = z.infer<typeof ProviderOverrideSchema>;
 export type TinoSettings = z.infer<typeof SettingsSchema>;
 
 interface SettingsData {
@@ -36,7 +45,30 @@ interface SettingsData {
   modelId?: string;
   model?: string;
   customProviders?: Record<string, CustomProviderConfig>;
+  providers?: Record<string, ProviderOverrideConfig>;
+  providerOverrides?: Record<string, ProviderOverrideConfig>;
   [key: string]: unknown;
+}
+
+function deepMergeRecordValues(
+  left: Record<string, unknown>,
+  right: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...left };
+
+  for (const [key, value] of Object.entries(right)) {
+    const prev = merged[key];
+    if (
+      value && typeof value === 'object' && !Array.isArray(value)
+      && prev && typeof prev === 'object' && !Array.isArray(prev)
+    ) {
+      merged[key] = { ...(prev as Record<string, unknown>), ...(value as Record<string, unknown>) };
+      continue;
+    }
+    merged[key] = value;
+  }
+
+  return merged;
 }
 
 function readJsonFile(path: string): Record<string, unknown> | null {
@@ -66,7 +98,17 @@ export function loadSettings(): TinoSettings {
   const gcp = (global.customProviders ?? {}) as Record<string, unknown>;
   const pcp = (project.customProviders ?? {}) as Record<string, unknown>;
   if (Object.keys(gcp).length || Object.keys(pcp).length) {
-    merged.customProviders = { ...gcp, ...pcp };
+    merged.customProviders = deepMergeRecordValues(gcp, pcp);
+  }
+
+  const gpoAlias = (global.providers ?? {}) as Record<string, unknown>;
+  const gpoCanonical = (global.providerOverrides ?? {}) as Record<string, unknown>;
+  const ppoAlias = (project.providers ?? {}) as Record<string, unknown>;
+  const ppoCanonical = (project.providerOverrides ?? {}) as Record<string, unknown>;
+  const gpo = deepMergeRecordValues(gpoAlias, gpoCanonical);
+  const ppo = deepMergeRecordValues(ppoAlias, ppoCanonical);
+  if (Object.keys(gpo).length || Object.keys(ppo).length) {
+    merged.providers = deepMergeRecordValues(gpo, ppo);
   }
 
   const result = SettingsSchema.safeParse(merged);
@@ -75,6 +117,14 @@ export function loadSettings(): TinoSettings {
 
 export function saveSettings(settings: SettingsData): boolean {
   try {
+    const normalizedSettings: SettingsData = { ...settings };
+    const providerOverrides = (normalizedSettings.providerOverrides ?? {}) as Record<string, unknown>;
+    const providers = (normalizedSettings.providers ?? {}) as Record<string, unknown>;
+    if (Object.keys(providerOverrides).length || Object.keys(providers).length) {
+      normalizedSettings.providers = deepMergeRecordValues(providerOverrides, providers) as Record<string, ProviderOverrideConfig>;
+      delete normalizedSettings.providerOverrides;
+    }
+
     const target = existsSync(PROJECT_SETTINGS_FILE)
       ? PROJECT_SETTINGS_FILE
       : GLOBAL_SETTINGS_FILE;
@@ -82,7 +132,7 @@ export function saveSettings(settings: SettingsData): boolean {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(target, JSON.stringify(settings, null, 2));
+    writeFileSync(target, JSON.stringify(normalizedSettings, null, 2));
     return true;
   } catch {
     return false;
