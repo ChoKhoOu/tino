@@ -2,6 +2,22 @@ import { tool, type ToolSet } from 'ai';
 import type { ToolPlugin, ToolContext } from '@/domain/index.js';
 
 const MAX_TOOLS = 20;
+const BUNDLED_TOOL_LOADERS = [
+  () => import('../tools/consolidated/market-data.tool.js'),
+  () => import('../tools/consolidated/fundamentals.tool.js'),
+  () => import('../tools/consolidated/filings.tool.js'),
+  () => import('../tools/consolidated/macro-data.tool.js'),
+  () => import('../tools/consolidated/quant-compute.tool.js'),
+  () => import('../tools/consolidated/trading-sim.tool.js'),
+  () => import('../tools/consolidated/trading-live.tool.js'),
+  () => import('../tools/consolidated/strategy-lab.tool.js'),
+  () => import('../tools/consolidated/web-search.tool.js'),
+  () => import('../tools/consolidated/browser.tool.js'),
+  () => import('../tools/consolidated/skill.tool.js'),
+  () => import('../tools/consolidated/portfolio.tool.js'),
+  () => import('../tools/consolidated/chart.tool.js'),
+  () => import('../tools/consolidated/streaming.tool.js'),
+] as const;
 
 export class ToolRegistry {
   private plugins = new Map<string, ToolPlugin>();
@@ -58,8 +74,20 @@ export class ToolRegistry {
   }
 
   async discoverTools(dir: string): Promise<ToolPlugin[]> {
-    const glob = new Bun.Glob('**/*.tool.ts');
     const discovered: ToolPlugin[] = [];
+
+    for (const load of BUNDLED_TOOL_LOADERS) {
+      const mod = await load();
+      const plugin: ToolPlugin | undefined = mod.default;
+      if (plugin?.id && typeof plugin.execute === 'function') {
+        discovered.push(plugin);
+      }
+    }
+    if (discovered.length > 0) {
+      return discovered;
+    }
+
+    const glob = new Bun.Glob('**/*.tool.ts');
 
     for await (const path of glob.scan({ cwd: dir, absolute: true })) {
       const mod = await import(path);

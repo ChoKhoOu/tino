@@ -23,7 +23,7 @@ export function resolveAppDir(): string {
 export function resolveSrcDir(): string {
   const metaDir = import.meta.dirname;
 
-  if (!metaDir || metaDir.startsWith('/$bunfs/')) {
+  if (!metaDir) {
     return dirname(process.execPath);
   }
 
