@@ -1,0 +1,92 @@
+syntax = "proto3";
+package tino.portfolio.v1;
+
+service PortfolioService {
+  rpc RecordTrade(RecordTradeRequest) returns (RecordTradeResponse);
+  rpc GetPositions(GetPositionsRequest) returns (GetPositionsResponse);
+  rpc GetTrades(GetTradesRequest) returns (GetTradesResponse);
+  rpc GetPnLHistory(GetPnLHistoryRequest) returns (GetPnLHistoryResponse);
+  rpc GetSummary(GetSummaryRequest) returns (GetSummaryResponse);
+}
+
+message RecordTradeRequest {
+  string id = 1;
+  string instrument = 2;
+  string side = 3;
+  double quantity = 4;
+  double price = 5;
+  double fee = 6;
+  string venue = 7;
+  string timestamp = 8;
+  string order_id = 9;
+  string strategy = 10;
+}
+message RecordTradeResponse {
+  bool success = 1;
+  string trade_id = 2;
+}
+
+message GetPositionsRequest {
+  string instrument = 1;
+}
+message GetPositionsResponse {
+  repeated PortfolioPosition positions = 1;
+}
+
+message PortfolioPosition {
+  string instrument = 1;
+  double quantity = 2;
+  double avg_price = 3;
+  double unrealized_pnl = 4;
+  double realized_pnl = 5;
+  string updated_at = 6;
+}
+
+message GetTradesRequest {
+  string instrument = 1;
+  string start_date = 2;
+  string end_date = 3;
+  int32 limit = 4;
+}
+message GetTradesResponse {
+  repeated Trade trades = 1;
+}
+
+message Trade {
+  string id = 1;
+  string instrument = 2;
+  string side = 3;
+  double quantity = 4;
+  double price = 5;
+  double fee = 6;
+  string venue = 7;
+  string timestamp = 8;
+  string order_id = 9;
+  string strategy = 10;
+}
+
+message GetPnLHistoryRequest {
+  string instrument = 1;
+  string start_date = 2;
+  string end_date = 3;
+}
+message GetPnLHistoryResponse {
+  repeated DailyPnL entries = 1;
+}
+
+message DailyPnL {
+  string date = 1;
+  string instrument = 2;
+  double total_pnl = 3;
+  double realized_pnl = 4;
+  double unrealized_pnl = 5;
+}
+
+message GetSummaryRequest {}
+message GetSummaryResponse {
+  int32 total_trades = 1;
+  int32 open_positions = 2;
+  double total_realized_pnl = 3;
+  double total_unrealized_pnl = 4;
+  double total_fees = 5;
+}
