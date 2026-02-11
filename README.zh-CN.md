@@ -65,20 +65,27 @@ git clone https://github.com/penkzhou/tino.git
 cd tino
 bun install
 
-# 初始化交易项目
-bun run start init my-project
-cd my-project
-
 # 启动 Tino（确保 OPENAI_API_KEY 已设置）
 export OPENAI_API_KEY="sk-..."
 tino
 ```
 
+> **注意**：Tino 会在首次启动时自动在 `~/.tino/settings.json` 创建全局配置文件。
+
 ### 一行命令（全局安装后）
 
 ```bash
-tino init my-project && cd my-project && tino
+tino
 ```
+
+## 设置
+
+Tino 使用两级配置系统：
+
+1. **全局设置** (`~/.tino/settings.json`)：首次启动时自动创建。包含默认提供商 (`openai`) 和其他用户级偏好。
+2. **项目设置** (`.tino/settings.json`)：可选。在项目目录中创建，用于覆盖特定项目的全局设置。
+
+项目设置的优先级高于全局设置。
 
 ## 架构
 
@@ -232,7 +239,7 @@ tino/
 │   ├── skills/             # 8 个技能工作流 (Markdown 驱动)
 │   ├── components/         # Ink TUI 组件
 │   ├── hooks/              # React Hooks
-│   ├── commands/           # 斜杠命令 + init
+│   ├── commands/           # 斜杠命令
 │   └── config/             # 设置、环境变量、常量
 ├── python/                 # Python 守护进程
 │   └── tino_daemon/        # NautilusTrader gRPC 包装器

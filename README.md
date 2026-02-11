@@ -65,20 +65,21 @@ git clone https://github.com/penkzhou/tino.git
 cd tino
 bun install
 
-# Initialize a trading project
-bun run start init my-project
-cd my-project
-
 # Start Tino (make sure OPENAI_API_KEY is set)
 export OPENAI_API_KEY="sk-..."
 tino
 ```
 
-### One-Liner (if Tino is installed globally)
+> **Note**: Tino automatically creates a global settings file at `~/.tino/settings.json` on first launch.
 
-```bash
-tino init my-project && cd my-project && tino
-```
+## Settings
+
+Tino uses a two-tier settings system:
+
+1. **Global Settings** (`~/.tino/settings.json`): Auto-created on first launch. Contains default provider (`openai`) and other user-wide preferences.
+2. **Project Settings** (`.tino/settings.json`): Optional. Created in your project directory to override global settings for specific projects.
+
+Project settings take precedence over global settings.
 
 ## Architecture
 
@@ -232,7 +233,7 @@ tino/
 │   ├── skills/             # 8 skill workflows (markdown-driven)
 │   ├── components/         # Ink TUI components
 │   ├── hooks/              # React hooks
-│   ├── commands/           # Slash commands + init
+│   ├── commands/           # Slash commands
 │   └── config/             # Settings, env, constants
 ├── python/                 # Python daemon
 │   └── tino_daemon/        # NautilusTrader gRPC wrapper
