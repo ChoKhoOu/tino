@@ -17,6 +17,7 @@ from grpc_reflection.v1alpha import reflection
 
 from tino_daemon.config import DaemonConfig
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
+from tino_daemon.node_registry import NodeRegistry
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
@@ -75,7 +76,8 @@ async def serve(config: DaemonConfig) -> None:
     backtest_pb2_grpc.add_BacktestServiceServicer_to_server(backtest_servicer, server)
 
     # --- TradingService (proto-generated servicer base) ---
-    trading_servicer = TradingServiceServicer()
+    node_registry = NodeRegistry()
+    trading_servicer = TradingServiceServicer(registry=node_registry)
     trading_pb2_grpc.add_TradingServiceServicer_to_server(trading_servicer, server)
 
     # --- Reflection (enables grpcurl discovery) ---

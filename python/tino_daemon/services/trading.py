@@ -12,18 +12,25 @@ from typing import Any, AsyncIterator
 import grpc
 
 from tino_daemon.nautilus.node import TradingNodeWrapper
+from tino_daemon.node_registry import NodeRegistry
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
 
 
 class TradingServiceServicer(trading_pb2_grpc.TradingServiceServicer):
-    """Implements TradingService RPCs with a TradingNode backend."""
-
-    def __init__(self, node: Any | None = None) -> None:
+    def __init__(
+        self,
+        node: Any | None = None,
+        registry: NodeRegistry | None = None,
+    ) -> None:
         self._node = node
+        self._registry = registry
 
     def _get_node(self) -> TradingNodeWrapper:
         if self._node is None:
-            self._node = TradingNodeWrapper()
+            if self._registry is not None:
+                self._node = self._registry.get_node()
+            else:
+                self._node = TradingNodeWrapper()
         return self._node
 
     async def StartTrading(
