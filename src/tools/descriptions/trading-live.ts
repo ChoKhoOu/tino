@@ -25,6 +25,17 @@ Submit live trading orders and activate the emergency kill switch. ALL actions i
 | submit_order | Submit a live order | order, confirmed=true |
 | kill_switch | Cancel all orders, flatten all positions | confirmed=true |
 
+## Venue Parameter
+
+| Venue | Description |
+|-------|-------------|
+| SIM | Default simulated venue (NautilusTrader internal matching engine) |
+| BINANCE | Binance live exchange for real trading |
+
+- Default venue is SIM when not specified (backward compatible)
+- BINANCE venue requires BINANCE_API_KEY and BINANCE_API_SECRET environment variables
+- BINANCE venue connects to Binance live exchange — REAL MONEY at risk
+
 ## Safety — CRITICAL
 
 - **ALL actions require confirmed=true** — the tool will refuse to execute without it

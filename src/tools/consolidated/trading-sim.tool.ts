@@ -20,6 +20,7 @@ const schema = z.object({
   instrument: z.string().optional().describe('Trading instrument symbol'),
   params: z.record(z.string(), z.unknown()).optional().describe('Additional parameters'),
   account: z.string().optional().describe('Trading account identifier'),
+  venue: z.enum(['SIM', 'BINANCE']).default('SIM').describe('Trading venue'),
 });
 
 type Input = z.infer<typeof schema>;
@@ -90,7 +91,7 @@ async function handlePaperTrade(input: Input, ctx: ToolContext): Promise<string>
   for await (const event of client.startTrading({
     strategyPath: input.strategy_file ?? '',
     mode: 'paper',
-    venue: 'SIM',
+    venue: input.venue,
     instruments: input.instrument ? [input.instrument] : [],
     configJson: JSON.stringify(input.params ?? {}),
   })) {

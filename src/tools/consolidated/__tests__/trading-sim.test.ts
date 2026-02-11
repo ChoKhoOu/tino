@@ -193,6 +193,110 @@ describe('trading_sim consolidated tool', () => {
       expect(parsed.data.status).toBe('completed');
       expect(parsed.data.mode).toBe('paper');
     });
+
+    test('passes venue=BINANCE to gRPC client', async () => {
+      let capturedParams: Record<string, unknown> = {};
+      const mockTradingClient = {
+        startTrading: (params: Record<string, unknown>) => {
+          capturedParams = params;
+          return asyncGen([
+            {
+              type: StartTradingResponse_EventType.STARTED,
+              message: 'Started',
+              dataJson: '',
+              timestamp: '2024-01-01T00:00:00Z',
+            },
+            {
+              type: StartTradingResponse_EventType.STOPPED,
+              message: 'Stopped',
+              dataJson: '',
+              timestamp: '2024-01-01T01:00:00Z',
+            },
+          ]);
+        },
+      } as unknown as TradingClient;
+
+      __setClients({ tradingClient: mockTradingClient });
+
+      const mod = await import('../../consolidated/trading-sim.tool.js');
+      await mod.default.execute(
+        {
+          action: 'paper_trade',
+          strategy_file: 'test_strategy.py',
+          instrument: 'AAPL',
+          venue: 'BINANCE',
+        },
+        makeCtx(),
+      );
+
+      expect(capturedParams.venue).toBe('BINANCE');
+    });
+
+    test('defaults venue to SIM when not specified', async () => {
+      let capturedParams: Record<string, unknown> = {};
+      const mockTradingClient = {
+        startTrading: (params: Record<string, unknown>) => {
+          capturedParams = params;
+          return asyncGen([
+            {
+              type: StartTradingResponse_EventType.STARTED,
+              message: 'Started',
+              dataJson: '',
+              timestamp: '2024-01-01T00:00:00Z',
+            },
+            {
+              type: StartTradingResponse_EventType.STOPPED,
+              message: 'Stopped',
+              dataJson: '',
+              timestamp: '2024-01-01T01:00:00Z',
+            },
+          ]);
+        },
+      } as unknown as TradingClient;
+
+      __setClients({ tradingClient: mockTradingClient });
+
+      const mod = await import('../../consolidated/trading-sim.tool.js');
+      await mod.default.execute(
+        {
+          action: 'paper_trade',
+          strategy_file: 'test_strategy.py',
+          instrument: 'AAPL',
+        },
+        makeCtx(),
+      );
+
+      expect(capturedParams.venue).toBe('SIM');
+    });
+
+    test('venue parameter is optional (backward compat)', async () => {
+      const mockTradingClient = {
+        startTrading: () =>
+          asyncGen([
+            {
+              type: StartTradingResponse_EventType.STOPPED,
+              message: 'Stopped',
+              dataJson: '',
+              timestamp: '2024-01-01T01:00:00Z',
+            },
+          ]),
+      } as unknown as TradingClient;
+
+      __setClients({ tradingClient: mockTradingClient });
+
+      const mod = await import('../../consolidated/trading-sim.tool.js');
+      const result = await mod.default.execute(
+        {
+          action: 'paper_trade',
+          strategy_file: 'test_strategy.py',
+          instrument: 'AAPL',
+        },
+        makeCtx(),
+      );
+
+      const parsed = JSON.parse(result);
+      expect(parsed.data.status).toBe('completed');
+    });
   });
 
   describe('positions action', () => {

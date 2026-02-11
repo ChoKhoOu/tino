@@ -11,6 +11,7 @@ const schema = z.object({
   ]).describe('The live trading action to perform'),
   order: z.record(z.string(), z.unknown()).optional().describe('Order details (instrument, side, type, quantity, price)'),
   confirmed: z.boolean().describe('REQUIRED: Must be true to execute live orders. This uses REAL MONEY.'),
+  venue: z.enum(['SIM', 'BINANCE']).default('SIM').describe('Trading venue'),
 });
 
 type Input = z.infer<typeof schema>;
@@ -43,6 +44,7 @@ async function handleSubmitOrder(input: Input, ctx: ToolContext): Promise<string
       status: 'submitted',
       orderId: response.orderId,
       success: response.success,
+      venue: input.venue,
     },
   });
 }

@@ -29,6 +29,17 @@ Run backtests and paper trading simulations using NautilusTrader via the Tino da
 | paper_trade | Start simulated live trading | strategy_file, instrument |
 | positions | View current simulated positions | none |
 
+## Venue Parameter
+
+| Venue | Description |
+|-------|-------------|
+| SIM | Default simulated venue (NautilusTrader internal matching engine) |
+| BINANCE | Binance testnet for paper trading, Binance live for live trading |
+
+- Default venue is SIM when not specified (backward compatible)
+- BINANCE venue requires BINANCE_API_KEY and BINANCE_API_SECRET environment variables
+- BINANCE paper trading uses Binance testnet by default
+
 ## Safety
 
 - Paper trading is the default — always prefer this over live trading
