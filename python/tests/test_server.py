@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import json
-
 import grpc
 import pytest
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 
+from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
+
 
 @pytest.mark.asyncio
 async def test_health_check_serving(daemon_server):
-    """Health check should return SERVING."""
     server, port = daemon_server
     async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
         stub = health_pb2_grpc.HealthStub(channel)
@@ -21,45 +20,31 @@ async def test_health_check_serving(daemon_server):
 
 @pytest.mark.asyncio
 async def test_get_system_info(daemon_server):
-    """GetSystemInfo should return valid JSON with expected fields."""
     server, port = daemon_server
     async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
-        resp = await channel.unary_unary(
-            "/tino.daemon.v1.DaemonService/GetSystemInfo",
-            request_serializer=None,
-            response_deserializer=None,
-        )(b"")
+        stub = daemon_pb2_grpc.DaemonServiceStub(channel)
+        resp = await stub.GetSystemInfo(daemon_pb2.GetSystemInfoRequest())
 
-        info = json.loads(resp)
-        assert "python_version" in info
-        assert "nautilus_trader_version" in info
-        assert "memory_total_mb" in info
-        assert "uptime_seconds" in info
-        assert "pid" in info
-        assert info["uptime_seconds"] >= 0
+        assert resp.python_version != ""
+        assert resp.nautilus_version != ""
+        assert resp.memory_usage_bytes > 0
+        assert float(resp.uptime) >= 0
 
 
 @pytest.mark.asyncio
 async def test_shutdown_rpc(daemon_server):
-    """Shutdown RPC should return success status."""
     server, port = daemon_server
     async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
-        resp = await channel.unary_unary(
-            "/tino.daemon.v1.DaemonService/Shutdown",
-            request_serializer=None,
-            response_deserializer=None,
-        )(b"")
+        stub = daemon_pb2_grpc.DaemonServiceStub(channel)
+        resp = await stub.Shutdown(daemon_pb2.ShutdownRequest())
 
-        result = json.loads(resp)
-        assert result["status"] == "shutting_down"
+        assert resp.success is True
 
 
 @pytest.mark.asyncio
 async def test_unimplemented_service_stub(daemon_server):
-    """Calling an unimplemented service should return UNIMPLEMENTED or UNAVAILABLE."""
     server, port = daemon_server
 
-    # The backtest stub isn't registered in the test fixture, so this should fail
     async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
         try:
             await channel.unary_unary(
@@ -69,7 +54,6 @@ async def test_unimplemented_service_stub(daemon_server):
             )(b"")
             assert False, "Should have raised"
         except grpc.aio.AioRpcError as exc:
-            # UNIMPLEMENTED if stub is registered, UNIMPLEMENTED if not
             assert exc.code() in (
                 grpc.StatusCode.UNIMPLEMENTED,
                 grpc.StatusCode.UNAVAILABLE,

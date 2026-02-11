@@ -14,6 +14,7 @@ from grpc_reflection.v1alpha import reflection
 
 from tino_daemon.persistence.portfolio_db import PortfolioDB
 from tino_daemon.proto.tino.chart.v1 import chart_pb2, chart_pb2_grpc
+from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
 from tino_daemon.proto.tino.portfolio.v1 import portfolio_pb2, portfolio_pb2_grpc
 from tino_daemon.services.chart import ChartServiceServicer
 from tino_daemon.services.daemon import DaemonServicer
@@ -34,7 +35,7 @@ async def portfolio_server(
     await health_servicer.set("", SERVING_STATUS)
 
     daemon_svc = DaemonServicer(shutdown_event=shutdown_event)
-    daemon_svc.register(server)
+    daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_svc, server)
 
     db = PortfolioDB(db_path=str(tmp_path / "portfolio.db"))
     portfolio_svc = PortfolioServiceServicer(db=db)
@@ -45,7 +46,7 @@ async def portfolio_server(
 
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
-        "tino.daemon.v1.DaemonService",
+        daemon_pb2.DESCRIPTOR.services_by_name["DaemonService"].full_name,
         portfolio_pb2.DESCRIPTOR.services_by_name["PortfolioService"].full_name,
         chart_pb2.DESCRIPTOR.services_by_name["ChartService"].full_name,
         reflection.SERVICE_NAME,

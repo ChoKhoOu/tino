@@ -21,6 +21,7 @@ from tino_daemon.node_registry import NodeRegistry
 from tino_daemon.persistence.portfolio_db import PortfolioDB
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
 from tino_daemon.proto.tino.chart.v1 import chart_pb2, chart_pb2_grpc
+from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.proto.tino.portfolio.v1 import portfolio_pb2, portfolio_pb2_grpc
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
@@ -67,9 +68,9 @@ async def serve(config: DaemonConfig) -> None:
         health_pb2.HealthCheckResponse.SERVING,
     )
 
-    # --- DaemonService (hand-rolled, no proto codegen needed) ---
+    # --- DaemonService (proto-generated servicer base) ---
     daemon_servicer = DaemonServicer(shutdown_event=shutdown_event)
-    daemon_servicer.register(server)
+    daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_servicer, server)
 
     # --- DataService (proto-generated servicer base) ---
     catalog = DataCatalogWrapper()
@@ -100,7 +101,7 @@ async def serve(config: DaemonConfig) -> None:
     # --- Reflection (enables grpcurl discovery) ---
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
-        "tino.daemon.v1.DaemonService",
+        daemon_pb2.DESCRIPTOR.services_by_name["DaemonService"].full_name,
         data_pb2.DESCRIPTOR.services_by_name["DataService"].full_name,
         backtest_pb2.DESCRIPTOR.services_by_name["BacktestService"].full_name,
         trading_pb2.DESCRIPTOR.services_by_name["TradingService"].full_name,

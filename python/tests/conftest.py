@@ -32,25 +32,23 @@ async def daemon_server(
 ) -> AsyncGenerator[tuple[grpc.aio.Server, int], None]:
     """Start a daemon gRPC server on a random port, yield (server, port), then stop."""
     from tino_daemon.services.daemon import DaemonServicer
+    from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
     from grpc_health.v1 import health, health_pb2, health_pb2_grpc
     from grpc_reflection.v1alpha import reflection
 
     shutdown_event = asyncio.Event()
     server = grpc.aio.server()
 
-    # Health
     health_servicer = health.aio.HealthServicer()
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
     await health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
 
-    # Daemon
     daemon_svc = DaemonServicer(shutdown_event=shutdown_event)
-    daemon_svc.register(server)
+    daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_svc, server)
 
-    # Reflection
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
-        "tino.daemon.v1.DaemonService",
+        daemon_pb2.DESCRIPTOR.services_by_name["DaemonService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)

@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from pathlib import Path
 from collections.abc import AsyncGenerator
 
@@ -16,6 +15,7 @@ from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
+from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
 from tino_daemon.services.backtest import BacktestServiceServicer
@@ -72,7 +72,7 @@ async def integration_server(
     await health_servicer.set("", SERVING_STATUS)
 
     daemon_service = DaemonServicer(shutdown_event=shutdown_event)
-    daemon_service.register(server)
+    daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_service, server)
 
     catalog = DataCatalogWrapper(catalog_path=str(tmp_path / "catalog"))
     data_pb2_grpc.add_DataServiceServicer_to_server(
@@ -181,16 +181,13 @@ async def test_all_services_registered_on_server(integration_server):
         trading_resp = await trading_stub.GetPositions(
             trading_pb2.GetPositionsRequest()
         )
-        daemon_resp = await channel.unary_unary(
-            "/tino.daemon.v1.DaemonService/GetSystemInfo",
-            request_serializer=None,
-            response_deserializer=None,
-        )(b"")
+        daemon_stub = daemon_pb2_grpc.DaemonServiceStub(channel)
+        daemon_resp = await daemon_stub.GetSystemInfo(daemon_pb2.GetSystemInfoRequest())
 
         assert len(data_resp.entries) >= 0
         assert len(backtest_resp.results) >= 0
         assert len(trading_resp.positions) >= 0
-        assert "python_version" in json.loads(daemon_resp)
+        assert daemon_resp.python_version != ""
 
 
 @pytest.mark.asyncio
