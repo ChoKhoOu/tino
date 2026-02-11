@@ -9,3 +9,4 @@ export { STRATEGY_LAB_DESCRIPTION } from './strategy-lab.js';
 export { WEB_SEARCH_DESCRIPTION } from './web-search.js';
 export { BROWSER_DESCRIPTION } from './browser.js';
 export { PORTFOLIO_DESCRIPTION } from './portfolio.js';
+export { CHART_DESCRIPTION } from './chart.js';
