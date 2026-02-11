@@ -1,0 +1,51 @@
+syntax = "proto3";
+package tino.chart.v1;
+
+service ChartService {
+  rpc RenderCandlestick(RenderCandlestickRequest) returns (RenderCandlestickResponse);
+  rpc RenderLineChart(RenderLineChartRequest) returns (RenderLineChartResponse);
+  rpc RenderSubplot(RenderSubplotRequest) returns (RenderSubplotResponse);
+}
+
+message RenderCandlestickRequest {
+  repeated string dates = 1;
+  repeated double open = 2;
+  repeated double close = 3;
+  repeated double high = 4;
+  repeated double low = 5;
+  int32 width = 6;
+  int32 height = 7;
+  string title = 8;
+}
+
+message RenderCandlestickResponse {
+  string ansi_chart = 1;
+}
+
+message RenderLineChartRequest {
+  repeated string labels = 1;
+  repeated double values = 2;
+  int32 width = 3;
+  int32 height = 4;
+  string title = 5;
+  string color = 6;
+}
+
+message RenderLineChartResponse {
+  string ansi_chart = 1;
+}
+
+message RenderSubplotRequest {
+  repeated string dates = 1;
+  repeated double open = 2;
+  repeated double close = 3;
+  repeated double high = 4;
+  repeated double low = 5;
+  repeated double volume = 6;
+  int32 width = 7;
+  int32 height = 8;
+}
+
+message RenderSubplotResponse {
+  string ansi_chart = 1;
+}
