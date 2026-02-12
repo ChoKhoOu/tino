@@ -73,6 +73,8 @@ function runReducer(state: RunState, action: RunAction): RunState {
           };
         case 'answer_chunk':
           return { ...state, events, answer: state.answer + event.content };
+        case 'answer_delta':
+          return { ...state, events, answer: state.answer + event.delta };
         case 'done': {
           const done = event as DoneEvent;
           return {

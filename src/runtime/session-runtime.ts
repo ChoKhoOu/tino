@@ -56,9 +56,9 @@ function pruneContext(messages: RuntimeMessages): { clearedCount: number; keptCo
   const payload = messages.map((m) => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('');
   if (estimateTokens(payload) <= CONTEXT_THRESHOLD) return null;
   const keepFromEnd = KEEP_TOOL_USES * 2;
-  if (messages.length <= 2 + keepFromEnd) return null;
+  if (messages.length <= 1 + keepFromEnd) return null;
   const before = messages.length;
-  const head = messages.slice(0, 2);
+  const head = messages.slice(0, 1);
   const tail = messages.slice(-keepFromEnd);
   messages.length = 0;
   messages.push(...head, ...tail);
@@ -67,7 +67,15 @@ function pruneContext(messages: RuntimeMessages): { clearedCount: number; keptCo
 
 export class SessionRuntime {
   private readonly config: SessionRuntimeConfig;
+  private messages: RuntimeMessages = [];
+  private initialized = false;
+
   constructor(config: SessionRuntimeConfig) { this.config = config; }
+
+  clearHistory(): void {
+    this.messages = [];
+    this.initialized = false;
+  }
 
   async *startRun(input: string, signal?: AbortSignal): AsyncGenerator<RunEvent, RunResult> {
     const startTime = Date.now();
@@ -80,24 +88,29 @@ export class SessionRuntime {
 
     await this.config.hooks.run('SessionStart', { event: 'SessionStart' });
     const toolCtx: ToolContext = { signal: runtimeSignal, onProgress: () => {}, config: {} };
-    const messages: RuntimeMessages = [
-      { role: 'system', content: this.config.systemPrompt },
-      { role: 'user', content: input },
-    ];
+    if (!this.initialized) {
+      this.messages.push({ role: 'system', content: this.config.systemPrompt });
+      this.initialized = true;
+    }
+    this.messages.push({ role: 'user', content: input });
 
     for (let i = 0; i < maxIterations; i++) {
       iterations = i + 1;
       const result = streamText({
         model: this.config.broker.getModel('reason'),
-        messages,
+        messages: this.messages,
         tools: this.config.registry.getForModel(toolCtx),
         abortSignal: runtimeSignal,
       });
 
       const toolBatch: IterationToolCall[] = [];
       let visibleText = '';
+      const textDeltas: string[] = [];
       for await (const part of result.fullStream) {
-        if (part.type === 'text-delta') visibleText += part.text;
+        if (part.type === 'text-delta') {
+          visibleText += part.text;
+          textDeltas.push(part.text);
+        }
         if (part.type === 'tool-call') toolBatch.push({ toolCallId: part.toolCallId, toolName: part.toolName, args: (part.input ?? {}) as Record<string, unknown> });
       }
 
@@ -106,12 +119,17 @@ export class SessionRuntime {
 
       if (toolBatch.length === 0) {
         answer = visibleText;
+        if (answer.trim()) {
+          this.messages.push({ role: 'assistant', content: answer });
+        }
         yield { type: 'answer_start' };
-        if (answer) yield { type: 'answer_chunk', content: answer };
+        for (const delta of textDeltas) {
+          yield { type: 'answer_delta', delta };
+        }
         break;
       }
 
-      messages.push({
+      this.messages.push({
         role: 'assistant',
         content: toolBatch.map((call) => ({ type: 'tool-call' as const, toolCallId: call.toolCallId, toolName: call.toolName, input: call.args })),
       } as RuntimeMessages[number]);
@@ -121,7 +139,7 @@ export class SessionRuntime {
         if (decision === 'deny') {
           const denied = 'Error: Permission denied';
           yield { type: 'tool_error', toolId: call.toolName, error: denied };
-          messages.push(toToolMessage(call, denied));
+          this.messages.push(toToolMessage(call, denied));
           continue;
         }
 
@@ -134,7 +152,7 @@ export class SessionRuntime {
         if (pre.allow === false) {
           const blocked = pre.message ? `Error: ${pre.message}` : 'Error: Blocked by hook';
           yield { type: 'tool_error', toolId: call.toolName, error: blocked };
-          messages.push(toToolMessage(call, blocked));
+          this.messages.push(toToolMessage(call, blocked));
           continue;
         }
 
@@ -145,10 +163,10 @@ export class SessionRuntime {
 
         toolCalls.push({ toolId: call.toolName, args: call.args, result: toolResult });
         await this.config.hooks.run('PostToolUse', { event: 'PostToolUse', toolId: call.toolName, result: toolResult });
-        messages.push(toToolMessage(call, toolResult));
+        this.messages.push(toToolMessage(call, toolResult));
       }
 
-      const pruned = pruneContext(messages);
+      const pruned = pruneContext(this.messages);
       if (pruned) yield { type: 'context_cleared', ...pruned };
     }
 

@@ -67,6 +67,11 @@ export interface AnswerStartEvent {
   type: 'answer_start';
 }
 
+export interface AnswerDeltaEvent {
+  type: 'answer_delta';
+  delta: string;
+}
+
 export interface AnswerChunkEvent {
   type: 'answer_chunk';
   content: string;
@@ -91,6 +96,7 @@ export type RunEvent =
   | PermissionResponseEvent
   | ContextClearedEvent
   | AnswerStartEvent
+  | AnswerDeltaEvent
   | AnswerChunkEvent
   | DoneEvent;
 
