@@ -26,6 +26,7 @@
     "@bufbuild/protoc-gen-es": "^2.11.0",
     "@connectrpc/connect": "^2.1.1",
     "@connectrpc/connect-node": "^2.1.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "ai": "^6.0.78",
     "asciichart": "^1.5.25",
     "dotenv": "^17.2.3",
