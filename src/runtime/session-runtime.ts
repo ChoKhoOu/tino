@@ -69,12 +69,23 @@ export class SessionRuntime {
   private readonly config: SessionRuntimeConfig;
   private messages: RuntimeMessages = [];
   private initialized = false;
+  private permissionResolver: ((response: { allowed: boolean; alwaysAllow?: boolean }) => void) | null = null;
+  private alwaysAllowCache = new Map<string, boolean>();
 
   constructor(config: SessionRuntimeConfig) { this.config = config; }
 
   clearHistory(): void {
     this.messages = [];
     this.initialized = false;
+    this.alwaysAllowCache.clear();
+  }
+
+  respondToPermission(toolId: string, allowed: boolean, alwaysAllow?: boolean): void {
+    if (alwaysAllow && allowed) {
+      this.alwaysAllowCache.set(toolId, true);
+    }
+    this.permissionResolver?.({ allowed, alwaysAllow });
+    this.permissionResolver = null;
   }
 
   async *startRun(input: string, signal?: AbortSignal): AsyncGenerator<RunEvent, RunResult> {
@@ -144,8 +155,18 @@ export class SessionRuntime {
         }
 
         if (decision === 'ask') {
-          yield { type: 'permission_request', toolId: call.toolName, resource: '', rule: { tool: call.toolName, action: 'ask' } };
-          yield { type: 'permission_response', toolId: call.toolName, allowed: true };
+          if (!this.alwaysAllowCache.get(call.toolName)) {
+            yield { type: 'permission_request', toolId: call.toolName, resource: '', rule: { tool: call.toolName, action: 'ask' }, args: call.args };
+            const response = await new Promise<{ allowed: boolean; alwaysAllow?: boolean }>((resolve) => {
+              this.permissionResolver = resolve;
+            });
+            if (!response.allowed) {
+              const denied = 'Error: Permission denied by user';
+              yield { type: 'tool_error', toolId: call.toolName, error: denied };
+              this.messages.push(toToolMessage(call, denied));
+              continue;
+            }
+          }
         }
 
         const pre = await this.config.hooks.run('PreToolUse', { event: 'PreToolUse', toolId: call.toolName, args: call.args });

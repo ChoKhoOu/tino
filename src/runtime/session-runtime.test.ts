@@ -31,7 +31,7 @@ function makeRuntime(streamResults: MockResult[]) {
 
   const broker = new ModelBroker();
   const registry = new ToolRegistry();
-  const permissions = new PermissionEngine({ rules: [], defaultAction: 'ask' });
+  const permissions = new PermissionEngine({ rules: [{ tool: '*', action: 'allow' }], defaultAction: 'ask' });
   const hooks = new HookRunner([]);
 
   const runtime = new SessionRuntime({

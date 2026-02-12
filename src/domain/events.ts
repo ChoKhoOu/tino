@@ -49,6 +49,7 @@ export interface PermissionRequestEvent {
   toolId: string;
   resource: string;
   rule: PermissionRule;
+  args?: Record<string, unknown>;
 }
 
 export interface PermissionResponseEvent {

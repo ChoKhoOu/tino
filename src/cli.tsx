@@ -11,6 +11,7 @@ import { DaemonStatusBar } from './components/DaemonStatusBar.js';
 import { DebugPanel } from './components/DebugPanel.js';
 import { HistoryItemView, WorkingIndicator } from './components/index.js';
 import { ModelSelectionFlow } from './components/ModelSelectionFlow.js';
+import { PermissionPrompt } from './components/PermissionPrompt.js';
 import type { HistoryItem } from './components/index.js';
 import type { DoneEvent } from './domain/events.js';
 
@@ -26,7 +27,7 @@ import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hook
 export function CLI() {
   const { exit } = useApp();
   const { runtime, broker } = useRuntimeInit();
-  const { state: runState, startRun, cancel } = useSessionRunner(runtime);
+  const { state: runState, startRun, cancel, respondToPermission } = useSessionRunner(runtime);
   const { state: modelState, selectModel } = useModelSelector(broker);
 
   const {
@@ -138,7 +139,13 @@ export function CLI() {
       <Intro provider={modelState.currentProvider} model={modelState.currentModel} />
       {history.map((item) => (<HistoryItemView key={item.id} item={item} />))}
       {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
-      {isProcessing && <WorkingIndicator state={workingState} />}
+      {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}
+      {runState.status === 'permission_pending' && runState.pendingPermission && (
+        <PermissionPrompt
+          request={{ type: 'permission_request', ...runState.pendingPermission, rule: { tool: runState.pendingPermission.toolId, action: 'ask' } }}
+          onResponse={(allowed, alwaysAllow) => respondToPermission(runState.pendingPermission!.toolId, allowed, alwaysAllow)}
+        />
+      )}
       <Box marginTop={1}>
         <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} />
       </Box>

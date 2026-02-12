@@ -16,6 +16,7 @@ export type RunStatus = 'idle' | 'running' | 'permission_pending' | 'done';
 export interface PendingPermission {
   toolId: string;
   resource: string;
+  args?: Record<string, unknown>;
 }
 
 export interface RunState {
@@ -62,7 +63,7 @@ function runReducer(state: RunState, action: RunAction): RunState {
             ...state,
             events,
             status: 'permission_pending',
-            pendingPermission: { toolId: event.toolId, resource: event.resource },
+            pendingPermission: { toolId: event.toolId, resource: event.resource, args: event.args },
           };
         case 'permission_response':
           return {
@@ -87,8 +88,10 @@ function runReducer(state: RunState, action: RunAction): RunState {
             toolCalls: done.toolCalls,
           };
         }
-        default:
-          return { ...state, events };
+        default: {
+          const status = state.status === 'permission_pending' ? 'running' as const : state.status;
+          return { ...state, events, status, pendingPermission: status === 'running' ? undefined : state.pendingPermission };
+        }
       }
     }
 
@@ -114,7 +117,7 @@ export interface UseSessionRunnerResult {
   state: RunState;
   startRun: (input: string) => Promise<void>;
   cancel: () => void;
-  respondToPermission: (allowed: boolean) => void;
+  respondToPermission: (toolId: string, allowed: boolean, alwaysAllow?: boolean) => void;
   reset: () => void;
 }
 
@@ -160,10 +163,9 @@ export function useSessionRunner(
     dispatch({ type: 'CANCEL' });
   }, []);
 
-  const respondToPermission = useCallback((_allowed: boolean) => {
-    // For now, auto-allow. The generator already yields permission_response.
-    // Future: pass response back into the generator via a channel.
-  }, []);
+  const respondToPermission = useCallback((toolId: string, allowed: boolean, alwaysAllow?: boolean) => {
+    runtime.respondToPermission(toolId, allowed, alwaysAllow);
+  }, [runtime]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
