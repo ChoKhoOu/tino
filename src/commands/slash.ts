@@ -12,7 +12,19 @@ export type SlashAction =
   | 'clear'
   | 'skill'
   | 'help'
-  | 'exit';
+  | 'exit'
+  | 'compact'
+  | 'context'
+  | 'cost'
+  | 'resume'
+  | 'export'
+  | 'rename'
+  | 'rewind'
+  | 'status'
+  | 'permissions'
+  | 'mcp'
+  | 'config'
+  | 'todos';
 
 export interface SlashCommandResult {
   /** Whether the command was recognized and handled */
@@ -33,6 +45,18 @@ export const SLASH_COMMANDS: Record<string, string> = {
   '/skill': 'List or load a skill — /skill [name]',
   '/help': 'Show available commands',
   '/exit': 'Quit the application',
+  '/compact': 'Compact conversation context — /compact [focus]',
+  '/context': 'Show current context window usage',
+  '/cost': 'Show token usage and estimated cost',
+  '/resume': 'Resume a previous session — /resume [session]',
+  '/export': 'Export conversation to file — /export [filename]',
+  '/rename': 'Rename current session — /rename <name>',
+  '/rewind': 'Undo last assistant turn',
+  '/status': 'Show system status and version info',
+  '/permissions': 'Show tool permission settings',
+  '/mcp': 'Show MCP server connections',
+  '/config': 'Show current configuration',
+  '/todos': 'Show active todo items',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -97,6 +121,42 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
         handled: true,
         action: 'exit',
       };
+
+    case '/compact':
+      return { handled: true, action: 'compact', args };
+
+    case '/context':
+      return { handled: true, action: 'context' };
+
+    case '/cost':
+      return { handled: true, action: 'cost' };
+
+    case '/todos':
+      return { handled: true, action: 'todos' };
+
+    case '/resume':
+      return { handled: true, action: 'resume', args };
+
+    case '/export':
+      return { handled: true, action: 'export', args };
+
+    case '/rename':
+      return { handled: true, action: 'rename', args };
+
+    case '/status':
+      return { handled: true, action: 'status' };
+
+    case '/permissions':
+      return { handled: true, action: 'permissions' };
+
+    case '/mcp':
+      return { handled: true, action: 'mcp' };
+
+    case '/config':
+      return { handled: true, action: 'config' };
+
+    case '/rewind':
+      return { handled: true, action: 'rewind' };
 
     default:
       // Starts with / but not a recognized command
