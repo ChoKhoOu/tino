@@ -92,7 +92,13 @@ if [[ -d "$REPO_ROOT/python" ]]; then
     # Trim unnecessary files to reduce bundle size
     rm -rf "$DIST_DIR/python/runtime/include"
     rm -rf "$DIST_DIR/python/runtime/share"
+
+    # Pre-compile all .pyc bytecode to eliminate cold-start compilation penalty (~2-3s)
+    # Uses unchecked-hash since timestamps may shift during cp -R of relocatable runtime
+    echo "Pre-compiling Python bytecode..."
     find "$DIST_DIR/python/runtime" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    "$BUNDLED_PYTHON" -m compileall -q -j0 --invalidation-mode unchecked-hash \
+      "$DIST_DIR/python/runtime/lib" "$DIST_DIR/python/tino_daemon" 2>/dev/null || true
 
     RUNTIME_SIZE=$(du -sh "$DIST_DIR/python/runtime" | cut -f1)
     echo "Standalone Python runtime bundled (${RUNTIME_SIZE})"

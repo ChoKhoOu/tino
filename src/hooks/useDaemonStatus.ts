@@ -30,7 +30,7 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
 
     const scheduleCheck = () => {
       if (intervalId) clearInterval(intervalId);
-      const delay = statusRef.current === 'starting' ? 1000 : 5000;
+      const delay = statusRef.current === 'starting' ? 500 : 5000;
       intervalId = setInterval(checkStatus, delay);
     };
 

@@ -32,7 +32,13 @@ rm -f "$RUNTIME_DIR/lib/python3.12/EXTERNALLY-MANAGED"
 "$BUNDLED_PYTHON" -m pip install "$PYTHON_DIR" --no-cache-dir
 
 rm -rf "$RUNTIME_DIR/include" "$RUNTIME_DIR/share"
+
+# Pre-compile all .pyc bytecode to eliminate cold-start compilation penalty
+# Uses unchecked-hash since timestamps may shift during cp -R of relocatable runtime
+echo "Pre-compiling Python bytecode..."
 find "$RUNTIME_DIR" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+"$BUNDLED_PYTHON" -m compileall -q -j0 --invalidation-mode unchecked-hash \
+  "$RUNTIME_DIR/lib" "$PYTHON_DIR/tino_daemon" 2>/dev/null || true
 
 RUNTIME_SIZE=$(du -sh "$RUNTIME_DIR" | cut -f1)
 echo ""
