@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import { parseSlashCommand } from '@/commands/slash.js';
+import { resolveFileReferences } from '@/utils/file-reference.js';
+import { isBashQuickCommand, executeBashQuick, formatBashOutput } from './bash-quick.js';
 import type { SessionRuntime } from '@/runtime/session-runtime.js';
 import type { HistoryItem } from '@/components/HistoryItemView.js';
 
@@ -37,6 +39,13 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
         return;
       }
 
+      if (isBashQuickCommand(query)) {
+        const command = query.slice(1).trim();
+        const result = await executeBashQuick(command);
+        addDirectResponse(query, formatBashOutput(command, result));
+        return;
+      }
+
       const slashResult = parseSlashCommand(query);
       if (slashResult !== null) {
         if (slashResult.action === 'model') { startFlow(); return; }
@@ -61,7 +70,9 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
 
       await saveMessage(query);
       resetNavigation();
-      await executeRun(query);
+      
+      const resolvedQuery = await resolveFileReferences(query);
+      await executeRun(resolvedQuery);
     },
     [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError],
   );
