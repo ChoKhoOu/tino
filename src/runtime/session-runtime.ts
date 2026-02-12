@@ -1,10 +1,13 @@
 import { streamText } from 'ai';
 import type { RunEvent, RunResult, TokenUsage, ToolCallRecord, ToolContext } from '@/domain/index.js';
+import { compactMessages } from '@/agent/compaction.js';
+import type { Session } from '@/session/session.js';
 import { ModelBroker } from './model-broker.js';
 import { ToolRegistry } from './tool-registry.js';
 import { executeToolCall } from './tool-executor.js';
 import { PermissionEngine } from './permission-engine.js';
 import { HookRunner } from './hook-runner.js';
+import { zeroUsage, estimateTokens, normalizeUsage, mergeUsage } from './token-usage-helpers.js';
 
 const CONTEXT_THRESHOLD = 100_000;
 const KEEP_TOOL_USES = 5;
@@ -22,26 +25,6 @@ interface SessionRuntimeConfig {
 type RuntimeMessages = NonNullable<Parameters<typeof streamText>[0]['messages']>;
 type IterationToolCall = { toolCallId: string; toolName: string; args: Record<string, unknown> };
 
-const zeroUsage = (): TokenUsage => ({ inputTokens: 0, outputTokens: 0, totalTokens: 0 });
-const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
-
-function normalizeUsage(usage: unknown): TokenUsage {
-  if (!usage || typeof usage !== 'object') return zeroUsage();
-  const u = usage as Record<string, unknown>;
-  const input = typeof u.inputTokens === 'number' ? u.inputTokens : (typeof u.promptTokens === 'number' ? u.promptTokens : 0);
-  const output = typeof u.outputTokens === 'number' ? u.outputTokens : (typeof u.completionTokens === 'number' ? u.completionTokens : 0);
-  const total = typeof u.totalTokens === 'number' ? u.totalTokens : input + output;
-  return { inputTokens: input, outputTokens: output, totalTokens: total };
-}
-
-function mergeUsage(total: TokenUsage, delta: TokenUsage): TokenUsage {
-  return {
-    inputTokens: total.inputTokens + delta.inputTokens,
-    outputTokens: total.outputTokens + delta.outputTokens,
-    totalTokens: total.totalTokens + delta.totalTokens,
-  };
-}
-
 function toToolMessage(call: IterationToolCall, output: string): RuntimeMessages[number] {
   const wrappedOutput = output.startsWith('Error:')
     ? { type: 'error-text' as const, value: output }
@@ -52,11 +35,19 @@ function toToolMessage(call: IterationToolCall, output: string): RuntimeMessages
   } as unknown as RuntimeMessages[number];
 }
 
-function pruneContext(messages: RuntimeMessages): { clearedCount: number; keptCount: number } | null {
+async function pruneContext(messages: RuntimeMessages, broker: ModelBroker): Promise<{ clearedCount: number; keptCount: number } | null> {
   const payload = messages.map((m) => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('');
   if (estimateTokens(payload) <= CONTEXT_THRESHOLD) return null;
   const keepFromEnd = KEEP_TOOL_USES * 2;
   if (messages.length <= 1 + keepFromEnd) return null;
+
+  try {
+    const compacted = await compactMessages(messages, broker);
+    if (compacted.removedCount > 0) {
+      return { clearedCount: compacted.removedCount, keptCount: messages.length };
+    }
+  } catch {}
+
   const before = messages.length;
   const head = messages.slice(0, 1);
   const tail = messages.slice(-keepFromEnd);
@@ -78,6 +69,22 @@ export class SessionRuntime {
     this.messages = [];
     this.initialized = false;
     this.alwaysAllowCache.clear();
+  }
+
+  loadFromSession(session: Session): { messageCount: number } {
+    this.messages = [];
+    this.initialized = false;
+    this.alwaysAllowCache.clear();
+
+    for (const msg of session.messages) {
+      this.messages.push({ role: msg.role, content: msg.content } as RuntimeMessages[number]);
+    }
+
+    if (this.messages.length > 0) {
+      this.initialized = true;
+    }
+
+    return { messageCount: this.messages.length };
   }
 
   respondToPermission(toolId: string, allowed: boolean, alwaysAllow?: boolean): void {
@@ -187,7 +194,7 @@ export class SessionRuntime {
         this.messages.push(toToolMessage(call, toolResult));
       }
 
-      const pruned = pruneContext(this.messages);
+      const pruned = await pruneContext(this.messages, this.config.broker);
       if (pruned) yield { type: 'context_cleared', ...pruned };
     }
 
