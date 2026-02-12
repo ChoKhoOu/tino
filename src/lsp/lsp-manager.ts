@@ -3,7 +3,7 @@ import { pathToFileURL } from 'url';
 import { LspClient } from './lsp-client.js';
 import { DEFAULT_LSP_SERVER_CONFIGS, detectLanguageId, getServerConfig, type LspServerConfig } from './server-configs.js';
 
-type ClientFactory = (config: LspServerConfig, rootUri: string | null) => Promise<LspClient | null>;
+type ClientFactory = (config: LspServerConfig) => Promise<LspClient | null>;
 
 export interface LspManagerOptions {
   rootDir?: string;
@@ -26,53 +26,74 @@ export class LspManager {
   }
 
   async getClient(languageId: string): Promise<LspClient | null> {
-    const existing = this.clients.get(languageId);
-    if (existing) return existing;
+    try {
+      const existing = this.clients.get(languageId);
+      if (existing) return existing;
 
-    const config = getServerConfig(languageId, this.configs);
-    if (!config) return null;
+      const config = getServerConfig(languageId, this.configs);
+      if (!config) return null;
 
-    const client = await this.clientFactory(config, this.rootUri);
-    if (!client) return null;
+      const client = await this.clientFactory(config);
+      if (!client) return null;
 
-    this.clients.set(languageId, client);
-    return client;
+      this.clients.set(languageId, client);
+      return client;
+    } catch {
+      return null;
+    }
   }
 
   async getClientForFile(filePath: string): Promise<LspClient | null> {
-    const languageId = detectLanguageId(filePath);
-    if (!languageId) return null;
-    return this.getClient(languageId);
+    try {
+      const languageId = detectLanguageId(filePath);
+      if (!languageId) return null;
+      return await this.getClient(languageId);
+    } catch {
+      return null;
+    }
   }
 
   async detectProjectLanguages(rootDir = this.rootDir): Promise<string[]> {
-    const detected = new Set<string>();
-    for (const config of this.configs) {
-      for (const pattern of config.rootPatterns) {
-        if (await fileExists(resolve(rootDir, pattern))) {
-          detected.add(config.languageId);
-          break;
+    try {
+      const detected = new Set<string>();
+      for (const config of this.configs) {
+        for (const pattern of config.rootPatterns) {
+          if (await fileExists(resolve(rootDir, pattern))) {
+            detected.add(config.languageId);
+            break;
+          }
         }
       }
+      return [...detected];
+    } catch {
+      return [];
     }
-    return [...detected];
   }
 
   async shutdown(): Promise<void> {
-    for (const client of this.clients.values()) {
-      await client.close();
+    try {
+      for (const client of this.clients.values()) {
+        try {
+          await client.close();
+        } catch {}
+      }
+    } finally {
+      this.clients.clear();
     }
-    this.clients.clear();
   }
 
   private async createDefaultClient(config: LspServerConfig): Promise<LspClient | null> {
-    const client = new LspClient(config, { rootUri: this.rootUri });
-    if (!(await client.connect())) return null;
-    if ((await client.initialize()) === null) {
-      await client.close();
+    try {
+      const client = new LspClient(config, { rootUri: this.rootUri });
+      if (!(await client.connect())) return null;
+      if ((await client.initialize()) === null) {
+        await client.close();
+        return null;
+      }
+      return client;
+    } catch {
       return null;
     }
-    return client;
   }
 }
 
