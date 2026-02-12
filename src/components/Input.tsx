@@ -3,8 +3,11 @@ import { Box, Text, useInput } from 'ink';
 
 import { colors } from '../theme.js';
 import { useTextBuffer } from '../hooks/useTextBuffer.js';
+import { shouldTreatAsMultiline } from '../hooks/useKeyboardShortcuts.js';
 import { cursorHandlers } from '../utils/input-key-handlers.js';
 import { CursorText } from './CursorText.js';
+import { FileAutocomplete } from './FileAutocomplete.js';
+import { useAutocomplete } from '../hooks/useAutocomplete.js';
 
 interface InputProps {
   onSubmit: (value: string) => void;
@@ -16,6 +19,8 @@ interface InputProps {
 
 export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps) {
   const { text, cursorPosition, actions } = useTextBuffer();
+  const { query, files, selectedIndex, setSelectedIndex } = useAutocomplete(text, cursorPosition);
+  const isAutocompleteActive = query !== null && files.length > 0;
 
   // Update input buffer when history navigation changes
   useEffect(() => {
@@ -31,6 +36,29 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
   // Handle all input
   useInput((input, key) => {
     const ctx = { text, cursorPosition };
+
+    if (isAutocompleteActive) {
+      if (key.upArrow) {
+        setSelectedIndex((prev) => Math.max(0, prev - 1));
+        return;
+      }
+      if (key.downArrow) {
+        setSelectedIndex((prev) => Math.min(files.length - 1, prev + 1));
+        return;
+      }
+      if (key.tab || key.return) {
+        const selectedFile = files[selectedIndex];
+        if (selectedFile && query !== null) {
+          const queryStart = cursorPosition - query.length;
+          const before = text.slice(0, queryStart);
+          const after = text.slice(cursorPosition);
+          const newText = before + selectedFile + after;
+          actions.setValue(newText);
+          actions.moveCursor(queryStart + selectedFile.length);
+        }
+        return;
+      }
+    }
 
     // Up arrow: move cursor up if not on first line, else history navigation
     if (key.upArrow) {
@@ -110,6 +138,10 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
 
     // Handle submit (plain Enter)
     if (key.return) {
+      if (shouldTreatAsMultiline(text)) {
+        actions.setValue(text.slice(0, -1) + '\n', true);
+        return;
+      }
       const val = text.trim();
       if (val) {
         onSubmit(val);
@@ -134,6 +166,7 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
       borderRight={false}
       width="100%"
     >
+      <FileAutocomplete files={files} selectedIndex={selectedIndex} />
       <Box paddingX={1}>
         <Text color={colors.primary} bold>
           {'> '}

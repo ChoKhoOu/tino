@@ -22,6 +22,7 @@ import { useDaemonStatus } from './hooks/useDaemonStatus.js';
 import { useModelSelectionFlow } from './hooks/useModelSelectionFlow.js';
 import { useRuntimeInit } from './hooks/useRuntimeInit.js';
 import { useCommandHandler } from './hooks/useCommandHandler.js';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hooks/useDisplayEvents.js';
 
 export function CLI() {
@@ -109,6 +110,11 @@ export function CLI() {
     (direction: 'up' | 'down') => { direction === 'up' ? navigateUp() : navigateDown(); },
     [navigateUp, navigateDown],
   );
+
+  useKeyboardShortcuts({
+    onClearScreen: () => { setHistory([]); setError(null); },
+    onExit: () => { console.log('\nGoodbye!'); exit(); },
+  });
 
   useInput((input, key) => {
     if (key.escape) {
