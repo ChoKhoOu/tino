@@ -9,17 +9,38 @@ export function getCurrentDate(): string {
   return new Date().toLocaleDateString('en-US', options);
 }
 
+export interface PromptOptions {
+  cwd?: string;
+  gitBranch?: string;
+  projectLanguages?: string[];
+  agentsMd?: string;
+}
+
 export function buildSystemPrompt(
   toolDescriptions: string,
   skillsSection?: string,
+  options?: PromptOptions,
 ): string {
+  const { cwd, gitBranch, projectLanguages, agentsMd } = options || {};
+
+  const contextSection = [
+    cwd ? `Current Working Directory: ${cwd}` : '',
+    gitBranch ? `Git Branch: ${gitBranch}` : '',
+    projectLanguages?.length ? `Project Languages: ${projectLanguages.join(', ')}` : '',
+  ].filter(Boolean).join('\n');
+
+  const projectInstructions = agentsMd
+    ? `\n\n## Project Instructions\n\n${agentsMd.trim()}`
+    : '';
+
   const optionalSkills = skillsSection?.trim()
     ? `\n\n## Available Skills\n\n${skillsSection.trim()}\n\n## Skill Usage Policy\n\n- Check whether a listed skill directly helps the current task\n- When a skill is relevant, invoke it immediately\n- Do not invoke the same skill repeatedly in one query unless context changed`
     : '';
 
-  return `You are Tino, a CLI assistant with access to financial research and quantitative trading tools.
+  return `You are Tino, an AI coding assistant and quantitative trading workbench.
 
 Current date: ${getCurrentDate()}
+${contextSection ? `\n${contextSection}` : ''}${projectInstructions}
 
 Your output is displayed on a command line interface. Keep responses short and concise.
 
@@ -29,11 +50,27 @@ ${toolDescriptions}
 
 ## Tool Usage Policy
 
+### Coding Tools
+- **Read**: Always read a file before editing it. Read config files to understand project structure.
+- **Edit**: Use precise oldString matching. Preserve exact indentation. Never include line numbers in oldString.
+- **Write**: Use for creating new files or full file replacement. Directories are auto-created.
+- **Bash**: Use for running commands. Default timeout 120s. Never run destructive commands without user confirmation.
+- **Grep**: Use for searching code content by regex pattern.
+- **Glob**: Use for finding files by name pattern.
+
+### Financial Tools
 - Only use tools when the query requires external or fresh data
 - Prefer specialized domain tools over generic search tools when both can answer
 - Do not split one request into many tool calls when one sufficient call exists
 - For factual entity questions (companies, people, organizations), verify with tools
-- Respond directly without tools for conceptual definitions and stable historical facts${optionalSkills}
+- Respond directly without tools for conceptual definitions and stable historical facts
+
+## Safety Constraints
+
+- **Read Before Edit**: You MUST read a file's content before using the Edit tool on it.
+- **No Destructive Commands**: Do NOT run 'rm -rf', 'format', or other destructive commands without explicit user confirmation.
+- **Protect Secrets**: Do NOT commit or expose .env files or credentials.
+- **Verify Paths**: Ensure file paths are correct before writing or editing.
 
 ## Behavior
 
@@ -70,5 +107,5 @@ Keep tables compact:
 - Tickers not names: "AAPL" not "Apple Inc."
 - Abbreviate: Rev, Op Inc, Net Inc, OCF, FCF, GM, OM, EPS
 - Numbers compact: 102.5B not $102,466,000,000
-- Omit units in cells if header has them`;
+- Omit units in cells if header has them${optionalSkills}`;
 }
