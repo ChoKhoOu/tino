@@ -28,9 +28,15 @@ const BUNDLED_TOOL_LOADERS = [
 
 export class ToolRegistry {
   private plugins = new Map<string, ToolPlugin>();
+  private dynamicIds = new Set<string>();
 
   register(plugin: ToolPlugin): void {
     this.plugins.set(plugin.id, plugin);
+  }
+
+  registerDynamic(plugin: ToolPlugin): void {
+    this.plugins.set(plugin.id, plugin);
+    this.dynamicIds.add(plugin.id);
   }
 
   registerAll(plugins: ToolPlugin[]): void {
@@ -63,8 +69,9 @@ export class ToolRegistry {
       }
     }
 
-    if (this.plugins.size > MAX_TOOLS) {
-      throw new Error(`Too many tools: ${this.plugins.size} > ${MAX_TOOLS}`);
+    const staticCount = this.plugins.size - this.dynamicIds.size;
+    if (staticCount > MAX_TOOLS) {
+      throw new Error(`Too many tools: ${staticCount} > ${MAX_TOOLS}`);
     }
   }
 
