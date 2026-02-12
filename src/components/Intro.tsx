@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { colors, dimensions } from '../theme.js';
+import { colors } from '../theme.js';
 import packageJson from '../../package.json';
 import { getProviderDisplayName } from '../utils/env.js';
 import { getModelDisplayName } from './ModelSelector.js';
@@ -11,38 +11,17 @@ interface IntroProps {
 }
 
 export function Intro({ provider, model }: IntroProps) {
-  const { introWidth } = dimensions;
-  const welcomeText = 'Welcome to Tino';
-  const versionText = ` v${packageJson.version}`;
-  const fullText = welcomeText + versionText;
-  const padding = Math.floor((introWidth - fullText.length - 2) / 2);
-
   return (
-    <Box flexDirection="column" marginTop={2}>
-      <Text color={colors.primary}>{'═'.repeat(introWidth)}</Text>
-      <Text color={colors.primary}>
-        ║{' '.repeat(padding)}
-        <Text bold>{welcomeText}</Text>
-        <Text color={colors.muted}>{versionText}</Text>
-        {' '.repeat(introWidth - fullText.length - padding - 2)}║
-      </Text>
-      <Text color={colors.primary}>{'═'.repeat(introWidth)}</Text>
-
-      <Box marginTop={1}>
-        <Text color={colors.primary} bold>
-          {`
-████████╗██╗███╗   ██╗ ██████╗ 
-╚══██╔══╝██║████╗  ██║██╔═══██╗
-   ██║   ██║██╔██╗ ██║██║   ██║
-   ██║   ██║██║╚██╗██║██║   ██║
-   ██║   ██║██║ ╚████║╚██████╔╝
-   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝`}
+    <Box flexDirection="column" marginTop={1} marginBottom={1}>
+      <Box flexDirection="column" borderStyle="round" borderColor={colors.mutedDark} paddingX={1}>
+        <Text>
+          <Text color={colors.primary} bold>✻ Tino</Text>
+          <Text color={colors.muted}> v{packageJson.version}</Text>
         </Text>
-      </Box>
-
-      <Box marginY={1} flexDirection="column">
-        <Text>Your AI-powered quantitative trading workbench.</Text>
-        <Text color={colors.muted}>Model: <Text color={colors.primary}>{getModelDisplayName(model)}.</Text> Type /model to change.</Text>
+        <Text color={colors.muted}>
+          {getProviderDisplayName(provider)} · <Text color={colors.primary}>{getModelDisplayName(model)}</Text>
+          <Text color={colors.muted}> · Type /model to change.</Text>
+        </Text>
       </Box>
     </Box>
   );
