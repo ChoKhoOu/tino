@@ -1,8 +1,10 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, afterAll } from 'bun:test';
 import { join } from 'path';
 import { mkdtemp, rm, writeFile, readFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import type { ToolContext } from '@/domain/index.js';
+import type { LspManager } from '@/lsp/lsp-manager.js';
+import { configureLspDiagnostics, resetLspDiagnostics } from './lsp-diagnostics-helper.js';
 import plugin from './edit.tool.js';
 
 const ctx: ToolContext = {
@@ -243,5 +245,84 @@ describe('edge cases', () => {
     expect(result.success).toBe(true);
     const content = await readFile(filePath, 'utf-8');
     expect(content).toBe('keep this\nkeep this too\n');
+  });
+});
+
+describe('LSP diagnostics integration', () => {
+  afterEach(() => {
+    resetLspDiagnostics();
+  });
+
+  afterAll(() => {
+    resetLspDiagnostics();
+  });
+
+  function mockManager(diagnosticsResponse: unknown): LspManager {
+    return {
+      getClientForFile: async () => ({
+        didOpen: async () => {},
+        didChange: async () => {},
+        request: async () => diagnosticsResponse,
+      }),
+    } as unknown as LspManager;
+  }
+
+  test('appends diagnostics to single-match edit result', async () => {
+    configureLspDiagnostics(mockManager({
+      items: [{
+        range: { start: { line: 0, character: 0 } },
+        message: "Type 'string' is not assignable to type 'number'",
+        severity: 1,
+      }],
+    }));
+
+    const filePath = join(tempDir, 'diag.ts');
+    await writeFile(filePath, 'const x: number = 1;');
+
+    const raw = await plugin.execute(
+      { filePath, oldString: 'const x: number = 1;', newString: 'const x: number = "bad";' },
+      ctx,
+    );
+
+    expect(raw).toContain('"success":true');
+    expect(raw).toContain('LSP Diagnostics (1 error)');
+    expect(raw).toContain("Type 'string' is not assignable to type 'number'");
+  });
+
+  test('appends diagnostics to replaceAll edit result', async () => {
+    configureLspDiagnostics(mockManager({
+      items: [{
+        range: { start: { line: 0, character: 0 } },
+        message: "Cannot find name 'y'",
+        severity: 1,
+      }],
+    }));
+
+    const filePath = join(tempDir, 'diag2.ts');
+    await writeFile(filePath, 'let x = 1;\nlet x = 2;\n');
+
+    const raw = await plugin.execute(
+      { filePath, oldString: 'let x', newString: 'let y', replaceAll: true },
+      ctx,
+    );
+
+    expect(raw).toContain('"success":true');
+    expect(raw).toContain('LSP Diagnostics');
+  });
+
+  test('returns clean result when no LSP errors', async () => {
+    configureLspDiagnostics(mockManager({ items: [] }));
+
+    const filePath = join(tempDir, 'clean.ts');
+    await writeFile(filePath, 'const a = 1;');
+
+    const raw = await plugin.execute(
+      { filePath, oldString: 'const a = 1;', newString: 'const a = 2;' },
+      ctx,
+    );
+
+    expect(raw).not.toContain('LSP Diagnostics');
+    const result = JSON.parse(raw);
+    expect(result.success).toBe(true);
   });
 });

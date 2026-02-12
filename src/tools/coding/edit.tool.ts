@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises';
 import { normalize } from 'path';
 import { definePlugin } from '@/domain/index.js';
 import { findMatches, applyReplacement, applyAllReplacements } from './edit-matcher.js';
+import { getPostEditDiagnostics } from './lsp-diagnostics-helper.js';
 
 const schema = z.object({
   filePath: z.string().describe('Absolute path to the file to edit'),
@@ -48,7 +49,8 @@ export default definePlugin({
         return JSON.stringify({ error: 'oldString not found in file content' });
       }
       await Bun.write(filePath, result);
-      return JSON.stringify({ success: true, filePath, replacements: count });
+      const diag = await getPostEditDiagnostics(filePath, result);
+      return JSON.stringify({ success: true, filePath, replacements: count }) + diag;
     }
 
     const matches = findMatches(content, oldString);
@@ -66,11 +68,12 @@ export default definePlugin({
     const updated = applyReplacement(content, matches[0], newString);
     await Bun.write(filePath, updated);
 
+    const diag = await getPostEditDiagnostics(filePath, updated);
     return JSON.stringify({
       success: true,
       filePath,
       matchLevel: matches[0].level,
       replacements: 1,
-    });
+    }) + diag;
   },
 });

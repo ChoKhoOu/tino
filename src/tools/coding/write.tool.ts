@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { dirname, resolve, normalize } from 'path';
 import { mkdir, readFile, lstat, realpath } from 'fs/promises';
 import { definePlugin } from '@/domain/index.js';
+import { getPostEditDiagnostics } from './lsp-diagnostics-helper.js';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -101,6 +102,7 @@ export default definePlugin({
       result.diff = computeDiff(existingContent, content);
     }
 
-    return JSON.stringify(result);
+    const diag = await getPostEditDiagnostics(filePath, content);
+    return JSON.stringify(result) + diag;
   },
 });
