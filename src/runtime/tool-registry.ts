@@ -1,7 +1,14 @@
 import { tool, type ToolSet } from 'ai';
 import type { ToolPlugin, ToolContext } from '@/domain/index.js';
 
-const MAX_TOOLS = 20;
+export const MAX_TOOLS = 50;
+
+export const TOOL_DIRS = [
+  'tools/consolidated',
+  'tools/coding',
+  'tools/agent',
+] as const;
+
 const BUNDLED_TOOL_LOADERS = [
   () => import('../tools/consolidated/market-data.tool.js'),
   () => import('../tools/consolidated/fundamentals.tool.js'),
@@ -73,27 +80,37 @@ export class ToolRegistry {
     return tools;
   }
 
-  async discoverTools(dir: string): Promise<ToolPlugin[]> {
+  async discoverTools(dir?: string): Promise<ToolPlugin[]> {
     const discovered: ToolPlugin[] = [];
+    const seen = new Set<string>();
 
     for (const load of BUNDLED_TOOL_LOADERS) {
       const mod = await load();
       const plugin: ToolPlugin | undefined = mod.default;
-      if (plugin?.id && typeof plugin.execute === 'function') {
+      if (plugin?.id && typeof plugin.execute === 'function' && !seen.has(plugin.id)) {
+        seen.add(plugin.id);
         discovered.push(plugin);
       }
     }
-    if (discovered.length > 0) {
-      return discovered;
-    }
+
+    const dirs = dir ? [dir] : TOOL_DIRS.map((d) => {
+      const base = import.meta.dirname;
+      return base ? `${base}/../${d}` : d;
+    });
 
     const glob = new Bun.Glob('**/*.tool.ts');
-
-    for await (const path of glob.scan({ cwd: dir, absolute: true })) {
-      const mod = await import(path);
-      const plugin: ToolPlugin | undefined = mod.default;
-      if (plugin?.id && typeof plugin.execute === 'function') {
-        discovered.push(plugin);
+    for (const scanDir of dirs) {
+      try {
+        for await (const path of glob.scan({ cwd: scanDir, absolute: true })) {
+          const mod = await import(path);
+          const plugin: ToolPlugin | undefined = mod.default;
+          if (plugin?.id && typeof plugin.execute === 'function' && !seen.has(plugin.id)) {
+            seen.add(plugin.id);
+            discovered.push(plugin);
+          }
+        }
+      } catch {
+        continue;
       }
     }
 
