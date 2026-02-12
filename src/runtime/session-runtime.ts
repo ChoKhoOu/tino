@@ -43,9 +43,12 @@ function mergeUsage(total: TokenUsage, delta: TokenUsage): TokenUsage {
 }
 
 function toToolMessage(call: IterationToolCall, output: string): RuntimeMessages[number] {
+  const wrappedOutput = output.startsWith('Error:')
+    ? { type: 'error-text' as const, value: output }
+    : { type: 'text' as const, value: output };
   return {
     role: 'tool',
-    content: [{ type: 'tool-result', toolCallId: call.toolCallId, toolName: call.toolName, input: call.args, output }],
+    content: [{ type: 'tool-result', toolCallId: call.toolCallId, toolName: call.toolName, input: call.args, output: wrappedOutput }],
   } as unknown as RuntimeMessages[number];
 }
 
