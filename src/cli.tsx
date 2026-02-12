@@ -22,12 +22,13 @@ import { useDaemonStatus } from './hooks/useDaemonStatus.js';
 import { useModelSelectionFlow } from './hooks/useModelSelectionFlow.js';
 import { useRuntimeInit } from './hooks/useRuntimeInit.js';
 import { useCommandHandler } from './hooks/useCommandHandler.js';
+import { useSessionCommands } from './hooks/useSessionCommands.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hooks/useDisplayEvents.js';
 
 export function CLI() {
   const { exit } = useApp();
-  const { runtime, broker } = useRuntimeInit();
+  const { runtime, broker, sessionStore, connectedMcpServers } = useRuntimeInit();
   const { state: runState, startRun, cancel, respondToPermission } = useSessionRunner(runtime);
   const { state: modelState, selectModel } = useModelSelector(broker);
 
@@ -67,9 +68,22 @@ export function CLI() {
     await startRun(query);
   }, [startRun]);
 
+  const extendedSlashDeps = useSessionCommands({
+    runtime,
+    runState,
+    history,
+    setHistory,
+    resetNavigation,
+    sessionStore,
+    connectedMcpServers,
+    provider: modelState.currentProvider,
+    model: modelState.currentModel,
+  });
+
   const { handleSubmit } = useCommandHandler({
     exit, startFlow, isInFlow, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError,
+    extendedSlashDeps,
   });
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { parseSlashCommand } from '@/commands/slash.js';
 import { resolveFileReferences } from '@/utils/file-reference.js';
 import { isBashQuickCommand, executeBashQuick, formatBashOutput } from './bash-quick.js';
+import { runExtendedSlashAction, type ExtendedSlashDeps } from './slash-command-actions.js';
 import type { SessionRuntime } from '@/runtime/session-runtime.js';
 import type { HistoryItem } from '@/components/HistoryItemView.js';
 
@@ -16,12 +17,13 @@ interface CommandHandlerDeps {
   executeRun: (query: string) => Promise<void>;
   setHistory: React.Dispatch<React.SetStateAction<HistoryItem[]>>;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
+  extendedSlashDeps: ExtendedSlashDeps;
 }
 
 export function useCommandHandler(deps: CommandHandlerDeps) {
   const {
     exit, startFlow, isInFlow, isProcessing, runtime,
-    saveMessage, resetNavigation, executeRun, setHistory, setError,
+    saveMessage, resetNavigation, executeRun, setHistory, setError, extendedSlashDeps,
   } = deps;
 
   const addDirectResponse = useCallback((query: string, answer: string) => {
@@ -55,6 +57,17 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
           return;
         }
         if (slashResult.action === 'exit') { console.log('Goodbye!'); exit(); return; }
+        if (slashResult.action) {
+          const output = await runExtendedSlashAction(
+            slashResult.action,
+            slashResult.args ?? [],
+            extendedSlashDeps,
+          );
+          if (output !== null) {
+            addDirectResponse(query, output);
+            return;
+          }
+        }
         if (!slashResult.handled) {
           setError(`Unknown command: ${query.trim().split(/\s+/)[0]}. Type /help for available commands.`);
           return;
@@ -74,7 +87,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       const resolvedQuery = await resolveFileReferences(query);
       await executeRun(resolvedQuery);
     },
-    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError],
+    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps],
   );
 
   return { handleSubmit, addDirectResponse };
