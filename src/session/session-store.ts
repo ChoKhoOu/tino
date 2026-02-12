@@ -77,6 +77,43 @@ export class SessionStore {
     }
   }
 
+  async fork(id: string): Promise<string | null> {
+    try {
+      const session = await this.load(id);
+      if (!session) return null;
+      const now = new Date().toISOString();
+      const newId = `ses_${crypto.randomUUID().slice(0, 8)}`;
+      const forked: Session = {
+        id: newId,
+        title: `${session.title} (fork)`,
+        messages: JSON.parse(JSON.stringify(session.messages)),
+        createdAt: now,
+        updatedAt: now,
+        tokenUsage: session.tokenUsage,
+        todos: session.todos ? JSON.parse(JSON.stringify(session.todos)) : undefined,
+      };
+      await this.save(forked);
+      return newId;
+    } catch (err) {
+      console.error('[SessionStore] fork error:', err);
+      return null;
+    }
+  }
+
+  async rename(id: string, title: string): Promise<boolean> {
+    try {
+      const session = await this.load(id);
+      if (!session) return false;
+      session.title = title;
+      session.updatedAt = new Date().toISOString();
+      await this.save(session);
+      return true;
+    } catch (err) {
+      console.error('[SessionStore] rename error:', err);
+      return false;
+    }
+  }
+
   async appendMessage(id: string, message: SessionMessage): Promise<void> {
     try {
       const session = await this.load(id);
