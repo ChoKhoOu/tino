@@ -143,6 +143,14 @@ export class DaemonManager {
 
   // ------- Private -------
 
+  private buildSpawnCommand(): string[] {
+    const bundledPython = join(this.daemonPkgDir, 'runtime', 'bin', 'python3.12');
+    if (existsSync(bundledPython)) {
+      return [bundledPython, '-m', 'tino_daemon', '--port', String(this.port)];
+    }
+    return ['uv', 'run', '--python', '3.12', 'python', '-m', 'tino_daemon', '--port', String(this.port)];
+  }
+
   private async spawnDaemon(): Promise<void> {
     const env: Record<string, string> = {
       ...process.env as Record<string, string>,
@@ -151,7 +159,7 @@ export class DaemonManager {
     };
 
     this.proc = Bun.spawn(
-      ['uv', 'run', '--python', '3.12', 'python', '-m', 'tino_daemon', '--port', String(this.port)],
+      this.buildSpawnCommand(),
       {
         cwd: this.daemonPkgDir,
         env,

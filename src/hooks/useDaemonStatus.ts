@@ -21,11 +21,18 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
   useEffect(() => {
     const client = new DaemonClient();
     let mounted = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
     // Initial check - if ref is already set (unlikely on first mount but possible on remount)
     if (daemonRef.current) {
       setStatus('starting');
     }
+
+    const scheduleCheck = () => {
+      if (intervalId) clearInterval(intervalId);
+      const delay = statusRef.current === 'starting' ? 1000 : 5000;
+      intervalId = setInterval(checkStatus, delay);
+    };
 
     const checkStatus = async () => {
       if (!mounted) return;
@@ -40,6 +47,7 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
       // If we were not configured but now have a ref, we are starting
       if (statusRef.current === 'not-configured') {
         setStatus('starting');
+        scheduleCheck();
       }
 
       const sysInfo = await client.getSystemInfo();
@@ -47,8 +55,10 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
       if (!mounted) return;
 
       if (sysInfo) {
+        const wasStarting = statusRef.current === 'starting';
         setStatus('connected');
         setInfo(sysInfo);
+        if (wasStarting) scheduleCheck();
       } else {
         // Connection failed
         if (statusRef.current === 'connected') {
@@ -59,13 +69,13 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
       }
     };
 
-    // Run immediately then interval
+    // Run immediately then start interval
     void checkStatus();
-    const interval = setInterval(checkStatus, 5000);
+    scheduleCheck();
 
     return () => {
       mounted = false;
-      clearInterval(interval);
+      if (intervalId) clearInterval(intervalId);
     };
   }, [daemonRef]);
 

@@ -7,7 +7,6 @@ set -euo pipefail
 REPO="ChoKhoOu/tino"
 INSTALL_DIR="$HOME/.tino"
 BIN_DIR="$INSTALL_DIR/bin"
-PYTHON_DIR="$INSTALL_DIR/python"
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -131,30 +130,19 @@ install_tino() {
     exit 1
   fi
 
-  # Install Python daemon source
+  # Install Python runtime + daemon
   if [[ -d "$tmpdir/python" ]]; then
-    rm -rf "$PYTHON_DIR"
-    mv "$tmpdir/python" "$PYTHON_DIR"
-    success "Installed Python daemon to ${PYTHON_DIR}/"
+    rm -rf "$BIN_DIR/python"
+    mv "$tmpdir/python" "$BIN_DIR/python"
+    success "Installed Python runtime to ${BIN_DIR}/python/"
   else
-    warn "Python daemon source not found in archive."
+    warn "Python runtime not found in archive."
   fi
 }
 
 # --- Post-install checks ---
 post_install_checks() {
   echo ""
-
-  # Check for uv
-  if ! command -v uv &>/dev/null; then
-    printf "${YELLOW}Warning${RESET}: ${BOLD}uv${RESET} is required for the Python daemon (NautilusTrader).\n"
-    echo "  Install it:"
-    echo ""
-    printf "    ${CYAN}curl -LsSf https://astral.sh/uv/install.sh | sh${RESET}\n"
-    echo ""
-  else
-    success "uv found: $(uv --version 2>/dev/null || echo 'installed')"
-  fi
 
   # Check PATH
   case ":${PATH}:" in

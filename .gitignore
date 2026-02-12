@@ -56,6 +56,7 @@ yarn-error.log*
 
 # Python
 python/.venv/
+python/runtime/
 python/__pycache__/
 *.pyc
 

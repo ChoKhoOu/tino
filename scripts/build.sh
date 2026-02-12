@@ -70,8 +70,35 @@ bun "${BUILD_ARGS[@]}"
 if [[ -d "$REPO_ROOT/python" ]]; then
   rm -rf "$DIST_DIR/python"
   cp -R "$REPO_ROOT/python" "$DIST_DIR/python"
-  find "$DIST_DIR/python" -type d \( -name "__pycache__" -o -name ".venv" \) -exec rm -rf {} + 2>/dev/null || true
+  find "$DIST_DIR/python" -type d \( -name "__pycache__" -o -name ".venv" -o -name "tests" \) -exec rm -rf {} + 2>/dev/null || true
   echo "Copied python/ daemon source to dist/"
+
+  if command -v uv &>/dev/null; then
+    echo "Downloading standalone Python 3.12..."
+    uv python install 3.12
+    UV_PYTHON=$(uv python find 3.12)
+    UV_PYTHON_ROOT=$(dirname "$(dirname "$UV_PYTHON")")
+
+    mkdir -p "$DIST_DIR/python/runtime"
+    cp -R "$UV_PYTHON_ROOT/." "$DIST_DIR/python/runtime/"
+
+    BUNDLED_PYTHON="$DIST_DIR/python/runtime/bin/python3.12"
+
+    echo "Installing Python dependencies..."
+    "$BUNDLED_PYTHON" -m ensurepip --upgrade 2>/dev/null || true
+    rm -f "$DIST_DIR/python/runtime/lib/python3.12/EXTERNALLY-MANAGED"
+    "$BUNDLED_PYTHON" -m pip install "$DIST_DIR/python" --no-cache-dir
+
+    # Trim unnecessary files to reduce bundle size
+    rm -rf "$DIST_DIR/python/runtime/include"
+    rm -rf "$DIST_DIR/python/runtime/share"
+    find "$DIST_DIR/python/runtime" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+    RUNTIME_SIZE=$(du -sh "$DIST_DIR/python/runtime" | cut -f1)
+    echo "Standalone Python runtime bundled (${RUNTIME_SIZE})"
+  else
+    echo "Warning: uv not found — skipping Python runtime bundling"
+  fi
 fi
 
 BINARY_PATH="$DIST_DIR/$BINARY_NAME"
