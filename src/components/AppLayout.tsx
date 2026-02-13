@@ -14,6 +14,7 @@ import type { ModelSelectorState } from '../hooks/useModelSelector.js';
 import type { RunState } from '../hooks/useSessionRunner.js';
 import type { WorkingState } from './WorkingIndicator.js';
 import type { DaemonStatus, DaemonInfo } from '../hooks/useDaemonStatus.js';
+import type { BashHistory } from '../hooks/useBashHistory.js';
 
 interface AppLayoutProps {
   dispatcher: KeyboardDispatcher;
@@ -28,6 +29,7 @@ interface AppLayoutProps {
   handleHistoryNavigate: (direction: 'up' | 'down') => void;
   respondToPermission: (toolId: string, allowed: boolean, alwaysAllow?: boolean) => void;
   daemonStatus: { status: DaemonStatus; info?: DaemonInfo };
+  bashHistory?: BashHistory | null;
 }
 
 export function AppLayout({
@@ -43,6 +45,7 @@ export function AppLayout({
   handleHistoryNavigate,
   respondToPermission,
   daemonStatus,
+  bashHistory,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
   const introHeight = history.length === 0 ? 3 : 0;
@@ -71,7 +74,7 @@ export function AppLayout({
           )}
         </ScrollableContent>
         
-        <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} />
+        <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />
         
         <Box paddingX={1}>
           <Text color="#555555">─</Text>

@@ -20,13 +20,17 @@ import { useCommandHandler } from './hooks/useCommandHandler.js';
 import { useSessionCommands } from './hooks/useSessionCommands.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hooks/useDisplayEvents.js';
+import { createBashHistory } from './hooks/useBashHistory.js';
 import { KeyboardDispatcher } from './keyboard/dispatcher.js';
 import { KeyboardProvider } from './keyboard/use-keyboard.js';
 
 export function CLI() {
   const { exit } = useApp();
   const dispatcher = useMemo(() => new KeyboardDispatcher(), []);
+  const bashHistory = useMemo(() => createBashHistory(), []);
   const { runtime, broker, sessionStore, connectedMcpServers } = useRuntimeInit();
+
+  useEffect(() => { bashHistory.load(); }, [bashHistory]);
   const { state: runState, startRun, cancel, respondToPermission } = useSessionRunner(runtime);
   const { state: modelState, selectModel } = useModelSelector(broker);
 
@@ -81,7 +85,7 @@ export function CLI() {
   const { handleSubmit } = useCommandHandler({
     exit, startFlow, isInFlow, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError,
-    extendedSlashDeps,
+    extendedSlashDeps, bashHistory,
   });
 
   useEffect(() => {
@@ -202,6 +206,7 @@ export function CLI() {
       handleHistoryNavigate={handleHistoryNavigate}
       respondToPermission={respondToPermission}
       daemonStatus={daemonStatus}
+      bashHistory={bashHistory}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Box, Text } from 'ink';
 
 import { colors } from '../theme.js';
@@ -7,22 +7,29 @@ import { shouldTreatAsMultiline } from '../hooks/useKeyboardShortcuts.js';
 import { cursorHandlers } from '../utils/input-key-handlers.js';
 import { CursorText } from './CursorText.js';
 import { FileAutocomplete } from './FileAutocomplete.js';
+import { BashHistoryHint } from './BashHistoryHint.js';
 import { useAutocomplete } from '../hooks/useAutocomplete.js';
 import { useKeyboardDefaultHandler } from '../keyboard/use-keyboard.js';
 import type { KeyEvent } from '../keyboard/types.js';
+import type { BashHistory } from '../hooks/useBashHistory.js';
 
 interface InputProps {
   onSubmit: (value: string) => void;
-  /** Value from history navigation (null = user typing fresh input) */
   historyValue?: string | null;
-  /** Callback when user presses up/down arrow for history navigation */
   onHistoryNavigate?: (direction: 'up' | 'down') => void;
+  bashHistory?: BashHistory | null;
 }
 
-export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps) {
+export function Input({ onSubmit, historyValue, onHistoryNavigate, bashHistory }: InputProps) {
   const { text, cursorPosition, actions } = useTextBuffer();
   const { query, files, selectedIndex, setSelectedIndex } = useAutocomplete(text, cursorPosition);
   const isAutocompleteActive = query !== null && files.length > 0;
+
+  const bashPrefix = text.startsWith('!') ? text.slice(1) : null;
+  const bashHint = useMemo(
+    () => bashPrefix && bashHistory ? bashHistory.getBestMatch(bashPrefix) : null,
+    [bashPrefix, bashHistory],
+  );
 
   // Update input buffer when history navigation changes
   useEffect(() => {
@@ -60,6 +67,11 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
         }
         return true;
       }
+    }
+
+    if (key.tab && !isAutocompleteActive && bashHint) {
+      actions.setValue('!' + bashHint);
+      return true;
     }
 
     // Up arrow: move cursor up if not on first line, else history navigation
@@ -161,6 +173,7 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
     return false;
   }, [
     actions,
+    bashHint,
     cursorPosition,
     files,
     isAutocompleteActive,
@@ -190,6 +203,7 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
           {'> '}
         </Text>
         <CursorText text={text} cursorPosition={cursorPosition} />
+        <BashHistoryHint text={text} bestMatch={bashHint} />
       </Box>
     </Box>
   );

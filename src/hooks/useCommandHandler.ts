@@ -5,6 +5,7 @@ import { isBashQuickCommand, executeBashQuick, formatBashOutput } from './bash-q
 import { runExtendedSlashAction, type ExtendedSlashDeps } from './slash-command-actions.js';
 import type { SessionRuntime } from '@/runtime/session-runtime.js';
 import type { HistoryItem } from '@/components/HistoryItemView.js';
+import type { BashHistory } from './useBashHistory.js';
 
 interface CommandHandlerDeps {
   exit: () => void;
@@ -18,12 +19,14 @@ interface CommandHandlerDeps {
   setHistory: React.Dispatch<React.SetStateAction<HistoryItem[]>>;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   extendedSlashDeps: ExtendedSlashDeps;
+  bashHistory?: BashHistory | null;
 }
 
 export function useCommandHandler(deps: CommandHandlerDeps) {
   const {
     exit, startFlow, isInFlow, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError, extendedSlashDeps,
+    bashHistory,
   } = deps;
 
   const addDirectResponse = useCallback((query: string, answer: string) => {
@@ -44,6 +47,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       if (isBashQuickCommand(query)) {
         const command = query.slice(1).trim();
         const result = await executeBashQuick(command);
+        if (bashHistory) await bashHistory.addToHistory(command);
         addDirectResponse(query, formatBashOutput(command, result));
         return;
       }
@@ -87,7 +91,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       const resolvedQuery = await resolveFileReferences(query);
       await executeRun(resolvedQuery);
     },
-    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps],
+    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory],
   );
 
   return { handleSubmit, addDirectResponse };
