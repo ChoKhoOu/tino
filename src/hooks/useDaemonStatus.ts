@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { RefObject } from 'react';
 import type { DaemonManager } from '../daemon/manager.js';
 import { DaemonClient } from '../grpc/daemon-client.js';
@@ -79,5 +79,5 @@ export function useDaemonStatus(daemonRef: RefObject<DaemonManager | null>) {
     };
   }, [daemonRef]);
 
-  return { status, info };
+  return useMemo(() => ({ status, info }), [status, info]);
 }

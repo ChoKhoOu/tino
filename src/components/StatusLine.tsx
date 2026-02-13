@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
 import { componentTokens, getContextColor, colors } from '../theme.js';
 import type { PermissionMode } from '../domain/permission-mode.js';
 
@@ -13,7 +12,49 @@ export interface StatusLineProps {
   permissionMode?: PermissionMode;
 }
 
-export function StatusLine({
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+/** Isolated spinner — internal state changes never propagate to parent */
+const DaemonSpinner = React.memo(function DaemonSpinner() {
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setFrame(f => (f + 1) % SPINNER_FRAMES.length), 200);
+    return () => clearInterval(id);
+  }, []);
+  return <Text color={colors.primary}>{SPINNER_FRAMES[frame]} </Text>;
+});
+
+/** Module-level component — stable type reference prevents remount on parent re-render */
+const Separator = React.memo(function Separator() {
+  return <Text color={componentTokens.statusLine.separator}> │ </Text>;
+});
+
+function renderDaemonStatus(status: StatusLineProps['daemonStatus'], fg: string) {
+  switch (status) {
+    case 'starting':
+      return <><DaemonSpinner /><Text color={fg}>starting</Text></>;
+    case 'connected':
+      return <><Text color={colors.success}>● </Text><Text color={fg}>connected</Text></>;
+    case 'error':
+      return <><Text color={colors.error}>○ </Text><Text color={fg}>error</Text></>;
+    case 'stopped':
+      return <><Text color={colors.mutedDark}>○ </Text><Text color={fg}>stopped</Text></>;
+    default:
+      return <><Text color={colors.mutedDark}>○ </Text><Text color={fg}>not configured</Text></>;
+  }
+}
+
+function formatCost(c: number) { return `$${c.toFixed(4)}`; }
+
+function formatDuration(d: number | null) {
+  if (d === null) return '--m --s';
+  const m = Math.floor(d / 60);
+  const s = Math.floor(d % 60);
+  return `${m}m ${s}s`;
+}
+
+/** Memoized — only re-renders when props actually change */
+export const StatusLine = React.memo(function StatusLine({
   modelName,
   contextPercent,
   daemonStatus,
@@ -21,58 +62,7 @@ export function StatusLine({
   duration,
   permissionMode,
 }: StatusLineProps) {
-  const { bg, fg, separator } = componentTokens.statusLine;
-
-  const formatCost = (c: number) => `$${c.toFixed(4)}`;
-  
-  const formatDuration = (d: number | null) => {
-    if (d === null) return '--m --s';
-    const m = Math.floor(d / 60);
-    const s = Math.floor(d % 60);
-    return `${m}m ${s}s`;
-  };
-
-  const renderDaemonStatus = () => {
-    switch (daemonStatus) {
-      case 'starting':
-        return (
-          <>
-            <Text color={colors.primary}><Spinner type="dots" /> </Text>
-            <Text color={fg}>starting</Text>
-          </>
-        );
-      case 'connected':
-        return (
-          <>
-            <Text color={colors.success}>● </Text>
-            <Text color={fg}>connected</Text>
-          </>
-        );
-      case 'error':
-        return (
-          <>
-            <Text color={colors.error}>○ </Text>
-            <Text color={fg}>error</Text>
-          </>
-        );
-      case 'stopped':
-        return (
-          <>
-            <Text color={colors.mutedDark}>○ </Text>
-            <Text color={fg}>stopped</Text>
-          </>
-        );
-      default:
-        return (
-          <>
-            <Text color={colors.mutedDark}>○ </Text>
-            <Text color={fg}>not configured</Text>
-          </>
-        );
-    }
-  };
-
-  const Separator = () => <Text color={separator}> │ </Text>;
+  const { bg, fg } = componentTokens.statusLine;
 
   return (
     <Box width="100%" backgroundColor={bg} paddingX={1}>
@@ -86,7 +76,7 @@ export function StatusLine({
       <Separator />
       
       <Text color={fg}>Daemon: </Text>
-      {renderDaemonStatus()}
+      {renderDaemonStatus(daemonStatus, fg)}
       <Separator />
 
       {permissionMode && permissionMode !== 'default' && (
@@ -102,4 +92,4 @@ export function StatusLine({
       <Text color={fg}>{formatDuration(duration)}</Text>
     </Box>
   );
-}
+});
