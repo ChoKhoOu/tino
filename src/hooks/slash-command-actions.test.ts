@@ -87,6 +87,7 @@ describe('runExtendedSlashAction', () => {
     expect(await runExtendedSlashAction('clear', [], deps)).toBeNull();
     expect(await runExtendedSlashAction('skill', [], deps)).toBeNull();
     expect(await runExtendedSlashAction('exit', [], deps)).toBeNull();
+    expect(await runExtendedSlashAction('verbose', [], deps)).toBeNull();
   });
 
   test('handles missing required arguments', async () => {
@@ -114,11 +115,12 @@ describe('runExtendedSlashAction', () => {
       'mcp',
       'config',
       'todos',
+      'verbose',
     ];
 
     for (const action of actions) {
       await runExtendedSlashAction(action, [], deps);
     }
-    expect(actions).toHaveLength(17);
+    expect(actions).toHaveLength(18);
   });
 });

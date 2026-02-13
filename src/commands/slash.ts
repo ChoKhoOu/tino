@@ -24,7 +24,8 @@ export type SlashAction =
   | 'permissions'
   | 'mcp'
   | 'config'
-  | 'todos';
+  | 'todos'
+  | 'verbose';
 
 export interface SlashCommandResult {
   /** Whether the command was recognized and handled */
@@ -57,6 +58,7 @@ export const SLASH_COMMANDS: Record<string, string> = {
   '/mcp': 'Show MCP server connections',
   '/config': 'Show current configuration',
   '/todos': 'Show active todo items',
+  '/verbose': 'Toggle verbose output mode',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -157,6 +159,9 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
 
     case '/rewind':
       return { handled: true, action: 'rewind' };
+
+    case '/verbose':
+      return { handled: true, action: 'verbose', output: 'Verbose mode toggled.' };
 
     default:
       // Starts with / but not a recognized command

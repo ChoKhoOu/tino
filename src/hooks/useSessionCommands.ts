@@ -13,6 +13,8 @@ import {
   summarizeTodos,
 } from './session-history.js';
 import type { ExtendedSlashDeps } from './slash-command-actions.js';
+import { renderContextBar } from '@/components/context-bar.js';
+import { TOKEN_BUDGET } from '@/utils/tokens.js';
 
 interface SessionCommandOptions {
   runtime: SessionRuntime;
@@ -105,7 +107,10 @@ export function useSessionCommands(options: SessionCommandOptions): ExtendedSlas
     getContextSummary: () => {
       const turns = historyRef.current.length;
       const messages = turns * 2 + 1;
-      return `Context: ${messages} messages across ${turns} turns.`;
+      const usage = tokenUsageRef.current;
+      const usedTokens = usage?.inputTokens ?? 0;
+      const bar = renderContextBar(usedTokens, TOKEN_BUDGET);
+      return `Context: ${messages} messages across ${turns} turns.\n${bar}`;
     },
     getCostSummary: () => {
       const usage = tokenUsageRef.current;

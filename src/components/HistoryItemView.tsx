@@ -6,39 +6,25 @@ import type { DisplayEvent } from './AgentEventView.js';
 import { AnswerBox } from './AnswerBox.js';
 import type { TokenUsage } from '@/domain/index.js';
 
-/**
- * Format duration in milliseconds to human-readable string
- * e.g., "1m 31s", "45s", "500ms"
- */
-function formatDuration(ms: number): string {
-  // Show milliseconds for sub-second durations
-  if (ms < 1000) {
-    return `${Math.round(ms)}ms`;
-  }
-  
+export function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
   const totalSeconds = Math.round(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  
-  if (minutes === 0) {
-    return `${seconds}s`;
-  }
-  
+  if (minutes === 0) return `${seconds}s`;
   return `${minutes}m ${seconds}s`;
 }
 
-/**
- * Format performance stats into a single string
- */
-function formatPerformanceStats(
-  duration?: number,
-  tokenUsage?: TokenUsage,
-  tokensPerSecond?: number
+export function formatTurnStats(
+  durationMs: number,
+  tokenUsage: { totalTokens: number },
 ): string {
-  const parts: string[] = [];
-  if (duration !== undefined) parts.push(formatDuration(duration));
-  if (tokenUsage) parts.push(`${tokenUsage.totalTokens.toLocaleString()} tokens`);
-  if (tokensPerSecond !== undefined) parts.push(`(${tokensPerSecond.toFixed(1)} tok/s)`);
+  const parts: string[] = [formatDuration(durationMs)];
+  parts.push(`${tokenUsage.totalTokens.toLocaleString('en-US')} tokens`);
+  if (durationMs > 0) {
+    const throughput = tokenUsage.totalTokens / (durationMs / 1000);
+    parts.push(`(${throughput.toFixed(1)} tok/s)`);
+  }
   return parts.join(' · ');
 }
 
@@ -57,8 +43,6 @@ export interface HistoryItem {
   duration?: number;
   /** Token usage statistics */
   tokenUsage?: TokenUsage;
-  /** Tokens per second throughput */
-  tokensPerSecond?: number;
 }
 
 interface HistoryItemViewProps {
@@ -98,9 +82,9 @@ export function HistoryItemView({ item }: HistoryItemViewProps) {
       )}
       
       {/* Performance stats - only show when token data is present */}
-      {item.status === 'complete' && item.tokenUsage && (
+      {item.status === 'complete' && item.tokenUsage && item.duration !== undefined && (
         <Box marginTop={1}>
-          <Text color={colors.muted}>✻ {formatPerformanceStats(item.duration, item.tokenUsage, item.tokensPerSecond)}</Text>
+          <Text color={colors.muted}>✻ {formatTurnStats(item.duration, item.tokenUsage)}</Text>
         </Box>
       )}
     </Box>

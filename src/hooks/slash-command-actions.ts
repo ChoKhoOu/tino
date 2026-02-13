@@ -65,6 +65,7 @@ export async function runExtendedSlashAction(
     case 'skill':
     case 'help':
     case 'exit':
+    case 'verbose':
       return null;
   }
 }

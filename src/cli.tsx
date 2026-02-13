@@ -8,18 +8,20 @@ import { resolveAppDir } from './utils/resolve-app-dir.js';
 import { ModelSelectionFlow } from './components/ModelSelectionFlow.js';
 import { AppLayout } from './components/AppLayout.js';
 import type { HistoryItem } from './components/index.js';
-import type { DoneEvent } from './domain/events.js';
 
 import { useSessionRunner } from './hooks/useSessionRunner.js';
 import { useModelSelector } from './hooks/useModelSelector.js';
 import { useInputHistory } from './hooks/useInputHistory.js';
 import { useDaemonStatus } from './hooks/useDaemonStatus.js';
+import { useStatusLineData } from './hooks/useStatusLineData.js';
+import { useHistorySync } from './hooks/useHistorySync.js';
 import { useModelSelectionFlow } from './hooks/useModelSelectionFlow.js';
 import { useRuntimeInit } from './hooks/useRuntimeInit.js';
 import { useCommandHandler } from './hooks/useCommandHandler.js';
 import { useSessionCommands } from './hooks/useSessionCommands.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
-import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hooks/useDisplayEvents.js';
+import { useVerboseMode } from './hooks/useVerboseMode.js';
+import { deriveWorkingState } from './hooks/useDisplayEvents.js';
 import { createBashHistory } from './hooks/useBashHistory.js';
 import { KeyboardDispatcher } from './keyboard/dispatcher.js';
 import { KeyboardProvider } from './keyboard/use-keyboard.js';
@@ -28,6 +30,7 @@ export function CLI() {
   const { exit } = useApp();
   const dispatcher = useMemo(() => new KeyboardDispatcher(), []);
   const bashHistory = useMemo(() => createBashHistory(), []);
+  const { isVerbose, toggleVerbose } = useVerboseMode(dispatcher);
   const { runtime, broker, sessionStore, connectedMcpServers } = useRuntimeInit();
 
   useEffect(() => { bashHistory.load(); }, [bashHistory]);
@@ -61,6 +64,8 @@ export function CLI() {
   const [error, setError] = useState<string | null>(null);
   const isProcessing = runState.status === 'running' || runState.status === 'permission_pending';
 
+  const statusLineData = useStatusLineData(modelState, runState, daemonStatus, history);
+
   const executeRun = useCallback(async (query: string) => {
     setError(null);
     setHistory((prev) => [
@@ -85,33 +90,10 @@ export function CLI() {
   const { handleSubmit } = useCommandHandler({
     exit, startFlow, isInFlow, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError,
-    extendedSlashDeps, bashHistory,
+    extendedSlashDeps, bashHistory, toggleVerbose,
   });
 
-  useEffect(() => {
-    if (runState.status === 'idle' && runState.events.length === 0) return;
-    setHistory((prev) => {
-      const last = prev[prev.length - 1];
-      if (!last || last.status !== 'processing') return prev;
-      const displayEvents = buildDisplayEvents(runState.events);
-      const activeToolId = findActiveToolId(runState.events);
-      const isDone = runState.status === 'done';
-      const updated: HistoryItem = {
-        ...last, events: displayEvents, activeToolId,
-        answer: runState.answer, status: isDone ? 'complete' : last.status,
-      };
-      if (isDone) {
-        const doneEvt = runState.events.find((e) => e.type === 'done') as DoneEvent | undefined;
-        if (doneEvt) { updated.duration = doneEvt.totalTime; updated.tokenUsage = doneEvt.tokenUsage; }
-      }
-      if (runState.error) { updated.status = 'error'; setError(runState.error); }
-      return [...prev.slice(0, -1), updated];
-    });
-  }, [runState]);
-
-  useEffect(() => {
-    if (runState.status === 'done' && runState.answer) updateAgentResponse(runState.answer);
-  }, [runState.status, runState.answer, updateAgentResponse]);
+  useHistorySync(runState, setHistory, setError, updateAgentResponse);
 
   const cancelExecution = useCallback(() => {
     cancel();
@@ -207,6 +189,9 @@ export function CLI() {
       respondToPermission={respondToPermission}
       daemonStatus={daemonStatus}
       bashHistory={bashHistory}
+      statusLineData={statusLineData}
+      selectModel={selectModel}
+      isVerbose={isVerbose}
     />
   );
 }

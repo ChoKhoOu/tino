@@ -20,13 +20,14 @@ interface CommandHandlerDeps {
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   extendedSlashDeps: ExtendedSlashDeps;
   bashHistory?: BashHistory | null;
+  toggleVerbose?: () => void;
 }
 
 export function useCommandHandler(deps: CommandHandlerDeps) {
   const {
     exit, startFlow, isInFlow, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError, extendedSlashDeps,
-    bashHistory,
+    bashHistory, toggleVerbose,
   } = deps;
 
   const addDirectResponse = useCallback((query: string, answer: string) => {
@@ -61,6 +62,11 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
           return;
         }
         if (slashResult.action === 'exit') { console.log('Goodbye!'); exit(); return; }
+        if (slashResult.action === 'verbose' && toggleVerbose) {
+          toggleVerbose();
+          addDirectResponse(query, 'Verbose mode toggled.');
+          return;
+        }
         if (slashResult.action) {
           const output = await runExtendedSlashAction(
             slashResult.action,
@@ -91,7 +97,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       const resolvedQuery = await resolveFileReferences(query);
       await executeRun(resolvedQuery);
     },
-    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory],
+    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory, toggleVerbose],
   );
 
   return { handleSubmit, addDirectResponse };

@@ -6,7 +6,9 @@ import { DebugPanel } from './DebugPanel.js';
 import { HistoryItemView, WorkingIndicator } from './index.js';
 import { PermissionPrompt } from './PermissionPrompt.js';
 import { ScrollableContent } from './ScrollableContent.js';
+import { ModelSwitchPopup } from './ModelSwitchPopup.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
+import { useModelSwitchPopup } from '../hooks/useModelSwitchPopup.js';
 import { KeyboardProvider } from '../keyboard/use-keyboard.js';
 import type { KeyboardDispatcher } from '../keyboard/dispatcher.js';
 import type { HistoryItem } from './index.js';
@@ -15,6 +17,9 @@ import type { RunState } from '../hooks/useSessionRunner.js';
 import type { WorkingState } from './WorkingIndicator.js';
 import type { DaemonStatus, DaemonInfo } from '../hooks/useDaemonStatus.js';
 import type { BashHistory } from '../hooks/useBashHistory.js';
+
+import { StatusLine } from './StatusLine.js';
+import type { StatusLineProps } from './StatusLine.js';
 
 interface AppLayoutProps {
   dispatcher: KeyboardDispatcher;
@@ -30,6 +35,9 @@ interface AppLayoutProps {
   respondToPermission: (toolId: string, allowed: boolean, alwaysAllow?: boolean) => void;
   daemonStatus: { status: DaemonStatus; info?: DaemonInfo };
   bashHistory?: BashHistory | null;
+  statusLineData: StatusLineProps;
+  selectModel: (name: string) => void;
+  isVerbose?: boolean;
 }
 
 export function AppLayout({
@@ -46,8 +54,12 @@ export function AppLayout({
   respondToPermission,
   daemonStatus,
   bashHistory,
+  statusLineData,
+  selectModel,
+  isVerbose = false,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
+  const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
   const introHeight = history.length === 0 ? 3 : 0;
   const inputHeight = 3;
   const statusLineHeight = 1;
@@ -74,13 +86,12 @@ export function AppLayout({
           )}
         </ScrollableContent>
         
+        <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
         <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />
         
-        <Box paddingX={1}>
-          <Text color="#555555">─</Text>
-        </Box>
+        <StatusLine {...statusLineData} />
         
-        <DebugPanel maxLines={8} show={false} />
+        <DebugPanel maxLines={8} show={isVerbose} />
       </Box>
     </KeyboardProvider>
   );

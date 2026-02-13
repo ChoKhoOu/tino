@@ -162,22 +162,29 @@ describe('parseSlashCommand — config commands', () => {
     expect(result?.handled).toBe(true);
     expect(result?.action).toBe('rewind');
   });
+
+  test('/verbose returns action with output', () => {
+    const result = parseSlashCommand('/verbose');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('verbose');
+    expect(result?.output).toBe('Verbose mode toggled.');
+  });
 });
 
 // ─── SLASH_COMMANDS registry ────────────────────────────────────────────────
 
 describe('SLASH_COMMANDS registry', () => {
-  test('contains all 17 commands', () => {
+  test('contains all 18 commands', () => {
     const expected = [
       '/model', '/clear', '/skill', '/help', '/exit',
       '/compact', '/context', '/cost', '/resume', '/export',
       '/rename', '/rewind', '/status', '/permissions', '/mcp',
-      '/config', '/todos',
+      '/config', '/todos', '/verbose',
     ];
     for (const cmd of expected) {
       expect(SLASH_COMMANDS).toHaveProperty(cmd);
     }
-    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(17);
+    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(18);
   });
 });
 
