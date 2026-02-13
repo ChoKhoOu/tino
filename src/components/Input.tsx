@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useCallback, useEffect } from 'react';
+import { Box, Text } from 'ink';
 
 import { colors } from '../theme.js';
 import { useTextBuffer } from '../hooks/useTextBuffer.js';
@@ -8,6 +8,8 @@ import { cursorHandlers } from '../utils/input-key-handlers.js';
 import { CursorText } from './CursorText.js';
 import { FileAutocomplete } from './FileAutocomplete.js';
 import { useAutocomplete } from '../hooks/useAutocomplete.js';
+import { useKeyboardDefaultHandler } from '../keyboard/use-keyboard.js';
+import type { KeyEvent } from '../keyboard/types.js';
 
 interface InputProps {
   onSubmit: (value: string) => void;
@@ -31,20 +33,20 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
       // Navigating history - show the historical message
       actions.setValue(historyValue);
     }
-  }, [historyValue]);
+  }, [actions, historyValue]);
 
-  // Handle all input
-  useInput((input, key) => {
+  const handleInput = useCallback((event: KeyEvent) => {
+    const { input, key } = event;
     const ctx = { text, cursorPosition };
 
     if (isAutocompleteActive) {
       if (key.upArrow) {
         setSelectedIndex((prev) => Math.max(0, prev - 1));
-        return;
+        return true;
       }
       if (key.downArrow) {
         setSelectedIndex((prev) => Math.min(files.length - 1, prev + 1));
-        return;
+        return true;
       }
       if (key.tab || key.return) {
         const selectedFile = files[selectedIndex];
@@ -56,7 +58,7 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
           actions.setValue(newText);
           actions.moveCursor(queryStart + selectedFile.length);
         }
-        return;
+        return true;
       }
     }
 
@@ -68,7 +70,7 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
       } else if (onHistoryNavigate) {
         onHistoryNavigate('up');
       }
-      return;
+      return true;
     }
 
     // Down arrow: move cursor down if not on last line, else history navigation
@@ -79,82 +81,98 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate }: InputProps)
       } else if (onHistoryNavigate) {
         onHistoryNavigate('down');
       }
-      return;
+      return true;
     }
 
     // Cursor movement - left arrow (plain, no modifiers)
     if (key.leftArrow && !key.ctrl && !key.meta) {
       actions.moveCursor(cursorHandlers.moveLeft(ctx));
-      return;
+      return true;
     }
 
     // Cursor movement - right arrow (plain, no modifiers)
     if (key.rightArrow && !key.ctrl && !key.meta) {
       actions.moveCursor(cursorHandlers.moveRight(ctx));
-      return;
+      return true;
     }
 
     // Ctrl+A - move to beginning of current line
     if (key.ctrl && input === 'a') {
       actions.moveCursor(cursorHandlers.moveToLineStart(ctx));
-      return;
+      return true;
     }
 
     // Ctrl+E - move to end of current line
     if (key.ctrl && input === 'e') {
       actions.moveCursor(cursorHandlers.moveToLineEnd(ctx));
-      return;
+      return true;
     }
 
     // Option+Left (Mac) / Ctrl+Left (Windows) / Alt+B - word backward
     if ((key.meta && key.leftArrow) || (key.ctrl && key.leftArrow) || (key.meta && input === 'b')) {
       actions.moveCursor(cursorHandlers.moveWordBackward(ctx));
-      return;
+      return true;
     }
 
     // Option+Right (Mac) / Ctrl+Right (Windows) / Alt+F - word forward
     if ((key.meta && key.rightArrow) || (key.ctrl && key.rightArrow) || (key.meta && input === 'f')) {
       actions.moveCursor(cursorHandlers.moveWordForward(ctx));
-      return;
+      return true;
     }
 
     // Option+Backspace (Mac) / Ctrl+Backspace (Windows) - delete word backward
     if ((key.meta || key.ctrl) && (key.backspace || key.delete)) {
       actions.deleteWordBackward();
-      return;
+      return true;
     }
 
     // Handle backspace/delete - delete character before cursor
     if (key.backspace || key.delete) {
       actions.deleteBackward();
-      return;
+      return true;
     }
 
     // Shift+Enter - insert newline for multi-line input
     if (key.return && key.shift) {
       actions.insert('\n');
-      return;
+      return true;
     }
 
     // Handle submit (plain Enter)
     if (key.return) {
       if (shouldTreatAsMultiline(text)) {
         actions.setValue(text.slice(0, -1) + '\n', true);
-        return;
+        return true;
       }
       const val = text.trim();
       if (val) {
         onSubmit(val);
         actions.clear();
       }
-      return;
+      return true;
     }
 
     // Handle regular character input - insert at cursor position
     if (input && !key.ctrl && !key.meta) {
       actions.insert(input);
+      return true;
     }
-  });
+
+    return false;
+  }, [
+    actions,
+    cursorPosition,
+    files,
+    isAutocompleteActive,
+    onHistoryNavigate,
+    onSubmit,
+    query,
+    selectedIndex,
+    setSelectedIndex,
+    text,
+  ]);
+
+  useKeyboardDefaultHandler(handleInput);
 
   return (
     <Box

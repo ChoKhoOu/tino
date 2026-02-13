@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useCallback, useState } from 'react';
+import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
+import { useKeyboardBinding, useKeyboardMode } from '../keyboard/use-keyboard.js';
+import type { KeyEvent } from '../keyboard/types.js';
 
 interface Option {
   label: string;
@@ -26,8 +28,28 @@ export function QuestionPrompt({ questions, onAnswer }: QuestionPromptProps) {
 
   const currentQuestion = questions[currentIndex];
 
-  useInput((input, key) => {
-    if (!currentQuestion) return;
+  useKeyboardMode('popup');
+
+  const submitAnswer = useCallback((answer: string | string[]) => {
+    const activeQuestion = questions[currentIndex];
+    if (!activeQuestion) return;
+
+    const newAnswer = { question: activeQuestion.question, answer };
+    const nextAnswers = [...answers, newAnswer];
+
+    if (currentIndex < questions.length - 1) {
+      setAnswers(nextAnswers);
+      setCurrentIndex(currentIndex + 1);
+      setSelectedIndices(new Set());
+      return;
+    }
+
+    onAnswer(nextAnswers);
+  }, [answers, currentIndex, onAnswer, questions]);
+
+  const handleQuestionInput = useCallback((event: KeyEvent) => {
+    const { input, key } = event;
+    if (!currentQuestion) return false;
 
     const num = parseInt(input, 10);
     if (!isNaN(num) && num > 0 && num <= currentQuestion.options.length) {
@@ -42,6 +64,7 @@ export function QuestionPrompt({ questions, onAnswer }: QuestionPromptProps) {
       } else {
         submitAnswer(currentQuestion.options[index].label);
       }
+      return true;
     }
 
     if (key.return && currentQuestion.multiple) {
@@ -49,21 +72,12 @@ export function QuestionPrompt({ questions, onAnswer }: QuestionPromptProps) {
         .filter((_, i) => selectedIndices.has(i))
         .map(o => o.label);
       submitAnswer(selected);
+      return true;
     }
-  });
+    return false;
+  }, [currentQuestion, selectedIndices, submitAnswer]);
 
-  const submitAnswer = (answer: string | string[]) => {
-    const newAnswer = { question: currentQuestion!.question, answer };
-    const nextAnswers = [...answers, newAnswer];
-    
-    if (currentIndex < questions.length - 1) {
-      setAnswers(nextAnswers);
-      setCurrentIndex(currentIndex + 1);
-      setSelectedIndices(new Set());
-    } else {
-      onAnswer(nextAnswers);
-    }
-  };
+  useKeyboardBinding('popup', 'any', handleQuestionInput);
 
   if (!currentQuestion) return null;
 

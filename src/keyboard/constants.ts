@@ -1,0 +1,25 @@
+export const ESCAPE_DELAY_MS = 300;
+
+export const ANSI_KEYS = {
+  CTRL_A: '\x01',
+  CTRL_B: '\x02',
+  CTRL_C: '\x03',
+  CTRL_D: '\x04',
+  CTRL_G: '\x07',
+  CTRL_K: '\x0B',
+  CTRL_L: '\x0C',
+  CTRL_O: '\x0F',
+  CTRL_R: '\x12',
+  CTRL_T: '\x14',
+  CTRL_U: '\x15',
+  CTRL_Y: '\x19',
+  ESCAPE: '\x1b',
+  SHIFT_TAB: '\x1b[Z',
+  UP: '\x1b[A',
+  DOWN: '\x1b[B',
+  RIGHT: '\x1b[C',
+  LEFT: '\x1b[D',
+  ENTER: '\r',
+  TAB: '\t',
+  BACKSPACE: '\x7f',
+} as const;

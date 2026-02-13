@@ -1,4 +1,5 @@
-import { useInput } from 'ink';
+import { useEffect } from 'react';
+import type { KeyboardDispatcher } from '@/keyboard/dispatcher.js';
 
 export type ShortcutAction = 'clear_screen' | 'exit';
 
@@ -23,17 +24,24 @@ interface KeyboardShortcutHandlers {
   onExit: () => void;
 }
 
-export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers) {
-  useInput((input, key) => {
-    const action = classifyShortcut(input, key);
-    if (action === 'clear_screen') {
+export function useKeyboardShortcuts(dispatcher: KeyboardDispatcher, handlers: KeyboardShortcutHandlers) {
+  const { onClearScreen, onExit } = handlers;
+
+  useEffect(() => {
+    const unregisterClear = dispatcher.register('global', 'ctrl+l', () => {
       process.stdout.write('\x1B[2J\x1B[0f');
-      handlers.onClearScreen();
-      return;
-    }
-    if (action === 'exit') {
-      handlers.onExit();
-      return;
-    }
-  });
+      onClearScreen();
+      return true;
+    });
+
+    const unregisterExit = dispatcher.register('global', 'ctrl+d', () => {
+      onExit();
+      return true;
+    });
+
+    return () => {
+      unregisterClear();
+      unregisterExit();
+    };
+  }, [dispatcher, onClearScreen, onExit]);
 }

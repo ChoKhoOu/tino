@@ -1,17 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Text, useApp, useInput } from 'ink';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useApp } from 'ink';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { DaemonManager } from './daemon/index.js';
 import { resolveAppDir } from './utils/resolve-app-dir.js';
 
-import { Input } from './components/Input.js';
-import { Intro } from './components/Intro.js';
-import { DaemonStatusBar } from './components/DaemonStatusBar.js';
-import { DebugPanel } from './components/DebugPanel.js';
-import { HistoryItemView, WorkingIndicator } from './components/index.js';
 import { ModelSelectionFlow } from './components/ModelSelectionFlow.js';
-import { PermissionPrompt } from './components/PermissionPrompt.js';
+import { AppLayout } from './components/AppLayout.js';
 import type { HistoryItem } from './components/index.js';
 import type { DoneEvent } from './domain/events.js';
 
@@ -25,9 +20,12 @@ import { useCommandHandler } from './hooks/useCommandHandler.js';
 import { useSessionCommands } from './hooks/useSessionCommands.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { buildDisplayEvents, findActiveToolId, deriveWorkingState } from './hooks/useDisplayEvents.js';
+import { KeyboardDispatcher } from './keyboard/dispatcher.js';
+import { KeyboardProvider } from './keyboard/use-keyboard.js';
 
 export function CLI() {
   const { exit } = useApp();
+  const dispatcher = useMemo(() => new KeyboardDispatcher(), []);
   const { runtime, broker, sessionStore, connectedMcpServers } = useRuntimeInit();
   const { state: runState, startRun, cancel, respondToPermission } = useSessionRunner(runtime);
   const { state: modelState, selectModel } = useModelSelector(broker);
@@ -125,52 +123,85 @@ export function CLI() {
     [navigateUp, navigateDown],
   );
 
-  useKeyboardShortcuts({
-    onClearScreen: () => { setHistory([]); setError(null); },
-    onExit: () => { console.log('\nGoodbye!'); exit(); },
+  const clearScreen = useCallback(() => {
+    setHistory([]);
+    setError(null);
+  }, []);
+
+  const exitApp = useCallback(() => {
+    console.log('\nGoodbye!');
+    exit();
+  }, [exit]);
+
+  useKeyboardShortcuts(dispatcher, {
+    onClearScreen: clearScreen,
+    onExit: exitApp,
   });
 
-  useInput((input, key) => {
-    if (key.escape) {
-      if (isInFlow()) { cancelFlow(); return; }
-      if (isProcessing) { cancelExecution(); return; }
-    }
-    if (key.ctrl && input === 'c') {
-      if (isInFlow()) { cancelFlow(); }
-      else if (isProcessing) { cancelExecution(); }
-      else { console.log('\nGoodbye!'); exit(); }
-    }
-  });
+  useEffect(() => {
+    const unregisterEscape = dispatcher.register('global', 'escape', () => {
+      if (isInFlow()) {
+        cancelFlow();
+        return true;
+      }
+      if (isProcessing) {
+        cancelExecution();
+        return true;
+      }
+      return false;
+    });
+
+    const unregisterCtrlC = dispatcher.register('global', 'ctrl+c', () => {
+      if (isInFlow()) {
+        cancelFlow();
+        return true;
+      }
+      if (isProcessing) {
+        cancelExecution();
+        return true;
+      }
+      exitApp();
+      return true;
+    });
+
+    const unregisterDoubleEscape = dispatcher.register('global', 'escape+escape', () => true);
+
+    return () => {
+      unregisterEscape();
+      unregisterCtrlC();
+      unregisterDoubleEscape();
+    };
+  }, [cancelExecution, cancelFlow, dispatcher, exitApp, isInFlow, isProcessing]);
 
   if (flowState.appState !== 'idle') {
     return (
-      <ModelSelectionFlow
-        flowState={flowState} modelState={modelState}
-        onProviderSelect={handleProviderSelect} onModelSelect={handleModelSelect}
-        onModelInputSubmit={handleModelInputSubmit}
-        onApiKeyConfirm={handleApiKeyConfirm} onApiKeySubmit={handleApiKeySubmit}
-      />
+      <KeyboardProvider dispatcher={dispatcher}>
+        <ModelSelectionFlow
+          flowState={flowState} modelState={modelState}
+          onProviderSelect={handleProviderSelect} onModelSelect={handleModelSelect}
+          onModelInputSubmit={handleModelInputSubmit}
+          onApiKeyConfirm={handleApiKeyConfirm} onApiKeySubmit={handleApiKeySubmit}
+        />
+      </KeyboardProvider>
     );
   }
 
   const workingState = deriveWorkingState(runState);
+
   return (
-    <Box flexDirection="column">
-      <Intro provider={modelState.currentProvider} model={modelState.currentModel} />
-      {history.map((item) => (<HistoryItemView key={item.id} item={item} />))}
-      {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
-      {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}
-      {runState.status === 'permission_pending' && runState.pendingPermission && (
-        <PermissionPrompt
-          request={{ type: 'permission_request', ...runState.pendingPermission, rule: { tool: runState.pendingPermission.toolId, action: 'ask' } }}
-          onResponse={(allowed, alwaysAllow) => respondToPermission(runState.pendingPermission!.toolId, allowed, alwaysAllow)}
-        />
-      )}
-      <Box marginTop={1}>
-        <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} />
-      </Box>
-      <DaemonStatusBar status={daemonStatus.status} info={daemonStatus.info} />
-      <DebugPanel maxLines={8} show={true} />
-    </Box>
+    <AppLayout
+      dispatcher={dispatcher}
+      history={history}
+      modelState={modelState}
+      runState={runState}
+      workingState={workingState}
+      error={error}
+      isProcessing={isProcessing}
+      handleSubmit={handleSubmit}
+      historyValue={historyValue}
+      handleHistoryNavigate={handleHistoryNavigate}
+      respondToPermission={respondToPermission}
+      daemonStatus={daemonStatus}
+    />
   );
 }

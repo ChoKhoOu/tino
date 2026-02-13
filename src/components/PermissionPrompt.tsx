@@ -1,7 +1,8 @@
-import React from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useCallback } from 'react';
+import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
 import type { PermissionRequestEvent } from '@/domain/index.js';
+import { useKeyboardBinding, useKeyboardMode } from '@/keyboard/use-keyboard.js';
 
 interface PermissionPromptProps {
   request: PermissionRequestEvent;
@@ -15,12 +16,26 @@ function summarizeArgs(args?: Record<string, unknown>): string {
 }
 
 export function PermissionPrompt({ request, onResponse }: PermissionPromptProps) {
-  useInput((input) => {
-    const key = input.toLowerCase();
-    if (key === 'y') onResponse(true);
-    else if (key === 'n') onResponse(false);
-    else if (key === 'a') onResponse(true, true);
-  });
+  useKeyboardMode('permission');
+
+  const handlePermissionInput = useCallback((event: { input: string }) => {
+    const key = event.input.toLowerCase();
+    if (key === 'y') {
+      onResponse(true);
+      return true;
+    }
+    if (key === 'n') {
+      onResponse(false);
+      return true;
+    }
+    if (key === 'a') {
+      onResponse(true, true);
+      return true;
+    }
+    return false;
+  }, [onResponse]);
+
+  useKeyboardBinding('permission', 'any', handlePermissionInput);
 
   const argsSummary = summarizeArgs(request.args);
 

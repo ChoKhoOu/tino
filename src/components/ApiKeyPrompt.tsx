@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useCallback, useState } from 'react';
+import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
+import { useKeyboardBinding, useKeyboardMode } from '../keyboard/use-keyboard.js';
+import type { KeyEvent } from '../keyboard/types.js';
 
 interface ApiKeyConfirmProps {
   providerName: string;
@@ -8,14 +10,22 @@ interface ApiKeyConfirmProps {
 }
 
 export function ApiKeyConfirm({ providerName, onConfirm }: ApiKeyConfirmProps) {
-  useInput((input) => {
-    const key = input.toLowerCase();
+  useKeyboardMode('popup');
+
+  const handleConfirmInput = useCallback((event: KeyEvent) => {
+    const key = event.input.toLowerCase();
     if (key === 'y') {
       onConfirm(true);
-    } else if (key === 'n') {
-      onConfirm(false);
+      return true;
     }
-  });
+    if (key === 'n') {
+      onConfirm(false);
+      return true;
+    }
+    return false;
+  }, [onConfirm]);
+
+  useKeyboardBinding('popup', 'any', handleConfirmInput);
 
   return (
     <Box flexDirection="column" marginTop={1}>
@@ -38,17 +48,30 @@ interface ApiKeyInputProps {
 export function ApiKeyInput({ providerName, apiKeyName, onSubmit }: ApiKeyInputProps) {
   const [value, setValue] = useState('');
 
-  useInput((input, key) => {
+  useKeyboardMode('input');
+
+  const handleInput = useCallback((event: KeyEvent) => {
+    const { input, key } = event;
     if (key.return) {
       onSubmit(value.trim() || null);
-    } else if (key.escape) {
-      onSubmit(null);
-    } else if (key.backspace || key.delete) {
-      setValue((prev) => prev.slice(0, -1));
-    } else if (input && !key.ctrl && !key.meta) {
-      setValue((prev) => prev + input);
+      return true;
     }
-  });
+    if (key.escape) {
+      onSubmit(null);
+      return true;
+    }
+    if (key.backspace || key.delete) {
+      setValue((prev) => prev.slice(0, -1));
+      return true;
+    }
+    if (input && !key.ctrl && !key.meta) {
+      setValue((prev) => prev + input);
+      return true;
+    }
+    return false;
+  }, [onSubmit, value]);
+
+  useKeyboardBinding('input', 'any', handleInput);
 
   // Mask the API key for display
   const maskedValue = value.length > 0 ? '*'.repeat(value.length) : '';
@@ -72,4 +95,3 @@ export function ApiKeyInput({ providerName, apiKeyName, onSubmit }: ApiKeyInputP
     </Box>
   );
 }
-

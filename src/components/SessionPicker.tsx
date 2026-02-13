@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { useCallback, useState } from 'react';
+import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
 import type { SessionMetadata } from '../session/session.js';
+import { useKeyboardBinding, useKeyboardMode } from '../keyboard/use-keyboard.js';
+import type { KeyEvent } from '../keyboard/types.js';
 
 interface SessionPickerProps {
   sessions: SessionMetadata[];
@@ -24,19 +26,32 @@ function truncateTitle(title: string, max: number): string {
 export function SessionPicker({ sessions, onSelect }: SessionPickerProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  useInput((input, key) => {
+  useKeyboardMode('popup');
+
+  const handlePickerInput = useCallback((event: KeyEvent) => {
+    const { input, key } = event;
     if (key.upArrow || input === 'k') {
       setSelectedIndex((prev) => Math.max(0, prev - 1));
-    } else if (key.downArrow || input === 'j') {
+      return true;
+    }
+    if (key.downArrow || input === 'j') {
       setSelectedIndex((prev) => Math.min(sessions.length - 1, prev + 1));
-    } else if (key.return) {
+      return true;
+    }
+    if (key.return) {
       if (sessions.length > 0) {
         onSelect(sessions[selectedIndex].id);
       }
-    } else if (key.escape) {
-      onSelect(null);
+      return true;
     }
-  });
+    if (key.escape) {
+      onSelect(null);
+      return true;
+    }
+    return false;
+  }, [onSelect, selectedIndex, sessions]);
+
+  useKeyboardBinding('popup', 'any', handlePickerInput);
 
   if (sessions.length === 0) {
     return (
