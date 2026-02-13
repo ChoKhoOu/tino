@@ -192,17 +192,40 @@ describe('parseSlashCommand — config commands', () => {
 // ─── SLASH_COMMANDS registry ────────────────────────────────────────────────
 
 describe('SLASH_COMMANDS registry', () => {
-  test('contains all 21 commands', () => {
+  test('contains all 23 commands', () => {
     const expected = [
       '/model', '/clear', '/skill', '/help', '/exit',
       '/compact', '/context', '/cost', '/resume', '/export',
       '/rename', '/rewind', '/status', '/permissions', '/mcp',
       '/config', '/todos', '/verbose', '/agents', '/doctor', '/init',
+      '/output-style', '/style',
     ];
     for (const cmd of expected) {
       expect(SLASH_COMMANDS).toHaveProperty(cmd);
     }
-    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(21);
+    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(23);
+  });
+});
+
+// ─── Output style commands ──────────────────────────────────────────────────
+
+describe('parseSlashCommand — output style commands', () => {
+  test('/output-style returns action', () => {
+    const result = parseSlashCommand('/output-style');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('output-style');
+  });
+
+  test('/style is alias for /output-style', () => {
+    const result = parseSlashCommand('/style');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('output-style');
+  });
+
+  test('/output-style is case insensitive', () => {
+    const result = parseSlashCommand('/OUTPUT-STYLE');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('output-style');
   });
 });
 

@@ -5,12 +5,14 @@ import type { RunState } from './useSessionRunner.js';
 import type { DaemonStatus } from './useDaemonStatus.js';
 import type { HistoryItem } from '../components/index.js';
 import type { StatusLineProps } from '../components/StatusLine.js';
+import type { PermissionMode } from '../domain/permission-mode.js';
 
 export function useStatusLineData(
   modelState: ModelSelectorState,
   runState: RunState,
   daemonStatus: { status: DaemonStatus },
-  history: HistoryItem[]
+  history: HistoryItem[],
+  permissionMode?: PermissionMode,
 ): StatusLineProps {
   return useMemo(() => {
     let totalTokens = 0;
@@ -62,6 +64,7 @@ export function useStatusLineData(
       daemonStatus: daemonStatus.status,
       cost: 0, // Placeholder as we don't have pricing info
       duration,
+      permissionMode,
     };
-  }, [modelState, runState, daemonStatus, history]);
+  }, [modelState, runState, daemonStatus, history, permissionMode]);
 }

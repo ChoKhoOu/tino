@@ -79,6 +79,7 @@ export async function runExtendedSlashAction(
     case 'help':
     case 'exit':
     case 'verbose':
+    case 'output-style':
       return null;
   }
 }

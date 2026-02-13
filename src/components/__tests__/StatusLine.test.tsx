@@ -77,4 +77,59 @@ describe('StatusLine', () => {
     );
     expect(lastFrame()).toContain('1m 5s');
   });
+
+  test('does not show permission mode when default', () => {
+    const { lastFrame } = render(
+      <StatusLine
+        modelName="gpt-5.2"
+        contextPercent={10}
+        daemonStatus="connected"
+        cost={0}
+        duration={null}
+        permissionMode="default"
+      />
+    );
+    expect(lastFrame()).not.toContain('Mode:');
+  });
+
+  test('shows permission mode when auto-accept', () => {
+    const { lastFrame } = render(
+      <StatusLine
+        modelName="gpt-5.2"
+        contextPercent={10}
+        daemonStatus="connected"
+        cost={0}
+        duration={null}
+        permissionMode="auto-accept"
+      />
+    );
+    expect(lastFrame()).toContain('Mode: Auto Accept');
+  });
+
+  test('shows permission mode when plan', () => {
+    const { lastFrame } = render(
+      <StatusLine
+        modelName="gpt-5.2"
+        contextPercent={10}
+        daemonStatus="connected"
+        cost={0}
+        duration={null}
+        permissionMode="plan"
+      />
+    );
+    expect(lastFrame()).toContain('Mode: Plan');
+  });
+
+  test('does not show mode section when permissionMode is undefined', () => {
+    const { lastFrame } = render(
+      <StatusLine
+        modelName="gpt-5.2"
+        contextPercent={10}
+        daemonStatus="connected"
+        cost={0}
+        duration={null}
+      />
+    );
+    expect(lastFrame()).not.toContain('Mode:');
+  });
 });

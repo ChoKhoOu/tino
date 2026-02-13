@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import { componentTokens, getContextColor, colors } from '../theme.js';
+import type { PermissionMode } from '../domain/permission-mode.js';
 
 export interface StatusLineProps {
   modelName: string;
@@ -9,6 +10,7 @@ export interface StatusLineProps {
   daemonStatus: 'not-configured' | 'starting' | 'connected' | 'error' | 'stopped';
   cost: number;
   duration: number | null;
+  permissionMode?: PermissionMode;
 }
 
 export function StatusLine({
@@ -17,6 +19,7 @@ export function StatusLine({
   daemonStatus,
   cost,
   duration,
+  permissionMode,
 }: StatusLineProps) {
   const { bg, fg, separator } = componentTokens.statusLine;
 
@@ -83,6 +86,13 @@ export function StatusLine({
       <Text color={fg}>Daemon: </Text>
       {renderDaemonStatus()}
       <Separator />
+
+      {permissionMode && permissionMode !== 'default' && (
+        <>
+          <Text color={colors.accent}>Mode: {permissionMode === 'auto-accept' ? 'Auto Accept' : permissionMode === 'plan' ? 'Plan' : 'Delegate'}</Text>
+          <Separator />
+        </>
+      )}
       
       <Text color={fg}>{formatCost(cost)}</Text>
       <Separator />

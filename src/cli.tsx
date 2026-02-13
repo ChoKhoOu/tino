@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from 'ink';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { DaemonManager } from './daemon/index.js';
 import { resolveAppDir } from './utils/resolve-app-dir.js';
-
 import { ModelSelectionFlow } from './components/ModelSelectionFlow.js';
 import { AppLayout } from './components/AppLayout.js';
 import type { HistoryItem } from './components/index.js';
@@ -21,6 +20,7 @@ import { useCommandHandler } from './hooks/useCommandHandler.js';
 import { useSessionCommands } from './hooks/useSessionCommands.js';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts.js';
 import { useVerboseMode } from './hooks/useVerboseMode.js';
+import { usePermissionModeToggle } from './hooks/usePermissionModeToggle.js';
 import { deriveWorkingState } from './hooks/useDisplayEvents.js';
 import { createBashHistory } from './hooks/useBashHistory.js';
 import { KeyboardDispatcher } from './keyboard/dispatcher.js';
@@ -31,6 +31,7 @@ export function CLI() {
   const dispatcher = useMemo(() => new KeyboardDispatcher(), []);
   const bashHistory = useMemo(() => createBashHistory(), []);
   const { isVerbose, toggleVerbose } = useVerboseMode(dispatcher);
+  const { permissionMode } = usePermissionModeToggle(dispatcher);
   const { runtime, broker, sessionStore, connectedMcpServers } = useRuntimeInit();
 
   useEffect(() => { bashHistory.load(); }, [bashHistory]);
@@ -64,7 +65,7 @@ export function CLI() {
   const [error, setError] = useState<string | null>(null);
   const isProcessing = runState.status === 'running' || runState.status === 'permission_pending';
 
-  const statusLineData = useStatusLineData(modelState, runState, daemonStatus, history);
+  const statusLineData = useStatusLineData(modelState, runState, daemonStatus, history, permissionMode);
 
   const executeRun = useCallback(async (query: string) => {
     setError(null);
@@ -187,11 +188,11 @@ export function CLI() {
       historyValue={historyValue}
       handleHistoryNavigate={handleHistoryNavigate}
       respondToPermission={respondToPermission}
-      daemonStatus={daemonStatus}
       bashHistory={bashHistory}
       statusLineData={statusLineData}
       selectModel={selectModel}
       isVerbose={isVerbose}
+      onBackgroundCurrentOperation={cancelExecution}
     />
   );
 }

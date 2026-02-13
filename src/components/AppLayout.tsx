@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Input } from './Input.js';
 import { Intro } from './Intro.js';
@@ -15,11 +15,14 @@ import type { HistoryItem } from './index.js';
 import type { ModelSelectorState } from '../hooks/useModelSelector.js';
 import type { RunState } from '../hooks/useSessionRunner.js';
 import type { WorkingState } from './WorkingIndicator.js';
-import type { DaemonStatus, DaemonInfo } from '../hooks/useDaemonStatus.js';
 import type { BashHistory } from '../hooks/useBashHistory.js';
 
 import { StatusLine } from './StatusLine.js';
 import type { StatusLineProps } from './StatusLine.js';
+import { TaskList } from './TaskList.js';
+import { useBackgroundTasks } from '../hooks/useBackgroundTasks.js';
+import { useBackgroundTaskControl } from '../hooks/useBackgroundTaskControl.js';
+import { useTaskListVisibility } from '../hooks/useTaskListVisibility.js';
 
 interface AppLayoutProps {
   dispatcher: KeyboardDispatcher;
@@ -33,11 +36,11 @@ interface AppLayoutProps {
   historyValue: string | null;
   handleHistoryNavigate: (direction: 'up' | 'down') => void;
   respondToPermission: (toolId: string, allowed: boolean, alwaysAllow?: boolean) => void;
-  daemonStatus: { status: DaemonStatus; info?: DaemonInfo };
   bashHistory?: BashHistory | null;
   statusLineData: StatusLineProps;
   selectModel: (name: string) => void;
   isVerbose?: boolean;
+  onBackgroundCurrentOperation: () => void;
 }
 
 export function AppLayout({
@@ -52,18 +55,33 @@ export function AppLayout({
   historyValue,
   handleHistoryNavigate,
   respondToPermission,
-  daemonStatus,
   bashHistory,
   statusLineData,
   selectModel,
   isVerbose = false,
+  onBackgroundCurrentOperation,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
   const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
+  const { tasks } = useBackgroundTasks();
+  const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
+  const [taskNotice, setTaskNotice] = useState<string | null>(null);
   const introHeight = history.length === 0 ? 3 : 0;
   const inputHeight = 3;
   const statusLineHeight = 1;
   const contentHeight = Math.max(0, rows - introHeight - inputHeight - statusLineHeight);
+  const currentQuery = history[history.length - 1]?.status === 'processing'
+    ? history[history.length - 1].query
+    : null;
+
+  const backgroundControlOptions = useMemo(() => ({
+    runState,
+    currentQuery,
+    cancelForegroundRun: onBackgroundCurrentOperation,
+    setNotice: setTaskNotice,
+  }), [currentQuery, onBackgroundCurrentOperation, runState]);
+
+  useBackgroundTaskControl(dispatcher, backgroundControlOptions);
 
   return (
     <KeyboardProvider dispatcher={dispatcher}>
@@ -85,6 +103,13 @@ export function AppLayout({
             />
           )}
         </ScrollableContent>
+
+        {isTaskListVisible && <TaskList tasks={tasks} />}
+        {taskNotice && (
+          <Box marginBottom={1}>
+            <Text color="yellow">{taskNotice}</Text>
+          </Box>
+        )}
         
         <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
         <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />

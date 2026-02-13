@@ -2,16 +2,14 @@ import { z } from 'zod';
 import { EventEmitter } from 'node:events';
 import { definePlugin } from '@/domain/index.js';
 import type { TaskToolSnapshot } from '@/domain/background-task.js';
-import type { ModelBroker } from '@/runtime/model-broker.js';
-import type { PermissionEngine } from '@/runtime/permission-engine.js';
-import type { HookRunner } from '@/runtime/hook-runner.js';
-import { SessionRuntime } from '@/runtime/session-runtime.js';
-import { ToolRegistry } from '@/runtime/tool-registry.js';
+import { resolveDelegatedAgent, runChildTask } from './task-delegation.js';
+import type { SessionRuntimeConfig } from './task-delegation.js';
 
 const CHILD_MAX_ITERATIONS = 5;
 const schema = z.object({
   description: z.string(),
   prompt: z.string(),
+  agent: z.string().optional(),
   category: z.string().optional(),
   subagent_type: z.string().optional(),
   load_skills: z.array(z.string()).optional(),
@@ -21,16 +19,8 @@ const schema = z.object({
 
 type TaskArgs = z.infer<typeof schema>;
 
-export interface SessionRuntimeConfig {
-  broker: ModelBroker;
-  registry: ToolRegistry;
-  permissions: PermissionEngine;
-  hooks: HookRunner;
-  systemPrompt: string;
-  maxIterations?: number;
-}
-
 type BackgroundTaskRecord = TaskToolSnapshot & {
+  agent?: string;
   summary?: string;
   iterations?: number;
   total_time_ms?: number;
@@ -81,52 +71,6 @@ function createTaskId(): string {
   return `task_${Date.now()}_${taskCounter}`;
 }
 
-function createChildRegistry(parent: ToolRegistry): ToolRegistry {
-  const child = new ToolRegistry();
-  const childPlugins = parent.getAll().filter((plugin) => plugin.id !== 'task' && plugin.id !== 'todo_write');
-  child.registerAll(childPlugins);
-  return child;
-}
-
-function createChildRuntime(config: SessionRuntimeConfig): SessionRuntime {
-  return new SessionRuntime({
-    broker: config.broker,
-    registry: createChildRegistry(config.registry),
-    permissions: config.permissions,
-    hooks: config.hooks,
-    systemPrompt: config.systemPrompt,
-    maxIterations: Math.min(config.maxIterations ?? CHILD_MAX_ITERATIONS, CHILD_MAX_ITERATIONS),
-  });
-}
-
-async function runChildTask(
-  prompt: string,
-  signal: AbortSignal,
-  onProgress?: (eventType: string) => void,
-): Promise<Omit<BackgroundTaskRecord, 'task_id' | 'description' | 'status' | 'start_time'>> {
-  if (!runtimeFactory) throw new Error('Task tool is not configured');
-
-  const childRuntime = createChildRuntime(runtimeFactory());
-  let done: { answer: string; iterations: number; totalTime: number; toolCalls: unknown[] } | null = null;
-
-  for await (const event of childRuntime.startRun(prompt, signal)) {
-    if (event.type === 'done') {
-      done = { answer: event.answer, iterations: event.iterations, totalTime: event.totalTime, toolCalls: event.toolCalls };
-    } else {
-      onProgress?.(event.type);
-    }
-  }
-
-  if (!done) throw new Error('Child run completed without a done event');
-
-  return {
-    answer: done.answer,
-    iterations: done.iterations,
-    total_time_ms: done.totalTime,
-    summary: `Child task completed in ${done.iterations} iterations with ${done.toolCalls.length} tool calls.`,
-  };
-}
-
 export default definePlugin({
   id: 'task',
   domain: 'agent',
@@ -137,11 +81,20 @@ export default definePlugin({
     const args = schema.parse(raw) as TaskArgs;
     if (!runtimeFactory) return 'Error: Task tool is not configured';
 
+    let delegatedAgent: ReturnType<typeof resolveDelegatedAgent>;
+    try {
+      delegatedAgent = resolveDelegatedAgent(args.agent);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return JSON.stringify({ status: 'failed', error: message, agent: args.agent, summary: `Child task failed: ${message}` });
+    }
+
     if (args.run_in_background) {
       const taskId = createTaskId();
       const record: BackgroundTaskRecord = {
         task_id: taskId,
         description: args.description,
+        agent: delegatedAgent?.name,
         status: 'running',
         start_time: Date.now(),
       };
@@ -153,9 +106,16 @@ export default definePlugin({
       taskAbortControllers.set(taskId, controller);
       ctx.signal.addEventListener('abort', () => controller.abort(), { once: true });
 
-      void runChildTask(args.prompt, controller.signal, (eventType) => {
-        const currentTask = backgroundTasks.get(taskId);
-        if (currentTask) backgroundTaskEvents.emit('task:progress', currentTask, eventType);
+      void runChildTask({
+        runtimeFactory,
+        prompt: args.prompt,
+        signal: controller.signal,
+        delegatedAgent,
+        childMaxIterations: CHILD_MAX_ITERATIONS,
+        onProgress: (eventType) => {
+          const currentTask = backgroundTasks.get(taskId);
+          if (currentTask) backgroundTaskEvents.emit('task:progress', currentTask, eventType);
+        },
       })
         .then((result) => {
           taskAbortControllers.delete(taskId);
@@ -181,11 +141,17 @@ export default definePlugin({
     }
 
     try {
-      const result = await runChildTask(args.prompt, ctx.signal);
+      const result = await runChildTask({
+        runtimeFactory,
+        prompt: args.prompt,
+        signal: ctx.signal,
+        delegatedAgent,
+        childMaxIterations: CHILD_MAX_ITERATIONS,
+      });
       return JSON.stringify({ status: 'completed', ...result });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return JSON.stringify({ status: 'failed', error: message, summary: `Child task failed: ${message}` });
+      return JSON.stringify({ status: 'failed', error: message, agent: delegatedAgent?.name, summary: `Child task failed: ${message}` });
     }
   },
 });
