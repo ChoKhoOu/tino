@@ -64,7 +64,7 @@ export function AppLayout({
   onBackgroundCurrentOperation,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
-  const modelPopup = useModelSwitchPopup(dispatcher, modelState.currentModel, selectModel);
+  const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
   const { tasks } = useBackgroundTasks();
   const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
   const [taskNotice, setTaskNotice] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export function AppLayout({
 
   useBackgroundTaskControl(dispatcher, backgroundControlOptions);
 
-  const rewindMenu = useRewindMenu(dispatcher, history, (turn, action) => {
+  const rewindMenu = useRewindMenu(history, (turn: HistoryItem, action: string) => {
     setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
   });
 
