@@ -64,11 +64,11 @@ export function AppLayout({
   onBackgroundCurrentOperation,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
-  const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
+  const modelPopup = useModelSwitchPopup(dispatcher, modelState.currentModel, selectModel);
   const { tasks } = useBackgroundTasks();
   const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
   const [taskNotice, setTaskNotice] = useState<string | null>(null);
-  const introHeight = history.length === 0 ? 3 : 0;
+  const introHeight = history.length === 0 ? 11 : 0;
   const inputHeight = 3;
   const statusLineHeight = 1;
   const contentHeight = Math.max(0, rows - introHeight - inputHeight - statusLineHeight);
@@ -85,7 +85,7 @@ export function AppLayout({
 
   useBackgroundTaskControl(dispatcher, backgroundControlOptions);
 
-  const rewindMenu = useRewindMenu(history, (turn, action) => {
+  const rewindMenu = useRewindMenu(dispatcher, history, (turn, action) => {
     setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
   });
 
