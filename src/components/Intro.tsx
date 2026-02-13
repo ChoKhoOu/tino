@@ -20,7 +20,7 @@ interface IntroProps {
 export function Intro({ provider, model }: IntroProps) {
   return (
     <Box flexDirection="column" marginTop={1} marginBottom={1}>
-      <Box flexDirection="column" borderStyle="round" borderColor={colors.mutedDark} paddingX={1}>
+      <Box flexDirection="column" borderStyle="round" borderColor={colors.primary} paddingX={1} paddingTop={1}>
         {LOGO.map((line) => (
           <Text key={line} color={colors.primary}>{line}</Text>
         ))}
