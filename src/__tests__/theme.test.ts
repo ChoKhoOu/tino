@@ -12,8 +12,8 @@ import {
 describe('theme', () => {
   describe('backward compatibility', () => {
     it('preserves all 14 original colors', () => {
-      expect(colors.primary).toBe('#258bff');
-      expect(colors.primaryLight).toBe('#a5cfff');
+      expect(colors.primary).toBe('#E8772E');
+      expect(colors.primaryLight).toBe('#F5B87A');
       expect(colors.success).toBe('green');
       expect(colors.error).toBe('red');
       expect(colors.warning).toBe('yellow');
@@ -85,7 +85,7 @@ describe('theme', () => {
   describe('borderStyles', () => {
     it('defines border color tokens', () => {
       expect(borderStyles.default).toBe('#555555');
-      expect(borderStyles.active).toBe('#258bff');
+      expect(borderStyles.active).toBe('#E8772E');
       expect(borderStyles.warning).toBe('yellow');
       expect(borderStyles.info).toBe('#6CB6FF');
     });

@@ -1,6 +1,6 @@
 export const colors = {
-  primary: '#258bff',
-  primaryLight: '#a5cfff',
+  primary: '#E8772E',
+  primaryLight: '#F5B87A',
   success: 'green',
   error: 'red',
   warning: 'yellow',
@@ -39,7 +39,7 @@ export const contextColors = { low: 'green', mid: 'yellow', high: 'red' } as con
 
 export const borderStyles = {
   default: '#555555',
-  active: '#258bff',
+  active: '#E8772E',
   warning: 'yellow',
   info: '#6CB6FF',
 } as const;
