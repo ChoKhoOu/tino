@@ -4,7 +4,6 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { DaemonManager } from './daemon/index.js';
 import { resolveAppDir } from './utils/resolve-app-dir.js';
-import { ModelSelectionFlow } from './components/ModelSelectionFlow.js';
 import { AppLayout } from './components/AppLayout.js';
 import type { HistoryItem } from './components/index.js';
 
@@ -14,7 +13,6 @@ import { useInputHistory } from './hooks/useInputHistory.js';
 import { useDaemonStatus } from './hooks/useDaemonStatus.js';
 import { useStatusLineData } from './hooks/useStatusLineData.js';
 import { useHistorySync } from './hooks/useHistorySync.js';
-import { useModelSelectionFlow } from './hooks/useModelSelectionFlow.js';
 import { useRuntimeInit } from './hooks/useRuntimeInit.js';
 import { useCommandHandler } from './hooks/useCommandHandler.js';
 import { useSessionCommands } from './hooks/useSessionCommands.js';
@@ -39,15 +37,12 @@ export function CLI() {
   const { state: modelState, selectModel } = useModelSelector(broker);
 
   const {
-    flowState, startFlow, cancelFlow,
-    handleProviderSelect, handleModelSelect, handleModelInputSubmit,
-    handleApiKeyConfirm, handleApiKeySubmit, isInFlow,
-  } = useModelSelectionFlow(selectModel);
-
-  const {
     historyValue, navigateUp, navigateDown,
     saveMessage, updateAgentResponse, resetNavigation,
   } = useInputHistory();
+
+  const stylePickerRef = useRef<(() => void) | null>(null);
+  const modelPopupRef = useRef<(() => void) | null>(null);
 
   const daemonRef = useRef<DaemonManager | null>(null);
   useEffect(() => {
@@ -89,7 +84,8 @@ export function CLI() {
   });
 
   const { handleSubmit } = useCommandHandler({
-    exit, startFlow, isInFlow, isProcessing, runtime,
+    exit, openModelPopup: () => modelPopupRef.current?.(), openStylePicker: () => stylePickerRef.current?.(), isProcessing, runtime,
+    selectModel,
     saveMessage, resetNavigation, executeRun, setHistory, setError,
     extendedSlashDeps, bashHistory, toggleVerbose,
   });
@@ -127,10 +123,6 @@ export function CLI() {
 
   useEffect(() => {
     const unregisterEscape = dispatcher.register('global', 'escape', () => {
-      if (isInFlow()) {
-        cancelFlow();
-        return true;
-      }
       if (isProcessing) {
         cancelExecution();
         return true;
@@ -139,10 +131,6 @@ export function CLI() {
     });
 
     const unregisterCtrlC = dispatcher.register('global', 'ctrl+c', () => {
-      if (isInFlow()) {
-        cancelFlow();
-        return true;
-      }
       if (isProcessing) {
         cancelExecution();
         return true;
@@ -158,20 +146,7 @@ export function CLI() {
       unregisterCtrlC();
       unregisterDoubleEscape();
     };
-  }, [cancelExecution, cancelFlow, dispatcher, exitApp, isInFlow, isProcessing]);
-
-  if (flowState.appState !== 'idle') {
-    return (
-      <KeyboardProvider dispatcher={dispatcher}>
-        <ModelSelectionFlow
-          flowState={flowState} modelState={modelState}
-          onProviderSelect={handleProviderSelect} onModelSelect={handleModelSelect}
-          onModelInputSubmit={handleModelInputSubmit}
-          onApiKeyConfirm={handleApiKeyConfirm} onApiKeySubmit={handleApiKeySubmit}
-        />
-      </KeyboardProvider>
-    );
-  }
+  }, [cancelExecution, dispatcher, exitApp, isProcessing]);
 
   const workingState = deriveWorkingState(runState);
 
@@ -193,6 +168,8 @@ export function CLI() {
       selectModel={selectModel}
       isVerbose={isVerbose}
       onBackgroundCurrentOperation={cancelExecution}
+      stylePickerRef={stylePickerRef}
+      modelPopupRef={modelPopupRef}
     />
   );
 }

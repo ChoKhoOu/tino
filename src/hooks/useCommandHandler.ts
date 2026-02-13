@@ -9,8 +9,8 @@ import type { BashHistory } from './useBashHistory.js';
 
 interface CommandHandlerDeps {
   exit: () => void;
-  startFlow: () => void;
-  isInFlow: () => boolean;
+  openModelPopup: () => void;
+  selectModel?: (name: string) => void;
   isProcessing: boolean;
   runtime: SessionRuntime | null;
   saveMessage: (msg: string) => Promise<void>;
@@ -21,13 +21,14 @@ interface CommandHandlerDeps {
   extendedSlashDeps: ExtendedSlashDeps;
   bashHistory?: BashHistory | null;
   toggleVerbose?: () => void;
+  openStylePicker?: () => void;
 }
 
 export function useCommandHandler(deps: CommandHandlerDeps) {
   const {
-    exit, startFlow, isInFlow, isProcessing, runtime,
+    exit, openModelPopup, selectModel, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError, extendedSlashDeps,
-    bashHistory, toggleVerbose,
+    bashHistory, toggleVerbose, openStylePicker,
   } = deps;
 
   const addDirectResponse = useCallback((query: string, answer: string) => {
@@ -55,7 +56,14 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
 
       const slashResult = parseSlashCommand(query);
       if (slashResult !== null) {
-        if (slashResult.action === 'model') { startFlow(); return; }
+        if (slashResult.action === 'model') {
+          if (slashResult.args && slashResult.args.length > 0 && selectModel) {
+            selectModel(slashResult.args.join(' '));
+            return;
+          }
+          openModelPopup();
+          return;
+        }
         if (slashResult.action === 'clear') {
           runtime?.clearHistory();
           setHistory([]);
@@ -65,6 +73,10 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
         if (slashResult.action === 'verbose' && toggleVerbose) {
           toggleVerbose();
           addDirectResponse(query, 'Verbose mode toggled.');
+          return;
+        }
+        if (slashResult.action === 'output-style' && openStylePicker) {
+          openStylePicker();
           return;
         }
         if (slashResult.action) {
@@ -89,7 +101,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
         return;
       }
 
-      if (isInFlow() || isProcessing) return;
+      if (isProcessing) return;
 
       await saveMessage(query);
       resetNavigation();
@@ -97,7 +109,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       const resolvedQuery = await resolveFileReferences(query);
       await executeRun(resolvedQuery);
     },
-    [exit, startFlow, isInFlow, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory, toggleVerbose],
+    [exit, openModelPopup, selectModel, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory, toggleVerbose, openStylePicker],
   );
 
   return { handleSubmit, addDirectResponse };

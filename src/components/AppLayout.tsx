@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Input } from './Input.js';
 import { Intro } from './Intro.js';
@@ -7,8 +7,10 @@ import { HistoryItemView, WorkingIndicator } from './index.js';
 import { PermissionPrompt } from './PermissionPrompt.js';
 import { ScrollableContent } from './ScrollableContent.js';
 import { ModelSwitchPopup } from './ModelSwitchPopup.js';
+import { StylePicker } from './StylePicker.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { useModelSwitchPopup } from '../hooks/useModelSwitchPopup.js';
+import { useStylePicker } from '../hooks/useStylePicker.js';
 import { KeyboardProvider } from '../keyboard/use-keyboard.js';
 import type { KeyboardDispatcher } from '../keyboard/dispatcher.js';
 import type { HistoryItem } from './index.js';
@@ -43,6 +45,8 @@ interface AppLayoutProps {
   selectModel: (name: string) => void;
   isVerbose?: boolean;
   onBackgroundCurrentOperation: () => void;
+  stylePickerRef?: React.MutableRefObject<(() => void) | null>;
+  modelPopupRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 export function AppLayout(props: AppLayoutProps) {
@@ -70,9 +74,12 @@ function AppLayoutContent({
   selectModel,
   isVerbose = false,
   onBackgroundCurrentOperation,
+  stylePickerRef,
+  modelPopupRef,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
   const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
+  const stylePicker = useStylePicker();
   const { tasks } = useBackgroundTasks();
   const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
   const [taskNotice, setTaskNotice] = useState<string | null>(null);
@@ -88,6 +95,18 @@ function AppLayoutContent({
   backgroundControlRef.current = { runState, currentQuery, cancelForegroundRun: onBackgroundCurrentOperation, setNotice: setTaskNotice };
 
   useBackgroundTaskControl(dispatcher, backgroundControlRef);
+
+  useEffect(() => {
+    if (stylePickerRef) {
+      stylePickerRef.current = stylePicker.open;
+    }
+  }, [stylePicker.open, stylePickerRef]);
+
+  useEffect(() => {
+    if (modelPopupRef) {
+      modelPopupRef.current = modelPopup.open;
+    }
+  }, [modelPopup.open, modelPopupRef]);
 
   const handleRewindAction = useCallback((turn: HistoryItem, action: string) => {
     setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
@@ -130,7 +149,8 @@ function AppLayoutContent({
       />
       
       <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
-      <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />
+      <StylePicker isOpen={stylePicker.isOpen} selectedIndex={stylePicker.selectedIndex} styles={stylePicker.styles} />
+      <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} onSlashSelect={handleSubmit} />
       
       <StatusLine {...statusLineData} />
       
