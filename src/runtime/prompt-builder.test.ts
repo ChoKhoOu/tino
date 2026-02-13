@@ -1,9 +1,22 @@
-import { describe, expect, test } from 'bun:test';
-import { buildSystemPrompt } from './prompt-builder';
+import { describe, expect, test, beforeEach, afterEach } from 'bun:test';
+import { buildSystemPrompt } from './prompt-builder.js';
+import { setSetting } from '@/config/settings.js';
+import { clearStyleCache, setCustomStyleProvider, _overrideActiveStyleName } from '@/styles/registry.js';
 
 describe('buildSystemPrompt', () => {
   const mockToolDescriptions = 'Tool: mock-tool\nDescription: A mock tool.';
   const mockSkillsSection = '- Skill: mock-skill';
+
+  beforeEach(() => {
+    clearStyleCache();
+    setCustomStyleProvider(null);
+    setSetting('outputStyle', 'default');
+  });
+
+  afterEach(() => {
+    setSetting('outputStyle', 'default');
+    clearStyleCache();
+  });
 
   test('should include dual identity', () => {
     const prompt = buildSystemPrompt(mockToolDescriptions);
@@ -57,5 +70,24 @@ describe('buildSystemPrompt', () => {
   test('should stay under 8000 tokens (approx 32000 chars)', () => {
     const prompt = buildSystemPrompt(mockToolDescriptions);
     expect(prompt.length).toBeLessThan(32000);
+  });
+
+  test('should not append style section for default style', () => {
+    const prompt = buildSystemPrompt(mockToolDescriptions);
+    expect(prompt).not.toContain('## Output Style');
+  });
+
+  test('should append style modifier when non-default style is active', () => {
+    _overrideActiveStyleName('concise');
+    const prompt = buildSystemPrompt(mockToolDescriptions);
+    expect(prompt).toContain('## Output Style: concise');
+    expect(prompt).toContain('concise');
+  });
+
+  test('should append trading style modifier', () => {
+    _overrideActiveStyleName('trading');
+    const prompt = buildSystemPrompt(mockToolDescriptions);
+    expect(prompt).toContain('## Output Style: trading');
+    expect(prompt).toContain('quantitative');
   });
 });

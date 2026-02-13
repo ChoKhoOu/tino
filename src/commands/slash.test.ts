@@ -133,6 +133,12 @@ describe('parseSlashCommand — session commands', () => {
 });
 
 describe('parseSlashCommand — config commands', () => {
+  test('/agents returns action', () => {
+    const result = parseSlashCommand('/agents');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('agents');
+  });
+
   test('/status returns action with immediate output', () => {
     const result = parseSlashCommand('/status');
     expect(result?.handled).toBe(true);
@@ -169,22 +175,34 @@ describe('parseSlashCommand — config commands', () => {
     expect(result?.action).toBe('verbose');
     expect(result?.output).toBe('Verbose mode toggled.');
   });
+
+  test('/doctor returns action', () => {
+    const result = parseSlashCommand('/doctor');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('doctor');
+  });
+
+  test('/init returns action', () => {
+    const result = parseSlashCommand('/init');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('init');
+  });
 });
 
 // ─── SLASH_COMMANDS registry ────────────────────────────────────────────────
 
 describe('SLASH_COMMANDS registry', () => {
-  test('contains all 18 commands', () => {
+  test('contains all 21 commands', () => {
     const expected = [
       '/model', '/clear', '/skill', '/help', '/exit',
       '/compact', '/context', '/cost', '/resume', '/export',
       '/rename', '/rewind', '/status', '/permissions', '/mcp',
-      '/config', '/todos', '/verbose',
+      '/config', '/todos', '/verbose', '/agents', '/doctor', '/init',
     ];
     for (const cmd of expected) {
       expect(SLASH_COMMANDS).toHaveProperty(cmd);
     }
-    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(18);
+    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(21);
   });
 });
 

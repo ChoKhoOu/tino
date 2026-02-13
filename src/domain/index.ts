@@ -31,6 +31,21 @@ export {
 } from './permission.js';
 
 export {
+  PERMISSION_MODE_ORDER,
+  PERMISSION_MODE_DESCRIPTIONS,
+  PERMISSION_MODE_BEHAVIOR,
+  getNextPermissionMode,
+  isFileEditTool,
+  isReadTool,
+  isWriteTool,
+  resolvePermissionModeDecision,
+  type PermissionMode,
+  type PermissionDecision,
+  type PermissionModeDescription,
+  type PermissionModeBehavior,
+} from './permission-mode.js';
+
+export {
   type HookEvent,
   type HookContext,
   type HookResult,

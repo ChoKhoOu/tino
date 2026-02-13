@@ -1,3 +1,5 @@
+import { getActiveStyle } from '@/styles/registry.js';
+
 export function getCurrentDate(): string {
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -37,7 +39,7 @@ export function buildSystemPrompt(
     ? `\n\n## Available Skills\n\n${skillsSection.trim()}\n\n## Skill Usage Policy\n\n- Check whether a listed skill directly helps the current task\n- When a skill is relevant, invoke it immediately\n- Do not invoke the same skill repeatedly in one query unless context changed`
     : '';
 
-  return `You are Tino, an AI coding assistant and quantitative trading workbench.
+  const basePrompt = `You are Tino, an AI coding assistant and quantitative trading workbench.
 
 Current date: ${getCurrentDate()}
 ${contextSection ? `\n${contextSection}` : ''}${projectInstructions}
@@ -108,4 +110,11 @@ Keep tables compact:
 - Abbreviate: Rev, Op Inc, Net Inc, OCF, FCF, GM, OM, EPS
 - Numbers compact: 102.5B not $102,466,000,000
 - Omit units in cells if header has them${optionalSkills}`;
+
+  const activeStyle = getActiveStyle();
+  if (activeStyle.systemPromptModifier) {
+    return `${basePrompt}\n\n## Output Style: ${activeStyle.name}\n\n${activeStyle.systemPromptModifier}`;
+  }
+
+  return basePrompt;
 }

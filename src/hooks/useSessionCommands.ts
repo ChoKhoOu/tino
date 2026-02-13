@@ -15,6 +15,7 @@ import {
 import type { ExtendedSlashDeps } from './slash-command-actions.js';
 import { renderContextBar } from '@/components/context-bar.js';
 import { TOKEN_BUDGET } from '@/utils/tokens.js';
+import { discoverAgentConfigs } from '@/agents/registry.js';
 
 interface SessionCommandOptions {
   runtime: SessionRuntime;
@@ -133,6 +134,13 @@ export function useSessionCommands(options: SessionCommandOptions): ExtendedSlas
       ? `MCP: connected to ${connectedMcpServers.join(', ')}.`
       : 'MCP: no active server connections.',
     getConfigSummary: () => `Config: provider=${provider}, model=${model}.`,
+    getAgentsSummary: () => {
+      const agents = discoverAgentConfigs();
+      if (agents.length === 0) {
+        return 'No custom agents found. Add markdown files in ~/.tino/agents or .tino/agents.';
+      }
+      return ['Available agents:', ...agents.map((agent) => `- ${agent.name} (${agent.source}): ${agent.description}`)].join('\n');
+    },
     renameSession: async (name: string) => {
       setSessionTitle(name);
       await persistCurrentSession();

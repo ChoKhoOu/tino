@@ -25,6 +25,7 @@ function makeDeps() {
     getPermissionsSummary: () => 'Permissions: default ask',
     getMcpSummary: () => 'MCP: none connected',
     getConfigSummary: () => 'Config: openai/gpt-5.2',
+    getAgentsSummary: () => 'Agents:\n- trader (project)',
     renameSession: async (name: string) => {
       renamedTo = name;
       return true;
@@ -62,6 +63,7 @@ describe('runExtendedSlashAction', () => {
     expect(await runExtendedSlashAction('config', [], deps)).toBe('Config: openai/gpt-5.2');
     expect(await runExtendedSlashAction('mcp', [], deps)).toBe('MCP: none connected');
     expect(await runExtendedSlashAction('permissions', [], deps)).toBe('Permissions: default ask');
+    expect(await runExtendedSlashAction('agents', [], deps)).toBe('Agents:\n- trader (project)');
   });
 
   test('handles rewind/rename/resume/export', async () => {
@@ -116,11 +118,12 @@ describe('runExtendedSlashAction', () => {
       'config',
       'todos',
       'verbose',
+      'agents',
     ];
 
     for (const action of actions) {
       await runExtendedSlashAction(action, [], deps);
     }
-    expect(actions).toHaveLength(18);
+    expect(actions).toHaveLength(19);
   });
 });

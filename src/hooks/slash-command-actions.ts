@@ -1,4 +1,6 @@
 import type { SlashAction } from '@/commands/slash.js';
+import { runDoctorChecks, formatDoctorOutput } from '@/commands/doctor.js';
+import { runInitProject, formatInitOutput } from '@/commands/init-project.js';
 
 interface CompactResult {
   removed: number;
@@ -15,6 +17,7 @@ export interface ExtendedSlashDeps {
   getPermissionsSummary: () => string;
   getMcpSummary: () => string;
   getConfigSummary: () => string;
+  getAgentsSummary: () => string;
   renameSession: (name: string) => Promise<boolean>;
   resumeSession: (sessionId?: string) => Promise<string>;
   exportSession: (target?: string) => Promise<string>;
@@ -49,6 +52,8 @@ export async function runExtendedSlashAction(
       return deps.getMcpSummary();
     case 'config':
       return deps.getConfigSummary();
+    case 'agents':
+      return deps.getAgentsSummary();
     case 'rename': {
       if (args.length === 0) return 'Usage: /rename <name>';
       const name = args.join(' ').trim();
@@ -60,6 +65,14 @@ export async function runExtendedSlashAction(
       return deps.resumeSession(args[0]);
     case 'export':
       return deps.exportSession(args[0]);
+    case 'doctor': {
+      const results = await runDoctorChecks();
+      return formatDoctorOutput(results);
+    }
+    case 'init': {
+      const result = runInitProject(process.cwd());
+      return formatInitOutput(result);
+    }
     case 'model':
     case 'clear':
     case 'skill':

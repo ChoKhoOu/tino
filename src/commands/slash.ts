@@ -11,6 +11,7 @@ export type SlashAction =
   | 'model'
   | 'clear'
   | 'skill'
+  | 'agents'
   | 'help'
   | 'exit'
   | 'compact'
@@ -25,7 +26,9 @@ export type SlashAction =
   | 'mcp'
   | 'config'
   | 'todos'
-  | 'verbose';
+  | 'verbose'
+  | 'doctor'
+  | 'init';
 
 export interface SlashCommandResult {
   /** Whether the command was recognized and handled */
@@ -44,6 +47,7 @@ export const SLASH_COMMANDS: Record<string, string> = {
   '/model': 'Switch LLM model/provider',
   '/clear': 'Clear conversation history',
   '/skill': 'List or load a skill — /skill [name]',
+  '/agents': 'List available agent definitions',
   '/help': 'Show available commands',
   '/exit': 'Quit the application',
   '/compact': 'Compact conversation context — /compact [focus]',
@@ -59,6 +63,8 @@ export const SLASH_COMMANDS: Record<string, string> = {
   '/config': 'Show current configuration',
   '/todos': 'Show active todo items',
   '/verbose': 'Toggle verbose output mode',
+  '/doctor': 'Run health checks on your environment',
+  '/init': 'Initialize project (.tino/ directory, settings, permissions)',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -118,6 +124,12 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
         args,
       };
 
+    case '/agents':
+      return {
+        handled: true,
+        action: 'agents',
+      };
+
     case '/exit':
       return {
         handled: true,
@@ -162,6 +174,12 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
 
     case '/verbose':
       return { handled: true, action: 'verbose', output: 'Verbose mode toggled.' };
+
+    case '/doctor':
+      return { handled: true, action: 'doctor' };
+
+    case '/init':
+      return { handled: true, action: 'init' };
 
     default:
       // Starts with / but not a recognized command
