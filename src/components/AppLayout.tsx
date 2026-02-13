@@ -23,6 +23,8 @@ import { TaskList } from './TaskList.js';
 import { useBackgroundTasks } from '../hooks/useBackgroundTasks.js';
 import { useBackgroundTaskControl } from '../hooks/useBackgroundTaskControl.js';
 import { useTaskListVisibility } from '../hooks/useTaskListVisibility.js';
+import { RewindMenu } from './RewindMenu.js';
+import { useRewindMenu } from '../hooks/useRewindMenu.js';
 
 interface AppLayoutProps {
   dispatcher: KeyboardDispatcher;
@@ -83,6 +85,10 @@ export function AppLayout({
 
   useBackgroundTaskControl(dispatcher, backgroundControlOptions);
 
+  const rewindMenu = useRewindMenu(history, (turn, action) => {
+    setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
+  });
+
   return (
     <KeyboardProvider dispatcher={dispatcher}>
       <Box flexDirection="column" height={rows}>
@@ -110,6 +116,13 @@ export function AppLayout({
             <Text color="yellow">{taskNotice}</Text>
           </Box>
         )}
+        <RewindMenu
+          isOpen={rewindMenu.isOpen}
+          selectedIndex={rewindMenu.selectedIndex}
+          turns={rewindMenu.turns}
+          subMenuOpen={rewindMenu.subMenuOpen}
+          subMenuIndex={rewindMenu.subMenuIndex}
+        />
         
         <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
         <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />

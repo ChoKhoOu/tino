@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box } from 'ink';
 import type { RunEvent } from '@/domain/index.js';
 export { ThinkingView } from './events/ThinkingView.js';
@@ -27,7 +26,7 @@ export function AgentEventView({ event, isActive = false, progressMessage }: {
 }) {
   switch (event.type) {
     case 'thinking': return <ThinkingView message={event.message} />;
-    case 'tool_start': return <ToolStartView toolId={event.toolId} args={event.args} isActive={isActive} progressMessage={progressMessage} />;
+    case 'tool_start': return <ToolStartView toolId={event.toolId} args={event.args} agent={event.agent} isActive={isActive} progressMessage={progressMessage} />;
     case 'tool_end': return <ToolEndView toolId={event.toolId} args={{}} result={event.result} duration={event.duration} />;
     case 'tool_error': return <ToolErrorView toolId={event.toolId} error={event.error} />;
     case 'context_cleared': return <ContextClearedView clearedCount={event.clearedCount} keptCount={event.keptCount} />;

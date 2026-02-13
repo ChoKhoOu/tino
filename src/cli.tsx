@@ -151,7 +151,7 @@ export function CLI() {
       return true;
     });
 
-    const unregisterDoubleEscape = dispatcher.register('global', 'escape+escape', () => true);
+    const unregisterDoubleEscape = dispatcher.register('global', 'escape+escape', () => false);
 
     return () => {
       unregisterEscape();

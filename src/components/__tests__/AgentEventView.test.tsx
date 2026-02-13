@@ -1,5 +1,4 @@
 import { describe, test, expect } from 'bun:test';
-import React from 'react';
 import { render } from 'ink-testing-library';
 import { AgentEventView, EventListView, ThinkingView, ToolStartView, ToolEndView, ToolErrorView, ContextClearedView } from '../AgentEventView.js';
 import type { DisplayEvent } from '../AgentEventView.js';
@@ -30,6 +29,16 @@ describe('AgentEventView rendering', () => {
     );
     expect(lastFrame()).toContain('Market Data');
     expect(lastFrame()).toContain('symbol=AAPL');
+  });
+
+  test('renders tool_start event with agent attribution', () => {
+    const { lastFrame } = render(
+      <AgentEventView
+        event={{ type: 'tool_start', toolId: 'market_data', args: { symbol: 'AAPL' }, agent: 'delegate-agent' }}
+      />
+    );
+    expect(lastFrame()).toContain('[delegate-agent]');
+    expect(lastFrame()).toContain('Market Data');
   });
 
   test('renders tool_end event', () => {

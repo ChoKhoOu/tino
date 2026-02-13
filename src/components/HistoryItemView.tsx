@@ -1,9 +1,9 @@
-import React from 'react';
 import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
 import { EventListView } from './AgentEventView.js';
 import type { DisplayEvent } from './AgentEventView.js';
 import { AnswerBox } from './AnswerBox.js';
+import { AgentBadge } from './AgentBadge.js';
 import type { TokenUsage } from '@/domain/index.js';
 
 export function formatDuration(ms: number): string {
@@ -33,6 +33,7 @@ export type HistoryItemStatus = 'processing' | 'complete' | 'error' | 'interrupt
 export interface HistoryItem {
   id: string;
   query: string;
+  agent?: string;
   events: DisplayEvent[];
   answer: string;
   status: HistoryItemStatus;
@@ -76,7 +77,12 @@ export function HistoryItemView({ item }: HistoryItemViewProps) {
       
       {/* Answer - only show if we have one */}
       {item.answer && (
-        <Box>
+        <Box flexDirection="column">
+          {item.agent && (
+            <Box>
+              <AgentBadge agentName={item.agent} />
+            </Box>
+          )}
           <AnswerBox text={item.answer} />
         </Box>
       )}

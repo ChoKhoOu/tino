@@ -23,6 +23,7 @@ export interface ToolStartEvent {
   type: 'tool_start';
   toolId: string;
   args: Record<string, unknown>;
+  agent?: string;
 }
 
 export interface ToolProgressEvent {
