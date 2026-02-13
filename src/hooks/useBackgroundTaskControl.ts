@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { RefObject } from 'react';
 import taskTool from '@/tools/agent/task.tool.js';
 import type { KeyboardDispatcher } from '@/keyboard/dispatcher.js';
 import type { RunEvent } from '@/domain/events.js';
@@ -81,9 +82,10 @@ async function launchBackgroundTask(query: string, runningToolId: string | null)
 
 export function registerBackgroundTaskControl(
   dispatcher: KeyboardDispatcher,
-  options: BackgroundTaskControlOptions,
+  optionsRef: RefObject<BackgroundTaskControlOptions>,
 ): () => void {
   return dispatcher.register('normal', 'ctrl+b', () => {
+    const options = optionsRef.current;
     const query = options.currentQuery?.trim() ?? '';
     if (!query || !isBackgroundableRun(options.runState)) {
       options.setNotice(NO_ACTIVE_TASK_MESSAGE);
@@ -106,7 +108,7 @@ export function registerBackgroundTaskControl(
 
 export function useBackgroundTaskControl(
   dispatcher: KeyboardDispatcher,
-  options: BackgroundTaskControlOptions,
+  optionsRef: RefObject<BackgroundTaskControlOptions>,
 ): void {
-  useEffect(() => registerBackgroundTaskControl(dispatcher, options), [dispatcher, options]);
+  useEffect(() => registerBackgroundTaskControl(dispatcher, optionsRef), [dispatcher, optionsRef]);
 }

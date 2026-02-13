@@ -12,9 +12,10 @@ export function useAutocomplete(text: string, cursorPosition: number) {
 
   const { files, loading } = useFileSearch(query);
 
+  const fileCount = files.length;
   useEffect(() => {
     setSelectedIndex(0);
-  }, [files]);
+  }, [fileCount]);
 
   return {
     query,

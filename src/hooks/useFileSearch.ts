@@ -1,15 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { scanFiles } from '@/utils/file-reference.js';
 
+const EMPTY_FILES: string[] = [];
+
 export function useFileSearch(query: string | null) {
-  const [files, setFiles] = useState<string[]>([]);
+  const [files, setFiles] = useState<string[]>(EMPTY_FILES);
   const [loading, setLoading] = useState(false);
+  const prevQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!query) {
-      setFiles([]);
+      if (prevQueryRef.current !== null) {
+        setFiles(EMPTY_FILES);
+      }
+      prevQueryRef.current = query;
       return;
     }
+    prevQueryRef.current = query;
 
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -18,7 +25,7 @@ export function useFileSearch(query: string | null) {
         setFiles(results);
       } catch (error) {
         console.error('File search failed:', error);
-        setFiles([]);
+        setFiles(EMPTY_FILES);
       } finally {
         setLoading(false);
       }

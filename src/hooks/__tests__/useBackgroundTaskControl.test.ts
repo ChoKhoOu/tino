@@ -46,12 +46,16 @@ describe('useBackgroundTaskControl', () => {
     const cancelForegroundRun = mock(() => undefined);
     const setNotice = mock(() => undefined);
 
-    const unregister = registerBackgroundTaskControl(dispatcher, {
-      runState: { status: 'running', events: [{ type: 'thinking', message: 'working' }] },
-      currentQuery: 'analyze AAPL',
-      cancelForegroundRun,
-      setNotice,
-    });
+    const optionsRef = {
+      current: {
+        runState: { status: 'running' as const, events: [{ type: 'thinking' as const, message: 'working' }] },
+        currentQuery: 'analyze AAPL',
+        cancelForegroundRun,
+        setNotice,
+      },
+    };
+
+    const unregister = registerBackgroundTaskControl(dispatcher, optionsRef);
 
     dispatcher.dispatch({
       input: 'b',
@@ -82,15 +86,19 @@ describe('useBackgroundTaskControl', () => {
     const cancelForegroundRun = mock(() => undefined);
     const setNotice = mock(() => undefined);
 
-    const unregister = registerBackgroundTaskControl(dispatcher, {
-      runState: {
-        status: 'running',
-        events: [{ type: 'tool_start', toolId: 'market_data', args: { symbol: 'AAPL' } }],
+    const optionsRef = {
+      current: {
+        runState: {
+          status: 'running' as const,
+          events: [{ type: 'tool_start' as const, toolId: 'market_data', args: { symbol: 'AAPL' } }],
+        },
+        currentQuery: 'fetch AAPL latest news',
+        cancelForegroundRun,
+        setNotice,
       },
-      currentQuery: 'fetch AAPL latest news',
-      cancelForegroundRun,
-      setNotice,
-    });
+    };
+
+    const unregister = registerBackgroundTaskControl(dispatcher, optionsRef);
 
     dispatcher.dispatch({
       input: 'b',

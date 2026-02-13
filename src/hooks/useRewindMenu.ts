@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useKeyboardDispatcher } from '../keyboard/use-keyboard.js';
 import type { HistoryItem } from '../components/HistoryItemView.js';
 
@@ -33,11 +33,16 @@ export function useRewindMenu(
   onAction: (turn: HistoryItem, action: RewindAction) => void,
 ): UseRewindMenuResult {
   const dispatcher = useKeyboardDispatcher();
-  const [turns, setTurns] = useState(history);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [subMenuIndex, setSubMenuIndex] = useState(0);
+
+  const historyRef = useRef(history);
+  historyRef.current = history;
+
+  const onActionRef = useRef(onAction);
+  onActionRef.current = onAction;
 
   const close = useCallback(() => {
     setSubMenuOpen(false);
@@ -46,20 +51,20 @@ export function useRewindMenu(
   }, []);
 
   useEffect(() => {
-    setTurns(history);
     setSelectedIndex((prev) => Math.max(0, Math.min(prev, Math.max(0, history.length - 1))));
-  }, [history]);
+  }, [history.length]);
 
   useEffect(() => {
     return dispatcher.register('global', 'escape+escape', () => {
-      if (history.length === 0) return false;
-      setSelectedIndex((prev) => Math.max(0, Math.min(prev, history.length - 1)));
+      const h = historyRef.current;
+      if (h.length === 0) return false;
+      setSelectedIndex((prev) => Math.max(0, Math.min(prev, h.length - 1)));
       setSubMenuOpen(false);
       setSubMenuIndex(0);
       setIsOpen(true);
       return true;
     });
-  }, [dispatcher, history]);
+  }, [dispatcher]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -71,7 +76,7 @@ export function useRewindMenu(
         setSubMenuIndex((prev) => (prev > 0 ? prev - 1 : SUB_MENU_COUNT - 1));
         return true;
       }
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : turns.length - 1));
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : historyRef.current.length - 1));
       return true;
     });
 
@@ -80,7 +85,7 @@ export function useRewindMenu(
         setSubMenuIndex((prev) => (prev < SUB_MENU_COUNT - 1 ? prev + 1 : 0));
         return true;
       }
-      setSelectedIndex((prev) => (prev < turns.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) => (prev < historyRef.current.length - 1 ? prev + 1 : 0));
       return true;
     });
 
@@ -91,7 +96,7 @@ export function useRewindMenu(
         return true;
       }
 
-      const turn = turns[selectedIndex];
+      const turn = historyRef.current[selectedIndex];
       if (!turn) {
         close();
         return true;
@@ -103,7 +108,7 @@ export function useRewindMenu(
         return true;
       }
 
-      onAction(turn, action);
+      onActionRef.current(turn, action);
       close();
       return true;
     });
@@ -125,7 +130,7 @@ export function useRewindMenu(
       cleanupEsc();
       dispatcher.popMode();
     };
-  }, [close, dispatcher, isOpen, onAction, selectedIndex, subMenuIndex, subMenuOpen, turns]);
+  }, [close, dispatcher, isOpen, selectedIndex, subMenuIndex, subMenuOpen]);
 
-  return { isOpen, selectedIndex, turns, subMenuOpen, subMenuIndex, close };
+  return { isOpen, selectedIndex, turns: history, subMenuOpen, subMenuIndex, close };
 }

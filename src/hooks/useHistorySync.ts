@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import type { RunState } from './useSessionRunner.js';
 import type { HistoryItem } from '../components/index.js';
 import type { DoneEvent } from '../domain/events.js';
@@ -10,28 +10,39 @@ export function useHistorySync(
   setError: (error: string | null) => void,
   updateAgentResponse: (response: string) => void
 ) {
+  // Keep a ref to runState to avoid re-triggering effects on every reducer dispatch.
+  // We trigger sync only on meaningful state transitions via stable primitive deps.
+  const runStateRef = useRef(runState);
+  runStateRef.current = runState;
+
+  const eventCount = runState.events.length;
+  const status = runState.status;
+  const answer = runState.answer;
+  const error = runState.error;
+
   useEffect(() => {
-    if (runState.status === 'idle' && runState.events.length === 0) return;
+    const rs = runStateRef.current;
+    if (status === 'idle' && eventCount === 0) return;
     setHistory((prev) => {
       const last = prev[prev.length - 1];
       if (!last || last.status !== 'processing') return prev;
-      const displayEvents = buildDisplayEvents(runState.events);
-      const activeToolId = findActiveToolId(runState.events);
-      const isDone = runState.status === 'done';
+      const displayEvents = buildDisplayEvents(rs.events);
+      const activeToolId = findActiveToolId(rs.events);
+      const isDone = status === 'done';
       const updated: HistoryItem = {
         ...last, events: displayEvents, activeToolId,
-        answer: runState.answer, status: isDone ? 'complete' : last.status,
+        answer, status: isDone ? 'complete' : last.status,
       };
       if (isDone) {
-        const doneEvt = runState.events.find((e) => e.type === 'done') as DoneEvent | undefined;
+        const doneEvt = rs.events.find((e) => e.type === 'done') as DoneEvent | undefined;
         if (doneEvt) { updated.duration = doneEvt.totalTime; updated.tokenUsage = doneEvt.tokenUsage; }
       }
-      if (runState.error) { updated.status = 'error'; setError(runState.error); }
+      if (error) { updated.status = 'error'; setError(error); }
       return [...prev.slice(0, -1), updated];
     });
-  }, [runState, setHistory, setError]);
+  }, [status, eventCount, answer, error, setHistory, setError]);
 
   useEffect(() => {
-    if (runState.status === 'done' && runState.answer) updateAgentResponse(runState.answer);
-  }, [runState.status, runState.answer, updateAgentResponse]);
+    if (status === 'done' && answer) updateAgentResponse(answer);
+  }, [status, answer, updateAgentResponse]);
 }

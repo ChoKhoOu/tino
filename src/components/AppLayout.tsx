@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Input } from './Input.js';
 import { Intro } from './Intro.js';
@@ -84,14 +84,10 @@ function AppLayoutContent({
     ? history[history.length - 1].query
     : null;
 
-  const backgroundControlOptions = useMemo(() => ({
-    runState,
-    currentQuery,
-    cancelForegroundRun: onBackgroundCurrentOperation,
-    setNotice: setTaskNotice,
-  }), [currentQuery, onBackgroundCurrentOperation, runState]);
+  const backgroundControlRef = useRef({ runState, currentQuery, cancelForegroundRun: onBackgroundCurrentOperation, setNotice: setTaskNotice });
+  backgroundControlRef.current = { runState, currentQuery, cancelForegroundRun: onBackgroundCurrentOperation, setNotice: setTaskNotice };
 
-  useBackgroundTaskControl(dispatcher, backgroundControlOptions);
+  useBackgroundTaskControl(dispatcher, backgroundControlRef);
 
   const handleRewindAction = useCallback((turn: HistoryItem, action: string) => {
     setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
