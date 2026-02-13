@@ -76,6 +76,8 @@ export function StatusLine({
 
   return (
     <Box width="100%" backgroundColor={bg} paddingX={1}>
+      <Text color={colors.primary}>🦊</Text>
+      <Separator />
       <Text color={fg}>{modelName}</Text>
       <Separator />
       
