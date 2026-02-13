@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Input } from './Input.js';
 import { Intro } from './Intro.js';
@@ -45,7 +45,15 @@ interface AppLayoutProps {
   onBackgroundCurrentOperation: () => void;
 }
 
-export function AppLayout({
+export function AppLayout(props: AppLayoutProps) {
+  return (
+    <KeyboardProvider dispatcher={props.dispatcher}>
+      <AppLayoutContent {...props} />
+    </KeyboardProvider>
+  );
+}
+
+function AppLayoutContent({
   dispatcher,
   history,
   modelState,
@@ -85,52 +93,52 @@ export function AppLayout({
 
   useBackgroundTaskControl(dispatcher, backgroundControlOptions);
 
-  const rewindMenu = useRewindMenu(history, (turn: HistoryItem, action: string) => {
+  const handleRewindAction = useCallback((turn: HistoryItem, action: string) => {
     setTaskNotice(`Rewind: ${action} for turn ${turn.id} (UI only)`);
-  });
+  }, []);
+
+  const rewindMenu = useRewindMenu(history, handleRewindAction);
 
   return (
-    <KeyboardProvider dispatcher={dispatcher}>
-      <Box flexDirection="column" height={rows}>
-        {history.length === 0 && <Intro provider={modelState.currentProvider} model={modelState.currentModel} />}
-        
-        <Static items={history.filter(h => h.status === 'complete' || h.status === 'error' || h.status === 'interrupted')}>
-          {(item) => <HistoryItemView key={item.id} item={item} />}
-        </Static>
+    <Box flexDirection="column" height={rows}>
+      {history.length === 0 && <Intro provider={modelState.currentProvider} model={modelState.currentModel} />}
+      
+      <Static items={history.filter(h => h.status === 'complete' || h.status === 'error' || h.status === 'interrupted')}>
+        {(item) => <HistoryItemView key={item.id} item={item} />}
+      </Static>
 
-        <ScrollableContent height={contentHeight}>
-          {history.filter(h => h.status === 'processing').map((item) => (<HistoryItemView key={item.id} item={item} />))}
-          {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
-          {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}
-          {runState.status === 'permission_pending' && runState.pendingPermission && (
-            <PermissionPrompt
-              request={{ type: 'permission_request', ...runState.pendingPermission, rule: { tool: runState.pendingPermission.toolId, action: 'ask' } }}
-              onResponse={(allowed, alwaysAllow) => respondToPermission(runState.pendingPermission!.toolId, allowed, alwaysAllow)}
-            />
-          )}
-        </ScrollableContent>
-
-        {isTaskListVisible && <TaskList tasks={tasks} />}
-        {taskNotice && (
-          <Box marginBottom={1}>
-            <Text color="yellow">{taskNotice}</Text>
-          </Box>
+      <ScrollableContent height={contentHeight}>
+        {history.filter(h => h.status === 'processing').map((item) => (<HistoryItemView key={item.id} item={item} />))}
+        {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
+        {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}
+        {runState.status === 'permission_pending' && runState.pendingPermission && (
+          <PermissionPrompt
+            request={{ type: 'permission_request', ...runState.pendingPermission, rule: { tool: runState.pendingPermission.toolId, action: 'ask' } }}
+            onResponse={(allowed, alwaysAllow) => respondToPermission(runState.pendingPermission!.toolId, allowed, alwaysAllow)}
+          />
         )}
-        <RewindMenu
-          isOpen={rewindMenu.isOpen}
-          selectedIndex={rewindMenu.selectedIndex}
-          turns={rewindMenu.turns}
-          subMenuOpen={rewindMenu.subMenuOpen}
-          subMenuIndex={rewindMenu.subMenuIndex}
-        />
-        
-        <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
-        <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />
-        
-        <StatusLine {...statusLineData} />
-        
-        <DebugPanel maxLines={8} show={isVerbose} />
-      </Box>
-    </KeyboardProvider>
+      </ScrollableContent>
+
+      {isTaskListVisible && <TaskList tasks={tasks} />}
+      {taskNotice && (
+        <Box marginBottom={1}>
+          <Text color="yellow">{taskNotice}</Text>
+        </Box>
+      )}
+      <RewindMenu
+        isOpen={rewindMenu.isOpen}
+        selectedIndex={rewindMenu.selectedIndex}
+        turns={rewindMenu.turns}
+        subMenuOpen={rewindMenu.subMenuOpen}
+        subMenuIndex={rewindMenu.subMenuIndex}
+      />
+      
+      <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
+      <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} />
+      
+      <StatusLine {...statusLineData} />
+      
+      <DebugPanel maxLines={8} show={isVerbose} />
+    </Box>
   );
 }
