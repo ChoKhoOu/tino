@@ -76,7 +76,7 @@ function AppLayoutContent({
   const { tasks } = useBackgroundTasks();
   const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
   const [taskNotice, setTaskNotice] = useState<string | null>(null);
-  const introHeight = history.length === 0 ? 11 : 0;
+  const introHeight = history.length === 0 ? 9 : 0;
   const inputHeight = 3;
   const statusLineHeight = 1;
   const contentHeight = Math.max(0, rows - introHeight - inputHeight - statusLineHeight);
