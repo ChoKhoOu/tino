@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { logger } from '@/utils/logger.js';
 
 const SEGMENT_SIZE = 50;
 const WAL_DIR = join('.tino', 'wal');
@@ -79,7 +80,7 @@ export class InMemoryWAL {
       }
       this.flushedCount = this.segments.length;
     } catch (err) {
-      console.error('[WAL] flush error:', err);
+      logger.error('[WAL] flush error:', err);
     }
   }
 
@@ -112,7 +113,7 @@ export class InMemoryWAL {
       }
       this.flushedCount = this.segments.length;
     } catch (err) {
-      console.error('[WAL] recover error:', err);
+      logger.error('[WAL] recover error:', err);
     }
   }
 

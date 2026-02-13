@@ -6,5 +6,5 @@ import { CLI } from './cli.js';
 
 config({ quiet: true });
 
-const { waitUntilExit } = render(<CLI />);
+const { waitUntilExit } = render(<CLI />, { incrementalRendering: true });
 await waitUntilExit();

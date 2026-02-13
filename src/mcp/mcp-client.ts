@@ -31,6 +31,7 @@ export class McpClient {
         command: this.config.command,
         args: this.config.args,
         env: this.config.env,
+        stderr: 'pipe',
       });
 
       const client = new Client({

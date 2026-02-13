@@ -4,6 +4,7 @@ import type {
   HookContext,
   HookResult,
 } from '@/domain/index.js';
+import { logger } from '@/utils/logger.js';
 
 export class HookRunner {
   private hooks: HookDefinition[];
@@ -22,7 +23,7 @@ export class HookRunner {
           return result;
         }
       } catch (err) {
-        console.warn(
+        logger.warn(
           `[HookRunner] Hook error (event=${event}, type=${hook.type}):`,
           err,
         );

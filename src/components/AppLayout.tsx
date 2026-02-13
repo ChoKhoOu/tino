@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { Box, Text, Static } from 'ink';
 import { Input } from './Input.js';
 import { Intro } from './Intro.js';
@@ -57,7 +57,7 @@ export function AppLayout(props: AppLayoutProps) {
   );
 }
 
-function AppLayoutContent({
+const AppLayoutContent = React.memo(function AppLayoutContent({
   dispatcher,
   history,
   modelState,
@@ -86,7 +86,7 @@ function AppLayoutContent({
   const introHeight = history.length === 0 ? 11 : 0;
   const inputHeight = 3;
   const statusLineHeight = 1;
-  const contentHeight = Math.max(0, rows - introHeight - inputHeight - statusLineHeight);
+  const contentHeight = Math.max(0, rows - 1 - introHeight - inputHeight - statusLineHeight);
   const currentQuery = history[history.length - 1]?.status === 'processing'
     ? history[history.length - 1].query
     : null;
@@ -115,7 +115,7 @@ function AppLayoutContent({
   const rewindMenu = useRewindMenu(history, handleRewindAction);
 
   return (
-    <Box flexDirection="column" height={rows}>
+    <Box flexDirection="column" height={rows - 1}>
       {history.length === 0 && <Intro provider={modelState.currentProvider} model={modelState.currentModel} />}
       
       <Static items={history.filter(h => h.status === 'complete' || h.status === 'error' || h.status === 'interrupted')}>
@@ -157,4 +157,4 @@ function AppLayoutContent({
       <DebugPanel maxLines={8} show={isVerbose} />
     </Box>
   );
-}
+});

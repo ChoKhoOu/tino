@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 import type { Session, SessionMessage, SessionMetadata } from './session.js';
+import { logger } from '@/utils/logger.js';
 
 const DEFAULT_DIR = join(homedir(), '.tino', 'sessions');
 
@@ -18,7 +19,7 @@ export class SessionStore {
       const filePath = this.pathFor(session.id);
       await Bun.write(filePath, JSON.stringify(session, null, 2));
     } catch (err) {
-      console.error('[SessionStore] save error:', err);
+      logger.error('[SessionStore] save error:', err);
     }
   }
 
@@ -30,7 +31,7 @@ export class SessionStore {
       const text = await file.text();
       return JSON.parse(text) as Session;
     } catch (err) {
-      console.error('[SessionStore] load error:', err);
+      logger.error('[SessionStore] load error:', err);
       return null;
     }
   }
@@ -60,7 +61,7 @@ export class SessionStore {
 
       return results;
     } catch (err) {
-      console.error('[SessionStore] list error:', err);
+      logger.error('[SessionStore] list error:', err);
       return [];
     }
   }
@@ -72,7 +73,7 @@ export class SessionStore {
       unlinkSync(filePath);
       return true;
     } catch (err) {
-      console.error('[SessionStore] delete error:', err);
+      logger.error('[SessionStore] delete error:', err);
       return false;
     }
   }
@@ -95,7 +96,7 @@ export class SessionStore {
       await this.save(forked);
       return newId;
     } catch (err) {
-      console.error('[SessionStore] fork error:', err);
+      logger.error('[SessionStore] fork error:', err);
       return null;
     }
   }
@@ -109,7 +110,7 @@ export class SessionStore {
       await this.save(session);
       return true;
     } catch (err) {
-      console.error('[SessionStore] rename error:', err);
+      logger.error('[SessionStore] rename error:', err);
       return false;
     }
   }
@@ -122,7 +123,7 @@ export class SessionStore {
       session.updatedAt = new Date().toISOString();
       await this.save(session);
     } catch (err) {
-      console.error('[SessionStore] appendMessage error:', err);
+      logger.error('[SessionStore] appendMessage error:', err);
     }
   }
 

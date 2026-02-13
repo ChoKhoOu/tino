@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { scanFiles } from '@/utils/file-reference.js';
+import { logger } from '@/utils/logger.js';
 
 const EMPTY_FILES: string[] = [];
 
@@ -24,7 +25,7 @@ export function useFileSearch(query: string | null) {
         const results = await scanFiles(query);
         setFiles(results);
       } catch (error) {
-        console.error('File search failed:', error);
+        logger.error('File search failed:', error);
         setFiles(EMPTY_FILES);
       } finally {
         setLoading(false);

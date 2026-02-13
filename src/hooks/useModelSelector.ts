@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ModelBroker, DEFAULT_MODEL, DEFAULT_PROVIDER } from '@/runtime/model-broker.js';
 import { getSetting, setSetting } from '@/config/settings.js';
 
@@ -48,8 +48,13 @@ export function useModelSelector(broker: ModelBroker): UseModelSelectorResult {
   const startSelection = useCallback(() => setIsSelecting(true), []);
   const cancelSelection = useCallback(() => setIsSelecting(false), []);
 
+  const state = useMemo<ModelSelectorState>(
+    () => ({ currentModel, currentProvider, isSelecting }),
+    [currentModel, currentProvider, isSelecting],
+  );
+
   return {
-    state: { currentModel, currentProvider, isSelecting },
+    state,
     selectModel,
     startSelection,
     cancelSelection,

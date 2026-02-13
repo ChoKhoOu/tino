@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import type { ToolPlugin } from '@/domain/tool-plugin.js';
+import { logger } from '@/utils/logger.js';
 
 const PLUGIN_DIR_NAME = 'plugins';
 
@@ -36,12 +37,12 @@ async function loadPluginFile(filePath: string): Promise<ToolPlugin | null> {
     const mod = await import(filePath);
     const plugin = mod.default ?? mod;
     if (!isValidPlugin(plugin)) {
-      console.warn(`[plugins] Invalid plugin (missing id/schema/execute): ${filePath}`);
+      logger.warn(`[plugins] Invalid plugin (missing id/schema/execute): ${filePath}`);
       return null;
     }
     return plugin;
   } catch (err) {
-    console.warn(`[plugins] Failed to load plugin: ${filePath}`, err);
+    logger.warn(`[plugins] Failed to load plugin: ${filePath}`, err);
     return null;
   }
 }

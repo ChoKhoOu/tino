@@ -29,7 +29,6 @@ export function useKeyboardShortcuts(dispatcher: KeyboardDispatcher, handlers: K
 
   useEffect(() => {
     const unregisterClear = dispatcher.register('global', 'ctrl+l', () => {
-      process.stdout.write('\x1B[2J\x1B[0f');
       onClearScreen();
       return true;
     });

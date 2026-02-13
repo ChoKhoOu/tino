@@ -14,10 +14,14 @@ export function useStatusLineData(
   history: HistoryItem[],
   permissionMode?: PermissionMode,
 ): StatusLineProps {
+  const modelName = modelState.currentModel;
+  const runStatus = runState.status;
+  const events = runState.events;
+  const daemon = daemonStatus.status;
+
   return useMemo(() => {
     let totalTokens = 0;
     
-    // History tokens
     history.forEach(item => {
       if (item.tokenUsage) {
         totalTokens += item.tokenUsage.totalTokens;
@@ -27,9 +31,8 @@ export function useStatusLineData(
       }
     });
 
-    // Current run tokens
-    if (runState.status !== 'idle') {
-      runState.events.forEach(event => {
+    if (runStatus !== 'idle') {
+      events.forEach(event => {
         if (event.type === 'answer_chunk') {
           totalTokens += estimateTokens(event.content);
         } else if (event.type === 'answer_delta') {
@@ -44,9 +47,8 @@ export function useStatusLineData(
 
     const contextPercent = Math.min(100, (totalTokens / TOKEN_BUDGET) * 100);
 
-    // Duration
     let duration: number | null = null;
-    if (runState.status === 'running' || runState.status === 'permission_pending') {
+    if (runStatus === 'running' || runStatus === 'permission_pending') {
        const currentItem = history[history.length - 1];
        if (currentItem && currentItem.status === 'processing' && currentItem.startTime) {
          duration = (Date.now() - currentItem.startTime) / 1000;
@@ -59,12 +61,12 @@ export function useStatusLineData(
     }
 
     return {
-      modelName: modelState.currentModel,
+      modelName,
       contextPercent,
-      daemonStatus: daemonStatus.status,
-      cost: 0, // Placeholder as we don't have pricing info
+      daemonStatus: daemon,
+      cost: 0,
       duration,
       permissionMode,
     };
-  }, [modelState, runState, daemonStatus, history, permissionMode]);
+  }, [modelName, runStatus, events, daemon, history, permissionMode]);
 }

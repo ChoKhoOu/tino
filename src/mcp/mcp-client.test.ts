@@ -19,8 +19,12 @@ class MockSdkClient {
   constructor(_info: { name: string; version: string }) {}
 }
 
+let lastTransportParams: unknown = null;
+
 class MockStdioClientTransport {
-  constructor(_params: unknown) {}
+  constructor(params: unknown) {
+    lastTransportParams = params;
+  }
 }
 
 mock.module('@modelcontextprotocol/sdk/client/index.js', () => ({
@@ -38,6 +42,7 @@ let tempDir = '';
 
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), 'tino-mcp-test-'));
+  lastTransportParams = null;
   connectMock.mockReset();
   connectMock.mockImplementation(async () => {});
   listToolsMock.mockReset();
@@ -160,5 +165,14 @@ describe('McpClient', () => {
 
     expect(closeMock).toHaveBeenCalledTimes(1);
     expect(client.isConnected()).toBe(false);
+  });
+
+  test('passes stderr pipe to StdioClientTransport to prevent terminal corruption', async () => {
+    const client = new McpClient('tino', { command: 'npx', args: ['server'] });
+    await client.connect();
+
+    const params = lastTransportParams as Record<string, unknown>;
+    expect(params).toBeTruthy();
+    expect(params.stderr).toBe('pipe');
   });
 });

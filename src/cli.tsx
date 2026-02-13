@@ -148,7 +148,7 @@ export function CLI() {
     };
   }, [cancelExecution, dispatcher, exitApp, isProcessing]);
 
-  const workingState = deriveWorkingState(runState);
+  const workingState = useMemo(() => deriveWorkingState(runState), [runState]);
 
   return (
     <AppLayout
