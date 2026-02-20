@@ -1,54 +1,23 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
-import { z } from 'zod';
+import {
+  SettingsSchema,
+  MODEL_TO_PROVIDER_MAP,
+  type CustomProviderConfig,
+  type ProviderOverrideConfig,
+  type TinoSettings,
+  type SettingsData,
+} from './settings-schema.js';
+
+// Re-export types so existing imports from settings.ts keep working
+export type { CustomProviderConfig, ProviderOverrideConfig, TinoSettings } from './settings-schema.js';
 
 const GLOBAL_SETTINGS_DIR = join(homedir(), '.tino');
 const GLOBAL_SETTINGS_FILE = join(GLOBAL_SETTINGS_DIR, 'settings.json');
 const PROJECT_SETTINGS_FILE = '.tino/settings.json';
 
 const DEFAULT_GLOBAL_SETTINGS = { provider: 'openai' };
-
-const MODEL_TO_PROVIDER_MAP: Record<string, string> = {
-  'gpt-5.2': 'openai',
-  'claude-sonnet-4-5': 'anthropic',
-  'gemini-3': 'google',
-};
-
-const CustomProviderSchema = z.object({
-  baseURL: z.string().url(),
-  apiKey: z.string().optional(),
-  defaultModel: z.string().optional(),
-});
-
-const ProviderOverrideSchema = z.object({
-  baseURL: z.string().url().optional(),
-  apiKey: z.string().optional(),
-  defaultModel: z.string().optional(),
-});
-
-const SettingsSchema = z.object({
-  provider: z.string().optional(),
-  modelId: z.string().optional(),
-  model: z.string().optional(),
-  customProviders: z.record(z.string(), CustomProviderSchema).optional(),
-  providers: z.record(z.string(), ProviderOverrideSchema).optional(),
-  providerOverrides: z.record(z.string(), ProviderOverrideSchema).optional(),
-}).passthrough(); // Allow additional unknown keys for forward compatibility
-
-export type CustomProviderConfig = z.infer<typeof CustomProviderSchema>;
-export type ProviderOverrideConfig = z.infer<typeof ProviderOverrideSchema>;
-export type TinoSettings = z.infer<typeof SettingsSchema>;
-
-interface SettingsData {
-  provider?: string;
-  modelId?: string;
-  model?: string;
-  customProviders?: Record<string, CustomProviderConfig>;
-  providers?: Record<string, ProviderOverrideConfig>;
-  providerOverrides?: Record<string, ProviderOverrideConfig>;
-  [key: string]: unknown;
-}
 
 function deepMergeRecordValues(
   left: Record<string, unknown>,
@@ -90,7 +59,19 @@ function ensureGlobalSettings(): Record<string, unknown> {
   return { ...DEFAULT_GLOBAL_SETTINGS };
 }
 
+let _settingsCache: { data: TinoSettings; timestamp: number; cwd: string } | null = null;
+const CACHE_TTL_MS = 5_000;
+
+export function invalidateSettingsCache(): void {
+  _settingsCache = null;
+}
+
 export function loadSettings(): TinoSettings {
+  const cwd = process.cwd();
+  if (_settingsCache && _settingsCache.cwd === cwd && (Date.now() - _settingsCache.timestamp) < CACHE_TTL_MS) {
+    return _settingsCache.data;
+  }
+
   const global = ensureGlobalSettings();
   const project = readJsonFile(PROJECT_SETTINGS_FILE) ?? {};
 
@@ -112,10 +93,13 @@ export function loadSettings(): TinoSettings {
   }
 
   const result = SettingsSchema.safeParse(merged);
-  return result.success ? result.data : (merged as TinoSettings);
+  const settings = result.success ? result.data : (merged as TinoSettings);
+  _settingsCache = { data: settings, timestamp: Date.now(), cwd };
+  return settings;
 }
 
 export function saveSettings(settings: SettingsData): boolean {
+  invalidateSettingsCache();
   try {
     const normalizedSettings: SettingsData = { ...settings };
     const providerOverrides = (normalizedSettings.providerOverrides ?? {}) as Record<string, unknown>;
@@ -147,9 +131,7 @@ function migrateModelToProvider(settings: SettingsData): SettingsData {
   if (settings.model) {
     const providerId = MODEL_TO_PROVIDER_MAP[settings.model];
     if (providerId) {
-      settings.provider = providerId;
-      delete settings.model;
-      saveSettings(settings);
+      return { ...settings, provider: providerId, model: undefined };
     }
   }
 

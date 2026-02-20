@@ -1,31 +1,18 @@
-/**
- * Daemon lifecycle manager.
- * Starts, stops, health-checks, and auto-restarts the Python tino_daemon process.
- */
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { existsSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
+import { DaemonClient } from '@/grpc/daemon-client.js';
+import { readPidFile, writePidFile, removePidFile, isProcessAlive } from './pid-file.js';
 
-/** Default gRPC port the daemon listens on */
 const DEFAULT_PORT = 50051;
-
-/** How long to wait for graceful SIGTERM shutdown before SIGKILL (ms) */
 const SIGKILL_TIMEOUT_MS = 5_000;
-
-/** Delay between auto-restart attempts (ms) */
-const RESTART_DELAY_MS = 1_000;
-
-/** Max consecutive restart attempts before giving up */
-const MAX_RESTART_ATTEMPTS = 3;
+const RESTART_BASE_DELAY_MS = 1_000;
+const MAX_RESTART_ATTEMPTS = 5;
 
 export interface DaemonManagerOptions {
-  /** Project root directory (containing .tino/) */
   projectDir: string;
-  /** Path to tino daemon Python package (absolute) */
   daemonPkgDir: string;
-  /** gRPC port (default 50051) */
   port?: number;
-  /** Enable auto-restart on crash (default true) */
   autoRestart?: boolean;
 }
 
@@ -56,10 +43,6 @@ export class DaemonManager {
       : join(homedir(), '.tino', 'daemon.pid');
   }
 
-  /**
-   * Start the daemon process.
-   * Uses `uv run --python 3.12 python -m tino_daemon` in the daemon package directory.
-   */
   async start(): Promise<void> {
     // Check if already running
     if (this.proc) {
@@ -67,14 +50,14 @@ export class DaemonManager {
     }
 
     // Check for stale PID file
-    const stalePid = this.readPidFile();
+    const stalePid = readPidFile(this.pidFilePath);
     if (stalePid !== null) {
-      if (this.isProcessAlive(stalePid)) {
+      if (isProcessAlive(stalePid)) {
         // Already running externally — adopt it
         return;
       }
       // Stale PID file — clean up
-      this.removePidFile();
+      removePidFile(this.pidFilePath);
     }
 
     this.stopping = false;
@@ -82,16 +65,13 @@ export class DaemonManager {
     await this.spawnDaemon();
   }
 
-  /**
-   * Graceful shutdown: SIGTERM → wait → SIGKILL → remove PID file.
-   */
   async stop(): Promise<void> {
     this.stopping = true;
 
-    const pid = this.proc?.pid ?? this.readPidFile();
+    const pid = this.proc?.pid ?? readPidFile(this.pidFilePath);
     if (pid === null) {
       this.proc = null;
-      this.removePidFile();
+      removePidFile(this.pidFilePath);
       return;
     }
 
@@ -122,21 +102,25 @@ export class DaemonManager {
     this.cleanup();
   }
 
-  /**
-   * Check daemon health by verifying the process is alive.
-   * For full gRPC health checks, connect to localhost:{port} (not implemented yet).
-   */
-  healthCheck(): DaemonStatus {
-    const pid = this.proc?.pid ?? this.readPidFile();
-    const running = pid !== null && this.isProcessAlive(pid);
-    return {
-      running,
-      pid: running ? pid : null,
-      port: this.port,
-    };
+  async healthCheck(): Promise<DaemonStatus> {
+    const pid = this.proc?.pid ?? readPidFile(this.pidFilePath);
+    const processAlive = pid !== null && isProcessAlive(pid);
+
+    if (!processAlive) {
+      return { running: false, pid: null, port: this.port };
+    }
+
+    // Try gRPC health check for authoritative status
+    try {
+      const client = new DaemonClient({ port: this.port });
+      const healthy = await client.healthCheck();
+      return { running: healthy, pid, port: this.port };
+    } catch {
+      // gRPC failed but process is alive — report as running (starting up)
+      return { running: processAlive, pid, port: this.port };
+    }
   }
 
-  /** Get the PID file path (for testing) */
   getPidFilePath(): string {
     return this.pidFilePath;
   }
@@ -169,7 +153,7 @@ export class DaemonManager {
     );
 
     // Write PID file
-    this.writePidFile(this.proc.pid);
+    writePidFile(this.pidFilePath, this.proc.pid);
 
     // Monitor for exit — auto-restart if enabled
     this.monitorProcess();
@@ -187,14 +171,15 @@ export class DaemonManager {
         return;
       }
 
-      // Unexpected crash — auto-restart if enabled
+      // Unexpected crash — auto-restart with exponential backoff
       if (this.autoRestart && this.restartCount < MAX_RESTART_ATTEMPTS) {
+        const delayMs = RESTART_BASE_DELAY_MS * Math.pow(2, this.restartCount);
         this.restartCount++;
         setTimeout(() => {
           if (!this.stopping) {
             this.spawnDaemon();
           }
-        }, RESTART_DELAY_MS);
+        }, delayMs);
       }
     });
   }
@@ -207,44 +192,7 @@ export class DaemonManager {
 
   private cleanup(): void {
     this.proc = null;
-    this.removePidFile();
+    removePidFile(this.pidFilePath);
   }
 
-  private isProcessAlive(pid: number): boolean {
-    try {
-      process.kill(pid, 0); // Signal 0 just checks existence
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private readPidFile(): number | null {
-    try {
-      if (!existsSync(this.pidFilePath)) return null;
-      const content = readFileSync(this.pidFilePath, 'utf-8').trim();
-      const pid = parseInt(content, 10);
-      return isNaN(pid) ? null : pid;
-    } catch {
-      return null;
-    }
-  }
-
-  private writePidFile(pid: number): void {
-    try {
-      writeFileSync(this.pidFilePath, String(pid));
-    } catch {
-      // Non-fatal — daemon still runs without PID file
-    }
-  }
-
-  private removePidFile(): void {
-    try {
-      if (existsSync(this.pidFilePath)) {
-        unlinkSync(this.pidFilePath);
-      }
-    } catch {
-      // Ignore
-    }
-  }
 }

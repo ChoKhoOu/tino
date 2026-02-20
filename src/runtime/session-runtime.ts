@@ -1,17 +1,18 @@
 import { streamText } from 'ai';
-import type { RunEvent, RunResult, TokenUsage, ToolCallRecord, ToolContext } from '@/domain/index.js';
-import { compactMessages } from '@/agent/compaction.js';
+import type { RunEvent, RunResult, TokenUsage, ToolCallRecord, ToolContext, GrpcClients } from '@/domain/index.js';
+import { pruneContext } from './context-pruner.js';
 import type { Session } from '@/session/session.js';
 import { ModelBroker } from './model-broker.js';
 import { ToolRegistry } from './tool-registry.js';
 import { executeToolCall } from './tool-executor.js';
 import { PermissionEngine } from './permission-engine.js';
 import { HookRunner } from './hook-runner.js';
-import { zeroUsage, estimateTokens, normalizeUsage, mergeUsage } from './token-usage-helpers.js';
+import { zeroUsage, normalizeUsage, mergeUsage } from './token-usage-helpers.js';
+import type { RiskEngine, PreTradeResult } from '@/risk/risk-engine.js';
 
-const CONTEXT_THRESHOLD = 100_000;
-const KEEP_TOOL_USES = 5;
 const DEFAULT_MAX_ITERATIONS = 10;
+
+export type PreToolCheck = (toolId: string, args: Record<string, unknown>) => PreTradeResult;
 
 interface SessionRuntimeConfig {
   broker: ModelBroker;
@@ -20,6 +21,8 @@ interface SessionRuntimeConfig {
   hooks: HookRunner;
   systemPrompt: string;
   maxIterations?: number;
+  grpc?: GrpcClients;
+  preToolCheck?: PreToolCheck;
 }
 
 type RuntimeMessages = NonNullable<Parameters<typeof streamText>[0]['messages']>;
@@ -33,27 +36,6 @@ function toToolMessage(call: IterationToolCall, output: string): RuntimeMessages
     role: 'tool',
     content: [{ type: 'tool-result', toolCallId: call.toolCallId, toolName: call.toolName, input: call.args, output: wrappedOutput }],
   } as unknown as RuntimeMessages[number];
-}
-
-async function pruneContext(messages: RuntimeMessages, broker: ModelBroker): Promise<{ clearedCount: number; keptCount: number } | null> {
-  const payload = messages.map((m) => typeof m.content === 'string' ? m.content : JSON.stringify(m.content)).join('');
-  if (estimateTokens(payload) <= CONTEXT_THRESHOLD) return null;
-  const keepFromEnd = KEEP_TOOL_USES * 2;
-  if (messages.length <= 1 + keepFromEnd) return null;
-
-  try {
-    const compacted = await compactMessages(messages, broker);
-    if (compacted.removedCount > 0) {
-      return { clearedCount: compacted.removedCount, keptCount: messages.length };
-    }
-  } catch {}
-
-  const before = messages.length;
-  const head = messages.slice(0, 1);
-  const tail = messages.slice(-keepFromEnd);
-  messages.length = 0;
-  messages.push(...head, ...tail);
-  return { clearedCount: before - messages.length, keptCount: messages.length };
 }
 
 export class SessionRuntime {
@@ -105,7 +87,7 @@ export class SessionRuntime {
     let iterations = 0;
 
     await this.config.hooks.run('SessionStart', { event: 'SessionStart' });
-    const toolCtx: ToolContext = { signal: runtimeSignal, onProgress: () => {}, config: {} };
+    const toolCtx: ToolContext = { signal: runtimeSignal, onProgress: () => {}, config: {}, grpc: this.config.grpc };
     if (!this.initialized) {
       this.messages.push({ role: 'system', content: this.config.systemPrompt });
       this.initialized = true;
@@ -182,6 +164,16 @@ export class SessionRuntime {
           yield { type: 'tool_error', toolId: call.toolName, error: blocked };
           this.messages.push(toToolMessage(call, blocked));
           continue;
+        }
+
+        if (this.config.preToolCheck) {
+          const riskResult = this.config.preToolCheck(call.toolName, call.args);
+          if (!riskResult.allowed) {
+            const refused = `Error: Risk check failed — ${riskResult.reason}`;
+            yield { type: 'tool_error', toolId: call.toolName, error: refused };
+            this.messages.push(toToolMessage(call, refused));
+            continue;
+          }
         }
 
         yield { type: 'tool_start', toolId: call.toolName, args: call.args };

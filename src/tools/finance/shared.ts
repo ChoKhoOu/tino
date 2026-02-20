@@ -1,11 +1,20 @@
 /**
  * Shared utilities for external financial data source clients.
  *
- * Provides retry logic, API key validation, and rate-limit tracking
+ * Provides retry logic and cached JSON fetching
  * so each client module stays focused on endpoint-specific logic.
  */
 import { readCache, writeCache, describeRequest } from '../../utils/cache.js';
 import { logger } from '../../utils/logger.js';
+import { getRateLimitDelay, recordRateLimit } from './rate-limiter.js';
+
+// Re-export rate-limiter utilities so existing imports from shared.ts keep working
+export {
+  getRateLimitDelay,
+  recordRateLimit,
+  validateApiKey,
+  getOptionalApiKey,
+} from './rate-limiter.js';
 
 // ============================================================================
 // Types
@@ -23,68 +32,6 @@ export interface CacheableCallOptions {
   cacheable?: boolean;
   /** Source name for logging */
   source: string;
-}
-
-// ============================================================================
-// Rate-limit tracking
-// ============================================================================
-
-interface RateLimitState {
-  /** Timestamp (ms) when we can next make a request */
-  retryAfter: number;
-}
-
-const rateLimits = new Map<string, RateLimitState>();
-
-/**
- * Check if a source is currently rate-limited.
- * Returns the number of ms to wait, or 0 if clear.
- */
-export function getRateLimitDelay(source: string): number {
-  const state = rateLimits.get(source);
-  if (!state) return 0;
-  const now = Date.now();
-  if (now >= state.retryAfter) {
-    rateLimits.delete(source);
-    return 0;
-  }
-  return state.retryAfter - now;
-}
-
-/**
- * Record a rate-limit signal from an API response.
- * @param source  - Data source identifier (e.g. "FMP")
- * @param retryAfterSecs - Seconds to wait (from Retry-After header or default)
- */
-export function recordRateLimit(source: string, retryAfterSecs: number): void {
-  rateLimits.set(source, { retryAfter: Date.now() + retryAfterSecs * 1000 });
-}
-
-// ============================================================================
-// API key validation
-// ============================================================================
-
-/**
- * Read an API key from `process.env` at call time (lazy).
- * Throws a descriptive error when the key is missing.
- */
-export function validateApiKey(keyName: string, envVar: string): string {
-  const value = process.env[envVar];
-  if (!value) {
-    throw new Error(
-      `Missing API key: ${envVar} is not set. ` +
-        `Please add ${envVar}=<your-key> to your .env file to use the ${keyName} data source.`
-    );
-  }
-  return value;
-}
-
-/**
- * Optionally read an API key — returns undefined instead of throwing when absent.
- * Used for sources with free tiers (e.g. CoinGecko).
- */
-export function getOptionalApiKey(envVar: string): string | undefined {
-  return process.env[envVar] || undefined;
 }
 
 // ============================================================================
@@ -174,8 +121,6 @@ export async function fetchWithRetry(
 
 /**
  * Higher-level helper: fetch JSON from a URL with optional caching.
- * Follows the same pattern as the existing `callApi` in `api.ts`
- * but works with arbitrary base URLs and auth schemes.
  */
 export async function fetchJson<T>(
   url: string,

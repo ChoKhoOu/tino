@@ -1,11 +1,5 @@
 /**
- * Unified response types for external financial data source clients.
- *
- * Each data source has its own response shapes. These types give
- * downstream consumers a consistent contract to code against.
- *
- * Types are organized by domain in ./types/ and re-exported here
- * so existing imports continue to work unchanged.
+ * Barrel re-exports for all financial data source types.
  */
 
 export type {
@@ -16,13 +10,13 @@ export type {
   FmpHistoricalPrice,
   FmpInsiderTrade,
   FmpEarningsTranscript,
-} from './types/equity.js';
+} from './equity.js';
 
 export type {
   FredObservation,
   FredSeriesInfo,
   FredSearchResult,
-} from './types/macro.js';
+} from './macro.js';
 
 export type {
   CoinGeckoPriceEntry,
@@ -30,7 +24,7 @@ export type {
   CoinGeckoMarketData,
   CoinGeckoHistoryPoint,
   CoinGeckoCoin,
-} from './types/crypto.js';
+} from './crypto.js';
 
 export type {
   EdgarFiling,
@@ -38,7 +32,7 @@ export type {
   EdgarCompanyFact,
   EdgarCompanyFacts,
   EdgarSubmissions,
-} from './types/edgar.js';
+} from './edgar.js';
 
 export type {
   PolygonBar,
@@ -47,7 +41,7 @@ export type {
   PolygonOptionsContract,
   PolygonOptionQuote,
   PolygonSnapshot,
-} from './types/polygon.js';
+} from './polygon.js';
 
 export type {
   FinnhubNewsItem,
@@ -56,17 +50,17 @@ export type {
   FinnhubEarningsEvent,
   FinnhubInsiderTransaction,
   FinnhubInsiderResponse,
-} from './types/finnhub.js';
+} from './finnhub.js';
 
 export type {
   EodhdRealTimeQuote,
   EodhdHistoricalPrice,
   EodhdFundamentals,
   HkStockPrice,
-} from './types/eodhd.js';
+} from './eodhd.js';
 
 export type {
   OptionsContract,
   OptionQuote,
   OptionsChainData,
-} from './types/options.js';
+} from './options.js';

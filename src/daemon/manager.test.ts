@@ -30,30 +30,30 @@ describe('DaemonManager', () => {
     expect(manager.getPidFilePath()).toBe(join(projectDir, '.tino', 'daemon.pid'));
   });
 
-  test('healthCheck returns not running when no process', () => {
+  test('healthCheck returns not running when no process', async () => {
     const projectDir = createTestProject();
     const manager = new DaemonManager({
       projectDir,
       daemonPkgDir: '/tmp/fake-daemon',
     });
-    const status = manager.healthCheck();
+    const status = await manager.healthCheck();
     expect(status.running).toBe(false);
     expect(status.pid).toBeNull();
     expect(status.port).toBe(50051);
   });
 
-  test('healthCheck uses custom port', () => {
+  test('healthCheck uses custom port', async () => {
     const projectDir = createTestProject();
     const manager = new DaemonManager({
       projectDir,
       daemonPkgDir: '/tmp/fake-daemon',
       port: 9999,
     });
-    const status = manager.healthCheck();
+    const status = await manager.healthCheck();
     expect(status.port).toBe(9999);
   });
 
-  test('healthCheck detects stale PID file as not running', () => {
+  test('healthCheck detects stale PID file as not running', async () => {
     const projectDir = createTestProject();
     // Write a PID that doesn't exist (99999999 is very unlikely to be a real PID)
     writeFileSync(join(projectDir, '.tino', 'daemon.pid'), '99999999');
@@ -62,7 +62,7 @@ describe('DaemonManager', () => {
       projectDir,
       daemonPkgDir: '/tmp/fake-daemon',
     });
-    const status = manager.healthCheck();
+    const status = await manager.healthCheck();
     expect(status.running).toBe(false);
     expect(status.pid).toBeNull();
   });

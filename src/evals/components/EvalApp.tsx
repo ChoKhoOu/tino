@@ -5,6 +5,7 @@ import { EvalProgress } from './EvalProgress.js';
 import { EvalCurrentQuestion } from './EvalCurrentQuestion.js';
 import { EvalStats } from './EvalStats.js';
 import { EvalRecentResults, type EvalResult } from './EvalRecentResults.js';
+import { EvalCompleteSummary } from './EvalCompleteSummary.js';
 
 
 const SHOW_STATS = true;
@@ -131,41 +132,11 @@ export function EvalApp({ runEvaluation }: EvalAppProps) {
 
   // Complete state - show final summary
   if (state.status === 'complete') {
-    const avgScore = state.results.length > 0
-      ? state.results.reduce((sum, r) => sum + r.score, 0) / state.results.length
-      : 0;
-
     return (
-      <Box flexDirection="column" marginTop={1}>
-        <Text>{'═'.repeat(70)}</Text>
-        <Text bold>EVALUATION COMPLETE</Text>
-        <Text>{'═'.repeat(70)}</Text>
-        <Text>Experiment: {state.experimentName ?? 'unknown'}</Text>
-        <Text>Examples evaluated: {state.results.length}</Text>
-        <Text>Average correctness score: <Text color={colors.primary} bold>{(avgScore * 100).toFixed(1)}%</Text></Text>
-        <Text> </Text>
-        <Text>Results by question:</Text>
-        <Text>{'─'.repeat(70)}</Text>
-        {state.results.map((r, i) => {
-          const icon = r.score === 1 ? '✓' : '✗';
-          const iconColor = r.score === 1 ? colors.success : colors.error;
-          return (
-            <Box key={i} flexDirection="column">
-              <Box>
-                <Text color={iconColor}>{icon} </Text>
-                <Text color={colors.muted}>[{r.score}] </Text>
-                <Text>{r.question.slice(0, 65)}{r.question.length > 65 ? '...' : ''}</Text>
-              </Box>
-              {r.comment && r.score !== 1 && (
-                <Text color={colors.muted}>    {r.comment.slice(0, 80)}{r.comment.length > 80 ? '...' : ''}</Text>
-              )}
-            </Box>
-          );
-        })}
-        <Text> </Text>
-        <Text>{'─'.repeat(70)}</Text>
-        <Text color={colors.muted}>View full results: https://smith.langchain.com</Text>
-      </Box>
+      <EvalCompleteSummary
+        experimentName={state.experimentName}
+        results={state.results}
+      />
     );
   }
 
