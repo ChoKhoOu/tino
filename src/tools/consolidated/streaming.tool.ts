@@ -21,7 +21,7 @@ const schema = z.object({
 type Input = z.infer<typeof schema>;
 
 async function handleSubscribe(input: Input, ctx: ToolContext): Promise<string> {
-  const client = getStreamingClient();
+  const client = ctx.grpc?.streaming ?? getStreamingClient();
   ctx.onProgress(`Subscribing to ${input.instrument} via ${input.source}...`);
 
   const events: Array<{ type: string; instrument: string; data: unknown; timestamp: string }> = [];
@@ -63,8 +63,8 @@ async function handleSubscribe(input: Input, ctx: ToolContext): Promise<string> 
   });
 }
 
-async function handleUnsubscribe(input: Input): Promise<string> {
-  const client = getStreamingClient();
+async function handleUnsubscribe(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.streaming ?? getStreamingClient();
   const response = await client.unsubscribe({
     instrument: input.instrument ?? '',
     source: input.source,
@@ -79,8 +79,8 @@ async function handleUnsubscribe(input: Input): Promise<string> {
   });
 }
 
-async function handleListSubscriptions(): Promise<string> {
-  const client = getStreamingClient();
+async function handleListSubscriptions(ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.streaming ?? getStreamingClient();
   const response = await client.listSubscriptions();
 
   const subscriptions = response.subscriptions.map((s) => ({
@@ -107,9 +107,9 @@ export default definePlugin({
       case 'subscribe':
         return handleSubscribe(input, ctx);
       case 'unsubscribe':
-        return handleUnsubscribe(input);
+        return handleUnsubscribe(input, ctx);
       case 'list_subscriptions':
-        return handleListSubscriptions();
+        return handleListSubscriptions(ctx);
     }
   },
 });

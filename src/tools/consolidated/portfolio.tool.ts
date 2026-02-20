@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { getPortfolioClient } from '../portfolio/grpc-clients.js';
 import { PORTFOLIO_DESCRIPTION } from '../descriptions/portfolio.js';
+import type { ToolContext } from '@/domain/tool-plugin.js';
 
 const schema = z.object({
   action: z.enum([
@@ -18,8 +19,8 @@ const schema = z.object({
 
 type Input = z.infer<typeof schema>;
 
-async function handleSummary(): Promise<string> {
-  const client = getPortfolioClient();
+async function handleSummary(ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.portfolio ?? getPortfolioClient();
   const response = await client.getSummary();
 
   return JSON.stringify({
@@ -33,8 +34,8 @@ async function handleSummary(): Promise<string> {
   });
 }
 
-async function handleTrades(input: Input): Promise<string> {
-  const client = getPortfolioClient();
+async function handleTrades(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.portfolio ?? getPortfolioClient();
   const response = await client.getTrades({
     instrument: input.instrument,
     startDate: input.start_date,
@@ -58,8 +59,8 @@ async function handleTrades(input: Input): Promise<string> {
   return JSON.stringify({ data: { trades } });
 }
 
-async function handlePositions(input: Input): Promise<string> {
-  const client = getPortfolioClient();
+async function handlePositions(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.portfolio ?? getPortfolioClient();
   const response = await client.getPositions(input.instrument);
 
   const positions = response.positions.map((p) => ({
@@ -76,8 +77,8 @@ async function handlePositions(input: Input): Promise<string> {
   });
 }
 
-async function handlePnLHistory(input: Input): Promise<string> {
-  const client = getPortfolioClient();
+async function handlePnLHistory(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.portfolio ?? getPortfolioClient();
   const response = await client.getPnLHistory({
     instrument: input.instrument,
     startDate: input.start_date,
@@ -101,18 +102,18 @@ export default definePlugin({
   riskLevel: 'safe',
   description: PORTFOLIO_DESCRIPTION,
   schema,
-  execute: async (raw) => {
+  execute: async (raw, ctx) => {
     const input = schema.parse(raw);
 
     switch (input.action) {
       case 'summary':
-        return handleSummary();
+        return handleSummary(ctx);
       case 'trades':
-        return handleTrades(input);
+        return handleTrades(input, ctx);
       case 'positions':
-        return handlePositions(input);
+        return handlePositions(input, ctx);
       case 'pnl_history':
-        return handlePnLHistory(input);
+        return handlePnLHistory(input, ctx);
     }
   },
 });

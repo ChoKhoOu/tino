@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { definePlugin } from '@/domain/index.js';
 import { getChartClient } from '../chart/grpc-clients.js';
 import { CHART_DESCRIPTION } from '../descriptions/chart.js';
+import type { ToolContext } from '@/domain/tool-plugin.js';
 
 const schema = z.object({
   action: z.enum(['candlestick', 'line_chart', 'subplot']).describe('The chart action to perform'),
@@ -21,8 +22,8 @@ const schema = z.object({
 
 type Input = z.infer<typeof schema>;
 
-async function handleCandlestick(input: Input): Promise<string> {
-  const client = getChartClient();
+async function handleCandlestick(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.chart ?? getChartClient();
   const response = await client.renderCandlestick({
     dates: input.dates ?? [],
     open: input.open ?? [],
@@ -39,8 +40,8 @@ async function handleCandlestick(input: Input): Promise<string> {
   });
 }
 
-async function handleLineChart(input: Input): Promise<string> {
-  const client = getChartClient();
+async function handleLineChart(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.chart ?? getChartClient();
   const response = await client.renderLineChart({
     labels: input.labels ?? [],
     values: input.values ?? [],
@@ -55,8 +56,8 @@ async function handleLineChart(input: Input): Promise<string> {
   });
 }
 
-async function handleSubplot(input: Input): Promise<string> {
-  const client = getChartClient();
+async function handleSubplot(input: Input, ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.chart ?? getChartClient();
   const response = await client.renderSubplot({
     dates: input.dates ?? [],
     open: input.open ?? [],
@@ -79,16 +80,16 @@ export default definePlugin({
   riskLevel: 'safe',
   description: CHART_DESCRIPTION,
   schema,
-  execute: async (raw) => {
+  execute: async (raw, ctx) => {
     const input = schema.parse(raw);
 
     switch (input.action) {
       case 'candlestick':
-        return handleCandlestick(input);
+        return handleCandlestick(input, ctx);
       case 'line_chart':
-        return handleLineChart(input);
+        return handleLineChart(input, ctx);
       case 'subplot':
-        return handleSubplot(input);
+        return handleSubplot(input, ctx);
     }
   },
 });

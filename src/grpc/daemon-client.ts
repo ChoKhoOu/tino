@@ -3,7 +3,10 @@ import type { Client } from "@connectrpc/connect";
 import { DaemonService } from "./gen/tino/daemon/v1/daemon_pb.js";
 import { GrpcClient, type GrpcClientOptions } from "./client.js";
 import { create } from "@bufbuild/protobuf";
-import { GetSystemInfoRequestSchema } from "./gen/tino/daemon/v1/daemon_pb.js";
+import {
+  GetSystemInfoRequestSchema,
+  HealthCheckRequestSchema,
+} from "./gen/tino/daemon/v1/daemon_pb.js";
 
 type DaemonServiceClient = Client<typeof DaemonService>;
 
@@ -25,6 +28,16 @@ export class DaemonClient extends GrpcClient {
       };
     } catch {
       return null;
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      const request = create(HealthCheckRequestSchema, {});
+      const response = await this.client.healthCheck(request);
+      return response.healthy;
+    } catch {
+      return false;
     }
   }
 }

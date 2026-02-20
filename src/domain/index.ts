@@ -23,6 +23,7 @@ export {
   defineToolPlugin,
   type ToolContext,
   type ToolPlugin,
+  type GrpcClients,
 } from './tool-plugin.js';
 
 export {

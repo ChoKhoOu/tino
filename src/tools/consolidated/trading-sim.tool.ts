@@ -20,13 +20,13 @@ const schema = z.object({
   instrument: z.string().optional().describe('Trading instrument symbol'),
   params: z.record(z.string(), z.unknown()).optional().describe('Additional parameters'),
   account: z.string().optional().describe('Trading account identifier'),
-  venue: z.enum(['SIM', 'BINANCE']).default('SIM').describe('Trading venue'),
+  venue: z.enum(['SIM', 'BINANCE', 'OKX', 'BYBIT']).default('SIM').describe('Trading venue'),
 });
 
 type Input = z.infer<typeof schema>;
 
 async function handleBacktest(input: Input, ctx: ToolContext): Promise<string> {
-  const client = getBacktestClient();
+  const client = ctx.grpc?.backtest ?? getBacktestClient();
   ctx.onProgress('Starting backtest...');
 
   let result: Record<string, unknown> | null = null;
@@ -83,7 +83,7 @@ async function handleBacktest(input: Input, ctx: ToolContext): Promise<string> {
 }
 
 async function handlePaperTrade(input: Input, ctx: ToolContext): Promise<string> {
-  const client = getTradingClient();
+  const client = ctx.grpc?.trading ?? getTradingClient();
   ctx.onProgress('Starting paper trading...');
 
   const events: Array<{ type: string; message: string; timestamp: string }> = [];
@@ -127,8 +127,8 @@ async function handlePaperTrade(input: Input, ctx: ToolContext): Promise<string>
   });
 }
 
-async function handlePositions(): Promise<string> {
-  const client = getTradingClient();
+async function handlePositions(ctx: ToolContext): Promise<string> {
+  const client = ctx.grpc?.trading ?? getTradingClient();
   const response = await client.getPositions();
 
   const positions = response.positions.map((p) => ({
@@ -159,7 +159,7 @@ export default definePlugin({
       case 'paper_trade':
         return handlePaperTrade(input, ctx);
       case 'positions':
-        return handlePositions();
+        return handlePositions(ctx);
     }
   },
 });

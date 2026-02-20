@@ -24,6 +24,7 @@ const BUNDLED_TOOL_LOADERS = [
   () => import('../tools/consolidated/portfolio.tool.js'),
   () => import('../tools/consolidated/chart.tool.js'),
   () => import('../tools/consolidated/streaming.tool.js'),
+  () => import('../tools/consolidated/backtest-history.tool.js'),
 ] as const;
 
 export class ToolRegistry {

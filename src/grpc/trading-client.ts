@@ -10,6 +10,7 @@ import {
   type SubmitOrderRequest,
   type SubmitOrderResponse,
   type CancelOrderResponse,
+  type GetAccountSummaryResponse,
 } from "./gen/tino/trading/v1/trading_pb.js";
 import { GrpcClient, type GrpcClientOptions } from "./client.js";
 import { create } from "@bufbuild/protobuf";
@@ -20,6 +21,7 @@ import {
   GetOrdersRequestSchema,
   SubmitOrderRequestSchema,
   CancelOrderRequestSchema,
+  GetAccountSummaryRequestSchema,
 } from "./gen/tino/trading/v1/trading_pb.js";
 
 type TradingServiceClient = Client<typeof TradingService>;
@@ -66,5 +68,10 @@ export class TradingClient extends GrpcClient {
   async cancelOrder(orderId: string): Promise<CancelOrderResponse> {
     const request = create(CancelOrderRequestSchema, { orderId });
     return await this.client.cancelOrder(request);
+  }
+
+  async getAccountSummary(): Promise<GetAccountSummaryResponse> {
+    const request = create(GetAccountSummaryRequestSchema, {});
+    return await this.client.getAccountSummary(request);
   }
 }
