@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p=require\\(''path''\\),f=require\\(''fs''\\),d=process.env.CLAUDE_CONFIG_DIR||p.join\\(require\\(''os''\\).homedir\\(\\),''.claude''\\);console.log\\(f.existsSync\\(p.join\\(d,''hud'',''omc-hud.mjs''\\)\\)?''EXISTS'':''MISSING''\\)\")",
+      "Bash(node -e \"const p=require\\(''path''\\),f=require\\(''fs''\\),d=process.env.CLAUDE_CONFIG_DIR||p.join\\(require\\(''os''\\).homedir\\(\\),''.claude''\\),b=p.join\\(d,''plugins'',''cache'',''omc'',''oh-my-claudecode''\\);try{const v=f.readdirSync\\(b\\).filter\\(x=>/^\\\\d/.test\\(x\\)\\).sort\\(\\(a,c\\)=>a.localeCompare\\(c,void 0,{numeric:true}\\)\\);if\\(v.length===0\\){console.log\\(''Plugin not installed''\\);process.exit\\(\\)}const l=v[v.length-1],h=p.join\\(b,l,''dist'',''hud'',''index.js''\\);console.log\\(''Version:'',l\\);console.log\\(f.existsSync\\(h\\)?''READY'':''NOT_FOUND''\\)}catch{console.log\\(''Plugin not installed''\\)}\")",
+      "Bash(node:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(gh api:*)",
+      "Bash(grep:*)",
+      "mcp__plugin_oh-my-claudecode_t__state_clear",
+      "mcp__plugin_oh-my-claudecode_t__state_list_active",
+      "mcp__plugin_oh-my-claudecode_t__state_get_status",
+      "mcp__plugin_oh-my-claudecode_t__state_write",
+      "mcp__plugin_oh-my-claudecode_t__state_read",
+      "Bash(buf generate:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(buf:*)",
+      "Bash(ls:*)",
+      "Bash(bun run typecheck:*)",
+      "Bash(PATH=\"./node_modules/.bin:$PATH\" buf generate:*)",
+      "Bash(npx buf generate)",
+      "Bash(bunx buf generate:*)",
+      "Bash(PATH=\"/Users/ouzhuohao/tino/node_modules/.bin:$PATH\" buf generate:*)",
+      "Bash(bun test:*)",
+      "Bash(bun install:*)",
+      "Bash(git stash:*)",
+      "mcp__plugin_oh-my-claudecode_x__ask_codex",
+      "Bash(git add:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(echo:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

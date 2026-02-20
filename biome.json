@@ -1,0 +1,38 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "organizeImports": {
+    "enabled": false
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "off"
+      },
+      "complexity": {
+        "noBannedTypes": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "useImportType": "off"
+      }
+    }
+  },
+  "files": {
+    "ignore": [
+      "node_modules",
+      "dist",
+      "src/grpc/gen/",
+      "python/",
+      ".tino/",
+      "Plans/"
+    ]
+  },
+  "javascript": {
+    "globals": ["Bun"]
+  }
+}
