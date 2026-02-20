@@ -11,6 +11,7 @@ from typing import Any, AsyncIterator
 
 import grpc
 
+from tino_daemon.nautilus.exchange_factory import create_exchange_config
 from tino_daemon.nautilus.node import TradingNodeWrapper
 from tino_daemon.node_registry import NodeRegistry
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
@@ -161,6 +162,13 @@ class TradingServiceServicer(trading_pb2_grpc.TradingServiceServicer):
         """Submit a new order to the active trading session."""
         del context
 
+        venue = (request.venue or "").strip().upper()
+        if venue and venue not in {"SIM", ""}:
+            try:
+                create_exchange_config(venue)
+            except ValueError as exc:
+                return trading_pb2.SubmitOrderResponse(order_id="", success=False)
+
         try:
             order_id = await self._get_node().submit_order(
                 instrument=request.instrument,
@@ -172,6 +180,35 @@ class TradingServiceServicer(trading_pb2_grpc.TradingServiceServicer):
             return trading_pb2.SubmitOrderResponse(order_id=order_id, success=True)
         except Exception:
             return trading_pb2.SubmitOrderResponse(order_id="", success=False)
+
+    async def GetAccountSummary(
+        self,
+        request: Any,
+        context: Any,
+    ) -> Any:
+        """Return aggregated account summary for risk engine PnL queries."""
+        del request
+        del context
+
+        try:
+            positions = await self._get_node().get_positions()
+            total_value = sum(
+                abs(float(p.get("quantity", 0)) * float(p.get("avg_price", 0)))
+                for p in positions
+            )
+            daily_pnl = sum(
+                float(p.get("realized_pnl", 0)) + float(p.get("unrealized_pnl", 0))
+                for p in positions
+            )
+            return trading_pb2.GetAccountSummaryResponse(
+                total_position_value=total_value,
+                daily_pnl=daily_pnl,
+                margin_used=0.0,
+                available_balance=0.0,
+                open_position_count=len(positions),
+            )
+        except Exception:
+            return trading_pb2.GetAccountSummaryResponse()
 
     async def CancelOrder(
         self,

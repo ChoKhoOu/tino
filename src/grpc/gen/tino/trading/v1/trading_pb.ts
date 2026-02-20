@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tino/trading/v1/trading.proto.
  */
 export const file_tino_trading_v1_trading: GenFile = /*@__PURE__*/
-  fileDesc("Ch10aW5vL3RyYWRpbmcvdjEvdHJhZGluZy5wcm90bxIPdGluby50cmFkaW5nLnYxInMKE1N0YXJ0VHJhZGluZ1JlcXVlc3QSFQoNc3RyYXRlZ3lfcGF0aBgBIAEoCRIMCgRtb2RlGAIgASgJEg0KBXZlbnVlGAMgASgJEhMKC2luc3RydW1lbnRzGAQgAygJEhMKC2NvbmZpZ19qc29uGAUgASgJItUCChRTdGFydFRyYWRpbmdSZXNwb25zZRI9CgR0eXBlGAEgASgOMi8udGluby50cmFkaW5nLnYxLlN0YXJ0VHJhZGluZ1Jlc3BvbnNlLkV2ZW50VHlwZRIPCgdtZXNzYWdlGAIgASgJEhEKCWRhdGFfanNvbhgDIAEoCRIRCgl0aW1lc3RhbXAYBCABKAkixgEKCUV2ZW50VHlwZRIaChZFVkVOVF9UWVBFX1VOU1BFQ0lGSUVEEAASFgoSRVZFTlRfVFlQRV9TVEFSVEVEEAESGwoXRVZFTlRfVFlQRV9PUkRFUl9GSUxMRUQQAhIfChtFVkVOVF9UWVBFX1BPU0lUSU9OX0NIQU5HRUQQAxIZChVFVkVOVF9UWVBFX1BOTF9VUERBVEUQBBIUChBFVkVOVF9UWVBFX0VSUk9SEAUSFgoSRVZFTlRfVFlQRV9TVE9QUEVEEAYiLwoSU3RvcFRyYWRpbmdSZXF1ZXN0EhkKEWZsYXR0ZW5fcG9zaXRpb25zGAEgASgIIiYKE1N0b3BUcmFkaW5nUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIVChNHZXRQb3NpdGlvbnNSZXF1ZXN0IkQKFEdldFBvc2l0aW9uc1Jlc3BvbnNlEiwKCXBvc2l0aW9ucxgBIAMoCzIZLnRpbm8udHJhZGluZy52MS5Qb3NpdGlvbiJxCghQb3NpdGlvbhISCgppbnN0cnVtZW50GAEgASgJEhAKCHF1YW50aXR5GAIgASgBEhEKCWF2Z19wcmljZRgDIAEoARIWCg51bnJlYWxpemVkX3BubBgEIAEoARIUCgxyZWFsaXplZF9wbmwYBSABKAEiIQoQR2V0T3JkZXJzUmVxdWVzdBINCgVsaW1pdBgBIAEoBSI7ChFHZXRPcmRlcnNSZXNwb25zZRImCgZvcmRlcnMYASADKAsyFi50aW5vLnRyYWRpbmcudjEuT3JkZXIioAEKBU9yZGVyEgoKAmlkGAEgASgJEhIKCmluc3RydW1lbnQYAiABKAkSDAoEc2lkZRgDIAEoCRIMCgR0eXBlGAQgASgJEhAKCHF1YW50aXR5GAUgASgBEg0KBXByaWNlGAYgASgBEg4KBnN0YXR1cxgHIAEoCRIRCgl0aW1lc3RhbXAYCCABKAkSFwoPZmlsbGVkX3F1YW50aXR5GAkgASgBImUKElN1Ym1pdE9yZGVyUmVxdWVzdBISCgppbnN0cnVtZW50GAEgASgJEgwKBHNpZGUYAiABKAkSDAoEdHlwZRgDIAEoCRIQCghxdWFudGl0eRgEIAEoARINCgVwcmljZRgFIAEoASI4ChNTdWJtaXRPcmRlclJlc3BvbnNlEhAKCG9yZGVyX2lkGAEgASgJEg8KB3N1Y2Nlc3MYAiABKAgiJgoSQ2FuY2VsT3JkZXJSZXF1ZXN0EhAKCG9yZGVyX2lkGAEgASgJIiYKE0NhbmNlbE9yZGVyUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDKuBAoOVHJhZGluZ1NlcnZpY2USXQoMU3RhcnRUcmFkaW5nEiQudGluby50cmFkaW5nLnYxLlN0YXJ0VHJhZGluZ1JlcXVlc3QaJS50aW5vLnRyYWRpbmcudjEuU3RhcnRUcmFkaW5nUmVzcG9uc2UwARJYCgtTdG9wVHJhZGluZxIjLnRpbm8udHJhZGluZy52MS5TdG9wVHJhZGluZ1JlcXVlc3QaJC50aW5vLnRyYWRpbmcudjEuU3RvcFRyYWRpbmdSZXNwb25zZRJbCgxHZXRQb3NpdGlvbnMSJC50aW5vLnRyYWRpbmcudjEuR2V0UG9zaXRpb25zUmVxdWVzdBolLnRpbm8udHJhZGluZy52MS5HZXRQb3NpdGlvbnNSZXNwb25zZRJSCglHZXRPcmRlcnMSIS50aW5vLnRyYWRpbmcudjEuR2V0T3JkZXJzUmVxdWVzdBoiLnRpbm8udHJhZGluZy52MS5HZXRPcmRlcnNSZXNwb25zZRJYCgtTdWJtaXRPcmRlchIjLnRpbm8udHJhZGluZy52MS5TdWJtaXRPcmRlclJlcXVlc3QaJC50aW5vLnRyYWRpbmcudjEuU3VibWl0T3JkZXJSZXNwb25zZRJYCgtDYW5jZWxPcmRlchIjLnRpbm8udHJhZGluZy52MS5DYW5jZWxPcmRlclJlcXVlc3QaJC50aW5vLnRyYWRpbmcudjEuQ2FuY2VsT3JkZXJSZXNwb25zZWIGcHJvdG8z");
+  fileDesc("Ch10aW5vL3RyYWRpbmcvdjEvdHJhZGluZy5wcm90bxIPdGluby50cmFkaW5nLnYxInMKE1N0YXJ0VHJhZGluZ1JlcXVlc3QSFQoNc3RyYXRlZ3lfcGF0aBgBIAEoCRIMCgRtb2RlGAIgASgJEg0KBXZlbnVlGAMgASgJEhMKC2luc3RydW1lbnRzGAQgAygJEhMKC2NvbmZpZ19qc29uGAUgASgJItUCChRTdGFydFRyYWRpbmdSZXNwb25zZRI9CgR0eXBlGAEgASgOMi8udGluby50cmFkaW5nLnYxLlN0YXJ0VHJhZGluZ1Jlc3BvbnNlLkV2ZW50VHlwZRIPCgdtZXNzYWdlGAIgASgJEhEKCWRhdGFfanNvbhgDIAEoCRIRCgl0aW1lc3RhbXAYBCABKAkixgEKCUV2ZW50VHlwZRIaChZFVkVOVF9UWVBFX1VOU1BFQ0lGSUVEEAASFgoSRVZFTlRfVFlQRV9TVEFSVEVEEAESGwoXRVZFTlRfVFlQRV9PUkRFUl9GSUxMRUQQAhIfChtFVkVOVF9UWVBFX1BPU0lUSU9OX0NIQU5HRUQQAxIZChVFVkVOVF9UWVBFX1BOTF9VUERBVEUQBBIUChBFVkVOVF9UWVBFX0VSUk9SEAUSFgoSRVZFTlRfVFlQRV9TVE9QUEVEEAYiLwoSU3RvcFRyYWRpbmdSZXF1ZXN0EhkKEWZsYXR0ZW5fcG9zaXRpb25zGAEgASgIIiYKE1N0b3BUcmFkaW5nUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIVChNHZXRQb3NpdGlvbnNSZXF1ZXN0IkQKFEdldFBvc2l0aW9uc1Jlc3BvbnNlEiwKCXBvc2l0aW9ucxgBIAMoCzIZLnRpbm8udHJhZGluZy52MS5Qb3NpdGlvbiJxCghQb3NpdGlvbhISCgppbnN0cnVtZW50GAEgASgJEhAKCHF1YW50aXR5GAIgASgBEhEKCWF2Z19wcmljZRgDIAEoARIWCg51bnJlYWxpemVkX3BubBgEIAEoARIUCgxyZWFsaXplZF9wbmwYBSABKAEiIQoQR2V0T3JkZXJzUmVxdWVzdBINCgVsaW1pdBgBIAEoBSI7ChFHZXRPcmRlcnNSZXNwb25zZRImCgZvcmRlcnMYASADKAsyFi50aW5vLnRyYWRpbmcudjEuT3JkZXIioAEKBU9yZGVyEgoKAmlkGAEgASgJEhIKCmluc3RydW1lbnQYAiABKAkSDAoEc2lkZRgDIAEoCRIMCgR0eXBlGAQgASgJEhAKCHF1YW50aXR5GAUgASgBEg0KBXByaWNlGAYgASgBEg4KBnN0YXR1cxgHIAEoCRIRCgl0aW1lc3RhbXAYCCABKAkSFwoPZmlsbGVkX3F1YW50aXR5GAkgASgBInQKElN1Ym1pdE9yZGVyUmVxdWVzdBISCgppbnN0cnVtZW50GAEgASgJEgwKBHNpZGUYAiABKAkSDAoEdHlwZRgDIAEoCRIQCghxdWFudGl0eRgEIAEoARINCgVwcmljZRgFIAEoARINCgV2ZW51ZRgGIAEoCSI4ChNTdWJtaXRPcmRlclJlc3BvbnNlEhAKCG9yZGVyX2lkGAEgASgJEg8KB3N1Y2Nlc3MYAiABKAgiJgoSQ2FuY2VsT3JkZXJSZXF1ZXN0EhAKCG9yZGVyX2lkGAEgASgJIiYKE0NhbmNlbE9yZGVyUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIaChhHZXRBY2NvdW50U3VtbWFyeVJlcXVlc3QimQEKGUdldEFjY291bnRTdW1tYXJ5UmVzcG9uc2USHAoUdG90YWxfcG9zaXRpb25fdmFsdWUYASABKAESEQoJZGFpbHlfcG5sGAIgASgBEhMKC21hcmdpbl91c2VkGAMgASgBEhkKEWF2YWlsYWJsZV9iYWxhbmNlGAQgASgBEhsKE29wZW5fcG9zaXRpb25fY291bnQYBSABKAUymgUKDlRyYWRpbmdTZXJ2aWNlEl0KDFN0YXJ0VHJhZGluZxIkLnRpbm8udHJhZGluZy52MS5TdGFydFRyYWRpbmdSZXF1ZXN0GiUudGluby50cmFkaW5nLnYxLlN0YXJ0VHJhZGluZ1Jlc3BvbnNlMAESWAoLU3RvcFRyYWRpbmcSIy50aW5vLnRyYWRpbmcudjEuU3RvcFRyYWRpbmdSZXF1ZXN0GiQudGluby50cmFkaW5nLnYxLlN0b3BUcmFkaW5nUmVzcG9uc2USWwoMR2V0UG9zaXRpb25zEiQudGluby50cmFkaW5nLnYxLkdldFBvc2l0aW9uc1JlcXVlc3QaJS50aW5vLnRyYWRpbmcudjEuR2V0UG9zaXRpb25zUmVzcG9uc2USUgoJR2V0T3JkZXJzEiEudGluby50cmFkaW5nLnYxLkdldE9yZGVyc1JlcXVlc3QaIi50aW5vLnRyYWRpbmcudjEuR2V0T3JkZXJzUmVzcG9uc2USWAoLU3VibWl0T3JkZXISIy50aW5vLnRyYWRpbmcudjEuU3VibWl0T3JkZXJSZXF1ZXN0GiQudGluby50cmFkaW5nLnYxLlN1Ym1pdE9yZGVyUmVzcG9uc2USWAoLQ2FuY2VsT3JkZXISIy50aW5vLnRyYWRpbmcudjEuQ2FuY2VsT3JkZXJSZXF1ZXN0GiQudGluby50cmFkaW5nLnYxLkNhbmNlbE9yZGVyUmVzcG9uc2USagoRR2V0QWNjb3VudFN1bW1hcnkSKS50aW5vLnRyYWRpbmcudjEuR2V0QWNjb3VudFN1bW1hcnlSZXF1ZXN0GioudGluby50cmFkaW5nLnYxLkdldEFjY291bnRTdW1tYXJ5UmVzcG9uc2ViBnByb3RvMw");
 
 /**
  * @generated from message tino.trading.v1.StartTradingRequest
@@ -347,6 +347,11 @@ export type SubmitOrderRequest = Message<"tino.trading.v1.SubmitOrderRequest"> &
    * @generated from field: double price = 5;
    */
   price: number;
+
+  /**
+   * @generated from field: string venue = 6;
+   */
+  venue: string;
 };
 
 /**
@@ -413,6 +418,56 @@ export const CancelOrderResponseSchema: GenMessage<CancelOrderResponse> = /*@__P
   messageDesc(file_tino_trading_v1_trading, 13);
 
 /**
+ * @generated from message tino.trading.v1.GetAccountSummaryRequest
+ */
+export type GetAccountSummaryRequest = Message<"tino.trading.v1.GetAccountSummaryRequest"> & {
+};
+
+/**
+ * Describes the message tino.trading.v1.GetAccountSummaryRequest.
+ * Use `create(GetAccountSummaryRequestSchema)` to create a new message.
+ */
+export const GetAccountSummaryRequestSchema: GenMessage<GetAccountSummaryRequest> = /*@__PURE__*/
+  messageDesc(file_tino_trading_v1_trading, 14);
+
+/**
+ * @generated from message tino.trading.v1.GetAccountSummaryResponse
+ */
+export type GetAccountSummaryResponse = Message<"tino.trading.v1.GetAccountSummaryResponse"> & {
+  /**
+   * @generated from field: double total_position_value = 1;
+   */
+  totalPositionValue: number;
+
+  /**
+   * @generated from field: double daily_pnl = 2;
+   */
+  dailyPnl: number;
+
+  /**
+   * @generated from field: double margin_used = 3;
+   */
+  marginUsed: number;
+
+  /**
+   * @generated from field: double available_balance = 4;
+   */
+  availableBalance: number;
+
+  /**
+   * @generated from field: int32 open_position_count = 5;
+   */
+  openPositionCount: number;
+};
+
+/**
+ * Describes the message tino.trading.v1.GetAccountSummaryResponse.
+ * Use `create(GetAccountSummaryResponseSchema)` to create a new message.
+ */
+export const GetAccountSummaryResponseSchema: GenMessage<GetAccountSummaryResponse> = /*@__PURE__*/
+  messageDesc(file_tino_trading_v1_trading, 15);
+
+/**
  * @generated from service tino.trading.v1.TradingService
  */
 export const TradingService: GenService<{
@@ -463,6 +518,14 @@ export const TradingService: GenService<{
     methodKind: "unary";
     input: typeof CancelOrderRequestSchema;
     output: typeof CancelOrderResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.trading.v1.TradingService.GetAccountSummary
+   */
+  getAccountSummary: {
+    methodKind: "unary";
+    input: typeof GetAccountSummaryRequestSchema;
+    output: typeof GetAccountSummaryResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_tino_trading_v1_trading, 0);

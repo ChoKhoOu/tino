@@ -10,6 +10,8 @@ from typing import Any, AsyncIterator
 
 from tino_daemon.proto.tino.streaming.v1 import streaming_pb2, streaming_pb2_grpc
 from tino_daemon.streaming.binance_ws import BinanceWSClient
+from tino_daemon.streaming.bybit_ws import BybitWSClient
+from tino_daemon.streaming.okx_ws import OKXWSClient
 from tino_daemon.streaming.polygon_ws import PolygonWSClient
 from tino_daemon.streaming.subscription_registry import SubscriptionRegistry
 from tino_daemon.streaming.ws_client import BaseWSClient
@@ -31,6 +33,10 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
     def _create_ws_client(self, source: str) -> BaseWSClient:
         if source == "binance":
             return BinanceWSClient()
+        if source == "okx":
+            return OKXWSClient()
+        if source == "bybit":
+            return BybitWSClient()
         return PolygonWSClient()
 
     async def Subscribe(

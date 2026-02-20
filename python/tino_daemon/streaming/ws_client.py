@@ -66,6 +66,15 @@ class BaseWSClient(abc.ABC):
         except Exception as exc:
             logger.warning("WS close error: %s", exc)
 
+    async def reconnect(self) -> None:
+        """Reconnect after connection loss without clearing the message queue."""
+        self._connected = False
+        try:
+            await self._ws_close()
+        except Exception:
+            pass
+        await self.connect()
+
     async def enqueue_message(self, message: str) -> None:
         if self.message_queue.full():
             try:

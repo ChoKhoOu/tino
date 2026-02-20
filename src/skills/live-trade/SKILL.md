@@ -27,6 +27,19 @@ Live deployment is safety-critical. Confirm all prerequisites:
 - Paper trading completed with stable behavior
 - User understands live trading risks
 
+### Automated Graduation Gate Check (Required)
+
+Before proceeding, run the graduation gate verification using `checkGraduation` from `src/risk/graduation-gates.ts` for the `paper_to_live` stage:
+
+- Paper trading duration >= 14 days
+- PnL deviation vs backtest < 30%
+
+Thresholds are configurable via `.tino/settings.json` under `graduationThresholds`.
+
+**If graduation gates fail:** Display the specific failures to the user with measured values and required thresholds. Do NOT proceed to Step 2. Strongly recommend returning to paper trading until gates are met.
+
+**WARNING:** Proceeding without passing graduation gates significantly increases the risk of capital loss. The gates exist to ensure statistical confidence in the strategy before risking real capital.
+
 If paper trading evidence is missing, strongly recommend `skill` `paper-trade` before proceeding.
 
 ## Step 2: Pre-Live Risk and Infrastructure Checks

@@ -8,6 +8,7 @@ service TradingService {
   rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
   rpc SubmitOrder(SubmitOrderRequest) returns (SubmitOrderResponse);
   rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  rpc GetAccountSummary(GetAccountSummaryRequest) returns (GetAccountSummaryResponse);
 }
 
 message StartTradingRequest {
@@ -79,6 +80,7 @@ message SubmitOrderRequest {
   string type = 3;
   double quantity = 4;
   double price = 5;
+  string venue = 6;
 }
 message SubmitOrderResponse {
   string order_id = 1;
@@ -90,4 +92,13 @@ message CancelOrderRequest {
 }
 message CancelOrderResponse {
   bool success = 1;
+}
+
+message GetAccountSummaryRequest {}
+message GetAccountSummaryResponse {
+  double total_position_value = 1;
+  double daily_pnl = 2;
+  double margin_used = 3;
+  double available_balance = 4;
+  int32 open_position_count = 5;
 }

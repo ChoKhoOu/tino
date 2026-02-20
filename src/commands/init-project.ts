@@ -1,12 +1,26 @@
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { defaultRiskJson } from '@/risk/risk-config.js';
 
 export interface InitResult {
   created: string[];
   skipped: string[];
 }
 
-const DEFAULT_SETTINGS = { provider: 'openai' };
+export interface InitOptions {
+  exchange?: string;
+  defaultPair?: string;
+}
+
+// Risk config template is loaded from risk-config module
+
+function buildDefaultSettings(options?: InitOptions) {
+  return {
+    provider: 'openai',
+    exchange: options?.exchange ?? '',
+    defaultPair: options?.defaultPair ?? 'BTCUSDT',
+  };
+}
 
 const DEFAULT_PERMISSIONS = {
   rules: [
@@ -38,21 +52,23 @@ interface FileEntry {
   isDir?: boolean;
 }
 
-function getFileEntries(projectDir: string): FileEntry[] {
+function getFileEntries(projectDir: string, options?: InitOptions): FileEntry[] {
   const tinoDir = join(projectDir, '.tino');
+  const settings = buildDefaultSettings(options);
   return [
     { path: tinoDir, label: '.tino/', isDir: true },
-    { path: join(tinoDir, 'settings.json'), label: '.tino/settings.json', content: JSON.stringify(DEFAULT_SETTINGS, null, 2) },
+    { path: join(tinoDir, 'settings.json'), label: '.tino/settings.json', content: JSON.stringify(settings, null, 2) },
     { path: join(tinoDir, 'permissions.json'), label: '.tino/permissions.json', content: JSON.stringify(DEFAULT_PERMISSIONS, null, 2) },
+    { path: join(tinoDir, 'risk.json'), label: '.tino/risk.json', content: defaultRiskJson() },
     { path: join(projectDir, 'TINO.md'), label: 'TINO.md', content: TINO_MD_TEMPLATE },
   ];
 }
 
-export function runInitProject(projectDir: string): InitResult {
+export function runInitProject(projectDir: string, options?: InitOptions): InitResult {
   const created: string[] = [];
   const skipped: string[] = [];
 
-  for (const entry of getFileEntries(projectDir)) {
+  for (const entry of getFileEntries(projectDir, options)) {
     if (existsSync(entry.path)) {
       skipped.push(entry.label);
       continue;

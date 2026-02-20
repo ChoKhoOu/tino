@@ -15,6 +15,7 @@ Retrieve real-time and historical market data including stock prices, OHLCV bars
 - Crypto market data (market cap, volume, supply, 24h change)
 - Top cryptocurrencies by market cap
 - Historical crypto price data
+- Perpetual futures funding rates (current and historical, from Binance)
 
 ## When NOT to Use
 
@@ -37,6 +38,8 @@ Retrieve real-time and historical market data including stock prices, OHLCV bars
 | crypto_market_data | Crypto market stats (cap, volume, supply) | symbol |
 | crypto_top_coins | Top N cryptocurrencies by market cap | limit |
 | crypto_history | Historical crypto prices (daily) | symbol, from, to |
+| funding_rates | Current perpetual futures funding rates | symbol (optional, comma-separated) |
+| funding_rates_history | Historical funding rates for a symbol | symbol, from, to |
 
 ## Usage Notes
 
@@ -45,4 +48,7 @@ Retrieve real-time and historical market data including stock prices, OHLCV bars
 - Crypto actions use CoinGecko (FREE, no API key needed)
 - Price bars support multiplier param (e.g., multiplier=5 with timespan=minute for 5-min bars)
 - Options chain can filter by expiration_date
+- Funding rate actions use Binance Futures (FREE, no API key needed)
+- funding_rates with no symbol returns top-10 major perpetuals (BTC, ETH, SOL, etc.)
+- funding_rates_history defaults to last 30 days if from/to not specified
 `.trim();

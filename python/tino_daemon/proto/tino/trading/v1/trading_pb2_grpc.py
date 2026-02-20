@@ -44,6 +44,11 @@ class TradingServiceStub(object):
                 request_serializer=tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderRequest.SerializeToString,
                 response_deserializer=tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderResponse.FromString,
                 _registered_method=True)
+        self.GetAccountSummary = channel.unary_unary(
+                '/tino.trading.v1.TradingService/GetAccountSummary',
+                request_serializer=tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryRequest.SerializeToString,
+                response_deserializer=tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryResponse.FromString,
+                _registered_method=True)
 
 
 class TradingServiceServicer(object):
@@ -85,6 +90,12 @@ class TradingServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetAccountSummary(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TradingServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -117,6 +128,11 @@ def add_TradingServiceServicer_to_server(servicer, server):
                     servicer.CancelOrder,
                     request_deserializer=tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderRequest.FromString,
                     response_serializer=tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderResponse.SerializeToString,
+            ),
+            'GetAccountSummary': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAccountSummary,
+                    request_deserializer=tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryRequest.FromString,
+                    response_serializer=tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -281,6 +297,33 @@ class TradingService(object):
             '/tino.trading.v1.TradingService/CancelOrder',
             tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderRequest.SerializeToString,
             tino_dot_trading_dot_v1_dot_trading__pb2.CancelOrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAccountSummary(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.trading.v1.TradingService/GetAccountSummary',
+            tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryRequest.SerializeToString,
+            tino_dot_trading_dot_v1_dot_trading__pb2.GetAccountSummaryResponse.FromString,
             options,
             channel_credentials,
             insecure,

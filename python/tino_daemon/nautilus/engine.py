@@ -14,6 +14,8 @@ from types import ModuleType
 from typing import Any, Callable
 from uuid import uuid4
 
+from tino_daemon.persistence.backtest_db import BacktestDB
+
 try:
     from nautilus_trader.backtest.engine import (  # type: ignore[import-not-found]
         BacktestEngine as NTBacktestEngine,
@@ -47,6 +49,7 @@ class BacktestEngineWrapper:
         self._backtests_dir = Path(backtests_dir)
         self._strategies_dir = Path(strategies_dir).resolve()
         self._backtests_dir.mkdir(parents=True, exist_ok=True)
+        self._backtest_db = BacktestDB()
 
     async def run_backtest(
         self,
@@ -102,7 +105,15 @@ class BacktestEngineWrapper:
             trades_json=json.dumps(metrics.get("trades", [])),
             created_at=datetime.now(timezone.utc).isoformat(),
         )
-        self._persist_result(result)
+        self._persist_result(
+            result,
+            strategy_path=strategy_path,
+            instrument=instrument,
+            bar_type=bar_type,
+            start_date=start_date,
+            end_date=end_date,
+            config_json=config_json,
+        )
         return result
 
     def _run_backtest_sync(
@@ -156,10 +167,24 @@ class BacktestEngineWrapper:
             "trades": [],
         }
 
-    def _persist_result(self, result: Any) -> None:
-        path = self._backtests_dir / f"{result.id}.json"
+    def _persist_result(
+        self,
+        result: Any,
+        *,
+        strategy_path: str = "",
+        instrument: str = "",
+        bar_type: str = "",
+        start_date: str = "",
+        end_date: str = "",
+        config_json: str = "{}",
+    ) -> None:
         payload = {
             "id": result.id,
+            "strategy_path": strategy_path,
+            "instrument": instrument,
+            "bar_type": bar_type,
+            "start_date": start_date,
+            "end_date": end_date,
             "total_return": result.total_return,
             "sharpe_ratio": result.sharpe_ratio,
             "max_drawdown": result.max_drawdown,
@@ -168,11 +193,19 @@ class BacktestEngineWrapper:
             "winning_trades": result.winning_trades,
             "win_rate": result.win_rate,
             "profit_factor": result.profit_factor,
+            "config_json": config_json,
             "equity_curve_json": result.equity_curve_json,
             "trades_json": result.trades_json,
             "created_at": result.created_at,
         }
+        # JSON file write (existing behaviour)
+        path = self._backtests_dir / f"{result.id}.json"
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        # SQLite dual-write (TDR-005)
+        try:
+            self._backtest_db.record_backtest(payload)
+        except Exception:
+            logger.warning("SQLite dual-write failed for %s", result.id, exc_info=True)
 
     def _parse_config(self, config_json: str) -> dict[str, object]:
         if not config_json:

@@ -12,6 +12,10 @@ import {
   getCoinHistory,
   getTopCoins,
 } from '../finance/coingecko/index.js';
+import {
+  getCurrentFundingRates,
+  getHistoricalFundingRates,
+} from '../finance/funding-rates/index.js';
 import { getFmpPrices } from '../finance/fmp/index.js';
 import type { MarketDataInput } from './market-data.tool.js';
 
@@ -110,6 +114,20 @@ export async function routeMarketData(input: MarketDataInput): Promise<string> {
         const from = dateToUnix(input.from ?? '');
         const to = dateToUnix(input.to ?? '');
         const data = await getCoinHistory(coinId, from, to);
+        return fmt(data);
+      }
+
+      case 'funding_rates': {
+        const symbols = input.symbol ? input.symbol.split(',').map(s => s.trim()) : undefined;
+        const data = await getCurrentFundingRates(symbols);
+        return fmt(data);
+      }
+
+      case 'funding_rates_history': {
+        const symbol = requireSymbol(input.symbol);
+        const from = input.from ? new Date(input.from + 'T00:00:00Z').getTime() : Date.now() - 30 * 86400_000;
+        const to = input.to ? new Date(input.to + 'T00:00:00Z').getTime() : Date.now();
+        const data = await getHistoricalFundingRates(symbol, from, to);
         return fmt(data);
       }
 

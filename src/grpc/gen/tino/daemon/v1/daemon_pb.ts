@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tino/daemon/v1/daemon.proto.
  */
 export const file_tino_daemon_v1_daemon: GenFile = /*@__PURE__*/
-  fileDesc("Cht0aW5vL2RhZW1vbi92MS9kYWVtb24ucHJvdG8SDnRpbm8uZGFlbW9uLnYxIhYKFEdldFN5c3RlbUluZm9SZXF1ZXN0InUKFUdldFN5c3RlbUluZm9SZXNwb25zZRIWCg5weXRob25fdmVyc2lvbhgBIAEoCRIYChBuYXV0aWx1c192ZXJzaW9uGAIgASgJEhoKEm1lbW9yeV91c2FnZV9ieXRlcxgDIAEoBBIOCgZ1cHRpbWUYBCABKAkiEQoPU2h1dGRvd25SZXF1ZXN0IiMKEFNodXRkb3duUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCDK8AQoNRGFlbW9uU2VydmljZRJcCg1HZXRTeXN0ZW1JbmZvEiQudGluby5kYWVtb24udjEuR2V0U3lzdGVtSW5mb1JlcXVlc3QaJS50aW5vLmRhZW1vbi52MS5HZXRTeXN0ZW1JbmZvUmVzcG9uc2USTQoIU2h1dGRvd24SHy50aW5vLmRhZW1vbi52MS5TaHV0ZG93blJlcXVlc3QaIC50aW5vLmRhZW1vbi52MS5TaHV0ZG93blJlc3BvbnNlYgZwcm90bzM");
+  fileDesc("Cht0aW5vL2RhZW1vbi92MS9kYWVtb24ucHJvdG8SDnRpbm8uZGFlbW9uLnYxIhYKFEdldFN5c3RlbUluZm9SZXF1ZXN0InUKFUdldFN5c3RlbUluZm9SZXNwb25zZRIWCg5weXRob25fdmVyc2lvbhgBIAEoCRIYChBuYXV0aWx1c192ZXJzaW9uGAIgASgJEhoKEm1lbW9yeV91c2FnZV9ieXRlcxgDIAEoBBIOCgZ1cHRpbWUYBCABKAkiEQoPU2h1dGRvd25SZXF1ZXN0IiMKEFNodXRkb3duUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIUChJIZWFsdGhDaGVja1JlcXVlc3QiZAoTSGVhbHRoQ2hlY2tSZXNwb25zZRIPCgdoZWFsdGh5GAEgASgIEg4KBnVwdGltZRgCIAEoCRIPCgd2ZXJzaW9uGAMgASgJEhsKE2Nvbm5lY3RlZF9leGNoYW5nZXMYBCADKAkylAIKDURhZW1vblNlcnZpY2USXAoNR2V0U3lzdGVtSW5mbxIkLnRpbm8uZGFlbW9uLnYxLkdldFN5c3RlbUluZm9SZXF1ZXN0GiUudGluby5kYWVtb24udjEuR2V0U3lzdGVtSW5mb1Jlc3BvbnNlEk0KCFNodXRkb3duEh8udGluby5kYWVtb24udjEuU2h1dGRvd25SZXF1ZXN0GiAudGluby5kYWVtb24udjEuU2h1dGRvd25SZXNwb25zZRJWCgtIZWFsdGhDaGVjaxIiLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVxdWVzdBojLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVzcG9uc2ViBnByb3RvMw");
 
 /**
  * @generated from message tino.daemon.v1.GetSystemInfoRequest
@@ -88,6 +88,51 @@ export const ShutdownResponseSchema: GenMessage<ShutdownResponse> = /*@__PURE__*
   messageDesc(file_tino_daemon_v1_daemon, 3);
 
 /**
+ * @generated from message tino.daemon.v1.HealthCheckRequest
+ */
+export type HealthCheckRequest = Message<"tino.daemon.v1.HealthCheckRequest"> & {
+};
+
+/**
+ * Describes the message tino.daemon.v1.HealthCheckRequest.
+ * Use `create(HealthCheckRequestSchema)` to create a new message.
+ */
+export const HealthCheckRequestSchema: GenMessage<HealthCheckRequest> = /*@__PURE__*/
+  messageDesc(file_tino_daemon_v1_daemon, 4);
+
+/**
+ * @generated from message tino.daemon.v1.HealthCheckResponse
+ */
+export type HealthCheckResponse = Message<"tino.daemon.v1.HealthCheckResponse"> & {
+  /**
+   * @generated from field: bool healthy = 1;
+   */
+  healthy: boolean;
+
+  /**
+   * @generated from field: string uptime = 2;
+   */
+  uptime: string;
+
+  /**
+   * @generated from field: string version = 3;
+   */
+  version: string;
+
+  /**
+   * @generated from field: repeated string connected_exchanges = 4;
+   */
+  connectedExchanges: string[];
+};
+
+/**
+ * Describes the message tino.daemon.v1.HealthCheckResponse.
+ * Use `create(HealthCheckResponseSchema)` to create a new message.
+ */
+export const HealthCheckResponseSchema: GenMessage<HealthCheckResponse> = /*@__PURE__*/
+  messageDesc(file_tino_daemon_v1_daemon, 5);
+
+/**
  * @generated from service tino.daemon.v1.DaemonService
  */
 export const DaemonService: GenService<{
@@ -106,6 +151,14 @@ export const DaemonService: GenService<{
     methodKind: "unary";
     input: typeof ShutdownRequestSchema;
     output: typeof ShutdownResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.daemon.v1.DaemonService.HealthCheck
+   */
+  healthCheck: {
+    methodKind: "unary";
+    input: typeof HealthCheckRequestSchema;
+    output: typeof HealthCheckResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_tino_daemon_v1_daemon, 0);

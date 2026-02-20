@@ -24,6 +24,11 @@ class DaemonServiceStub(object):
                 request_serializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownRequest.SerializeToString,
                 response_deserializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownResponse.FromString,
                 _registered_method=True)
+        self.HealthCheck = channel.unary_unary(
+                '/tino.daemon.v1.DaemonService/HealthCheck',
+                request_serializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckRequest.SerializeToString,
+                response_deserializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckResponse.FromString,
+                _registered_method=True)
 
 
 class DaemonServiceServicer(object):
@@ -41,6 +46,12 @@ class DaemonServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def HealthCheck(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DaemonServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -53,6 +64,11 @@ def add_DaemonServiceServicer_to_server(servicer, server):
                     servicer.Shutdown,
                     request_deserializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownRequest.FromString,
                     response_serializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownResponse.SerializeToString,
+            ),
+            'HealthCheck': grpc.unary_unary_rpc_method_handler(
+                    servicer.HealthCheck,
+                    request_deserializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckRequest.FromString,
+                    response_serializer=tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -109,6 +125,33 @@ class DaemonService(object):
             '/tino.daemon.v1.DaemonService/Shutdown',
             tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownRequest.SerializeToString,
             tino_dot_daemon_dot_v1_dot_daemon__pb2.ShutdownResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def HealthCheck(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.daemon.v1.DaemonService/HealthCheck',
+            tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckRequest.SerializeToString,
+            tino_dot_daemon_dot_v1_dot_daemon__pb2.HealthCheckResponse.FromString,
             options,
             channel_credentials,
             insecure,

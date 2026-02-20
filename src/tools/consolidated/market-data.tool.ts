@@ -14,6 +14,8 @@ const schema = z.object({
     'crypto_market_data',
     'crypto_top_coins',
     'crypto_history',
+    'funding_rates',
+    'funding_rates_history',
   ]).describe('The market data action to perform'),
   symbol: z.string().optional().describe('Ticker symbol (e.g., AAPL, BTC)'),
   from: z.string().optional().describe('Start date (YYYY-MM-DD)'),

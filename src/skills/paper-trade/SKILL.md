@@ -79,14 +79,32 @@ Define review cadence with user:
 
 ## Step 6: Evaluate Readiness for Live Transition
 
+### Automated Graduation Gate Check
+
+Before recommending live trading, run the automated graduation gate verification using `checkGraduation` from `src/risk/graduation-gates.ts`:
+
+**Backtest-to-Paper gates (must have passed to reach this step):**
+- Sharpe ratio > 1.0
+- Max drawdown < 20%
+- Trade count > 100
+
+**Paper-to-Live gates (evaluate now):**
+- Paper trading duration >= 14 days
+- PnL deviation vs backtest < 30%
+
+These thresholds are configurable via `.tino/settings.json` under the `graduationThresholds` key. If any gate fails, do not recommend live transition. Report specific failures to the user with the measured values and required thresholds.
+
+### Qualitative Assessment
+
 Summarize paper trading outcomes with explicit go/no-go criteria:
 - Stability across multiple sessions
 - Risk controls working as intended
 - Behavior close to backtest assumptions
 
-Safety warnings (required):
+### Safety Warnings (required)
+
 - Paper fills can be unrealistically favorable
 - Live latency and slippage can degrade edge
 - Psychological pressure differs with real capital
 
-Do not transition to live automatically. Recommend invoking `skill` with `live-trade` only after user explicitly accepts residual risk and confirms readiness.
+Do not transition to live automatically. Recommend invoking `skill` with `live-trade` only after user explicitly accepts residual risk, graduation gates pass, and user confirms readiness.

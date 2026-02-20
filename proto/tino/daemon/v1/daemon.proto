@@ -4,6 +4,7 @@ package tino.daemon.v1;
 service DaemonService {
   rpc GetSystemInfo(GetSystemInfoRequest) returns (GetSystemInfoResponse);
   rpc Shutdown(ShutdownRequest) returns (ShutdownResponse);
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
 
 message GetSystemInfoRequest {}
@@ -17,4 +18,12 @@ message GetSystemInfoResponse {
 message ShutdownRequest {}
 message ShutdownResponse {
   bool success = 1;
+}
+
+message HealthCheckRequest {}
+message HealthCheckResponse {
+  bool healthy = 1;
+  string uptime = 2;
+  string version = 3;
+  repeated string connected_exchanges = 4;
 }

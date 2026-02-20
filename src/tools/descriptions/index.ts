@@ -21,3 +21,4 @@ export { LSP_DESCRIPTION } from './lsp.js';
 export { TASK_DESCRIPTION } from './task.js';
 export { TODO_DESCRIPTION } from './todo.js';
 export { QUESTION_DESCRIPTION } from './question.js';
+export { BACKTEST_HISTORY_DESCRIPTION } from './backtest-history.js';
