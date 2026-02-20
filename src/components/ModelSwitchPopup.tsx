@@ -22,8 +22,6 @@ export function ModelSwitchPopup({ isOpen, selectedIndex, models }: ModelSwitchP
   }
 
   const visibleItems = models.slice(start, start + VISIBLE_COUNT);
-  const showUpArrow = start > 0;
-  const showDownArrow = start + VISIBLE_COUNT < models.length;
 
   return (
     <Box
@@ -37,12 +35,6 @@ export function ModelSwitchPopup({ isOpen, selectedIndex, models }: ModelSwitchP
       <Box marginBottom={0}>
         <Text color={colors.muted} bold>Switch Model</Text>
       </Box>
-
-      {showUpArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▲</Text>
-        </Box>
-      )}
 
       {visibleItems.map((model, index) => {
         const realIndex = start + index;
@@ -71,12 +63,6 @@ export function ModelSwitchPopup({ isOpen, selectedIndex, models }: ModelSwitchP
           </Box>
         );
       })}
-
-      {showDownArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▼</Text>
-        </Box>
-      )}
     </Box>
   );
 }

@@ -41,8 +41,6 @@ export function RewindMenu({ isOpen, selectedIndex, turns, subMenuOpen, subMenuI
   }
 
   const visibleTurns = turns.slice(start, start + VISIBLE_COUNT);
-  const showUpArrow = start > 0;
-  const showDownArrow = start + VISIBLE_COUNT < turns.length;
 
   return (
     <Box
@@ -55,12 +53,6 @@ export function RewindMenu({ isOpen, selectedIndex, turns, subMenuOpen, subMenuI
     >
       <Text color={colors.muted} bold>Rewind Session</Text>
       <Text color={colors.muted}>Select a turn to restore or summarize</Text>
-
-      {showUpArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▲</Text>
-        </Box>
-      )}
 
       {visibleTurns.map((turn, idx) => {
         const realIndex = start + idx;
@@ -78,12 +70,6 @@ export function RewindMenu({ isOpen, selectedIndex, turns, subMenuOpen, subMenuI
           </Text>
         );
       })}
-
-      {showDownArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▼</Text>
-        </Box>
-      )}
 
       {subMenuOpen && (
         <Box marginTop={1} flexDirection="column" borderStyle="single" borderColor={componentTokens.popup.border} paddingX={1}>

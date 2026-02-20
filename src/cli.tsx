@@ -5,6 +5,7 @@ import { join } from 'path';
 import { DaemonManager } from './daemon/index.js';
 import { resolveAppDir } from './utils/resolve-app-dir.js';
 import { AppLayout } from './components/AppLayout.js';
+import { InitWizard } from './components/InitWizard.js';
 import type { HistoryItem } from './components/index.js';
 
 import { useSessionRunner } from './hooks/useSessionRunner.js';
@@ -58,6 +59,7 @@ export function CLI() {
 
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showInitWizard, setShowInitWizard] = useState(false);
   const isProcessing = runState.status === 'running' || runState.status === 'permission_pending';
 
   const statusLineData = useStatusLineData(modelState, runState, daemonStatus, history, permissionMode);
@@ -83,11 +85,20 @@ export function CLI() {
     model: modelState.currentModel,
   });
 
+  const handleWizardComplete = useCallback((summary: string) => {
+    setShowInitWizard(false);
+    setHistory((prev) => [
+      ...prev,
+      { id: Date.now().toString(), query: '/init', events: [], answer: summary, status: 'complete' as const, startTime: Date.now() },
+    ]);
+  }, []);
+
   const { handleSubmit } = useCommandHandler({
     exit, openModelPopup: () => modelPopupRef.current?.(), openStylePicker: () => stylePickerRef.current?.(), isProcessing, runtime,
     selectModel,
     saveMessage, resetNavigation, executeRun, setHistory, setError,
     extendedSlashDeps, bashHistory, toggleVerbose,
+    openInitWizard: () => setShowInitWizard(true),
   });
 
   useHistorySync(runState, setHistory, setError, updateAgentResponse);
@@ -149,6 +160,10 @@ export function CLI() {
   }, [cancelExecution, dispatcher, exitApp, isProcessing]);
 
   const workingState = useMemo(() => deriveWorkingState(runState), [runState]);
+
+  if (showInitWizard) {
+    return <InitWizard projectDir={process.cwd()} onComplete={handleWizardComplete} />;
+  }
 
   return (
     <AppLayout

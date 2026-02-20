@@ -60,24 +60,22 @@ describe('useSlashCommandMenu', () => {
     expect(output).not.toContain('"command":"/model"');
   });
 
-  it('should push popup mode when open', () => {
+  it('should not push popup mode (inline autocomplete, not modal)', () => {
     render(<TestComponent input="/" />);
-    expect(mockPushMode).toHaveBeenCalledWith('popup');
+    expect(mockPushMode).not.toHaveBeenCalled();
   });
 
-  it('should pop popup mode when closed', () => {
+  it('should not pop mode when closed (never pushed)', () => {
     const { rerender } = render(<TestComponent input="/" />);
-    expect(mockPushMode).toHaveBeenCalledWith('popup');
-    
     rerender(<TestComponent input="hello" />);
-    expect(mockPopMode).toHaveBeenCalled();
+    expect(mockPopMode).not.toHaveBeenCalled();
   });
 
-  it('should register keyboard handlers when open', () => {
+  it('should register keyboard handlers in normal mode when open', () => {
     render(<TestComponent input="/" />);
-    expect(mockRegister).toHaveBeenCalledWith('popup', 'up', expect.any(Function));
-    expect(mockRegister).toHaveBeenCalledWith('popup', 'down', expect.any(Function));
-    expect(mockRegister).toHaveBeenCalledWith('popup', 'return', expect.any(Function));
-    expect(mockRegister).toHaveBeenCalledWith('popup', 'escape', expect.any(Function));
+    expect(mockRegister).toHaveBeenCalledWith('normal', 'up', expect.any(Function));
+    expect(mockRegister).toHaveBeenCalledWith('normal', 'down', expect.any(Function));
+    expect(mockRegister).toHaveBeenCalledWith('normal', 'return', expect.any(Function));
+    expect(mockRegister).toHaveBeenCalledWith('normal', 'escape', expect.any(Function));
   });
 });

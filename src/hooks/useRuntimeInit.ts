@@ -22,7 +22,7 @@ import { SnapshotManager } from '@/snapshot/index.js';
 import { buildToolDescriptions } from './runtime-tool-descriptions.js';
 
 export interface UseRuntimeInitResult {
-  runtime: SessionRuntime;
+  runtime: SessionRuntime | null;
   runtimeReady: boolean;
   broker: ModelBroker;
   sessionStore: SessionStore;
@@ -118,20 +118,8 @@ export function useRuntimeInit(): UseRuntimeInitResult {
     });
   }, [runtimeReady, broker, registry, permissions, hooks]);
 
-  const stubRuntime = useMemo(
-    () =>
-      new SessionRuntime({
-        broker,
-        registry,
-        permissions,
-        hooks,
-        systemPrompt: '',
-      }),
-    [broker, registry, permissions, hooks],
-  );
-
   return {
-    runtime: runtime ?? stubRuntime,
+    runtime,
     runtimeReady,
     broker,
     sessionStore,

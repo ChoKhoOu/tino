@@ -9,7 +9,8 @@ interface SlashCommandMenuProps {
   filteredCommands: SlashCommandOption[];
 }
 
-const VISIBLE_COUNT = 5;
+export const SLASH_MENU_VISIBLE_COUNT = 5;
+const CMD_COL_WIDTH = 18;
 
 export function SlashCommandMenu({
   isOpen,
@@ -20,63 +21,33 @@ export function SlashCommandMenu({
     return null;
   }
 
-  // Calculate window to keep selectedIndex in view
-  let start = Math.max(0, selectedIndex - Math.floor(VISIBLE_COUNT / 2));
-  if (start + VISIBLE_COUNT > filteredCommands.length) {
-    start = Math.max(0, filteredCommands.length - VISIBLE_COUNT);
+  let start = Math.max(0, selectedIndex - Math.floor(SLASH_MENU_VISIBLE_COUNT / 2));
+  if (start + SLASH_MENU_VISIBLE_COUNT > filteredCommands.length) {
+    start = Math.max(0, filteredCommands.length - SLASH_MENU_VISIBLE_COUNT);
   }
   
-  const visibleItems = filteredCommands.slice(start, start + VISIBLE_COUNT);
-  const showUpArrow = start > 0;
-  const showDownArrow = start + VISIBLE_COUNT < filteredCommands.length;
+  const visibleItems = filteredCommands.slice(start, start + SLASH_MENU_VISIBLE_COUNT);
 
   return (
-    <Box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor={componentTokens.popup.border}
-      paddingX={1}
-      marginBottom={0}
-      width={60}
-    >
-      {showUpArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▲</Text>
-        </Box>
-      )}
-      
+    <Box flexDirection="column" paddingX={1}>
       {visibleItems.map((item, index) => {
         const realIndex = start + index;
         const isSelected = realIndex === selectedIndex;
+        const bg = isSelected ? componentTokens.popup.selected : undefined;
+        const cmdColor = isSelected ? colors.white : colors.muted;
+        const descColor = isSelected ? colors.white : colors.muted;
         
         return (
-          <Box key={item.command} flexDirection="row" justifyContent="space-between">
-            <Box>
-              <Text
-                color={isSelected ? colors.white : colors.white}
-                backgroundColor={isSelected ? componentTokens.popup.selected : undefined}
-                bold={isSelected}
-              >
-                {item.command}
-              </Text>
-            </Box>
-            <Box marginLeft={2}>
-              <Text
-                color={isSelected ? colors.white : colors.muted}
-                backgroundColor={isSelected ? componentTokens.popup.selected : undefined}
-              >
-                {item.description}
-              </Text>
-            </Box>
+          <Box key={item.command}>
+            <Text color={cmdColor} backgroundColor={bg} bold={isSelected}>
+              {item.command.padEnd(CMD_COL_WIDTH)}
+            </Text>
+            <Text color={descColor} backgroundColor={bg}>
+              {item.description}
+            </Text>
           </Box>
         );
       })}
-
-      {showDownArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▼</Text>
-        </Box>
-      )}
     </Box>
   );
 }

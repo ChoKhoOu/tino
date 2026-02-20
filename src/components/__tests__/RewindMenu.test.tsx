@@ -28,7 +28,7 @@ describe('RewindMenu', () => {
     expect(lastFrame()).toBe('');
   });
 
-  it('shows only 5 visible turns and scroll indicator', () => {
+  it('shows only 5 visible turns when list is long', () => {
     const turns = makeHistory(8);
     const { lastFrame } = render(
       <RewindMenu
@@ -42,7 +42,6 @@ describe('RewindMenu', () => {
 
     const output = lastFrame()!;
     expect(output).toContain('Rewind Session');
-    expect(output).toContain('▲');
     expect(output).toContain('turn-7');
     expect(output).not.toContain('turn-0');
   });

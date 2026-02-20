@@ -83,10 +83,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
   const { tasks } = useBackgroundTasks();
   const { isVisible: isTaskListVisible } = useTaskListVisibility(dispatcher);
   const [taskNotice, setTaskNotice] = useState<string | null>(null);
-  const introHeight = history.length === 0 ? 11 : 0;
-  const inputHeight = 3;
-  const statusLineHeight = 1;
-  const contentHeight = Math.max(0, rows - 1 - introHeight - inputHeight - statusLineHeight);
+  const hasContent = history.length > 0 || isProcessing || error !== null;
   const currentQuery = history[history.length - 1]?.status === 'processing'
     ? history[history.length - 1].query
     : null;
@@ -122,7 +119,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
         {(item) => <HistoryItemView key={item.id} item={item} />}
       </Static>
 
-      <ScrollableContent height={contentHeight}>
+      <ScrollableContent flexGrow={hasContent ? 1 : 0}>
         {history.filter(h => h.status === 'processing').map((item) => (<HistoryItemView key={item.id} item={item} />))}
         {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
         {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}

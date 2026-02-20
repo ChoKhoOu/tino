@@ -80,28 +80,29 @@ export function Input({ onSubmit, historyValue, onHistoryNavigate, bashHistory, 
   useKeyboardDefaultHandler(handleInput);
 
   return (
-    <Box
-      flexDirection="column"
-      marginBottom={1}
-      borderStyle="single"
-      borderColor={colors.mutedDark}
-      borderLeft={false}
-      borderRight={false}
-      width="100%"
-    >
+    <>
+      <Box
+        flexDirection="column"
+        borderStyle="single"
+        borderColor={colors.mutedDark}
+        borderLeft={false}
+        borderRight={false}
+        width="100%"
+      >
+        <FileAutocomplete files={files} selectedIndex={selectedIndex} />
+        <Box paddingX={1}>
+          <Text color={colors.primary} bold>
+            {'> '}
+          </Text>
+          <CursorText text={text} cursorPosition={cursorPosition} />
+          <BashHistoryHint text={text} bestMatch={bashHint} />
+        </Box>
+      </Box>
       <SlashCommandMenu
         isOpen={slashMenu.isOpen}
         selectedIndex={slashMenu.selectedIndex}
         filteredCommands={slashMenu.filteredCommands}
       />
-      <FileAutocomplete files={files} selectedIndex={selectedIndex} />
-      <Box paddingX={1}>
-        <Text color={colors.primary} bold>
-          {'> '}
-        </Text>
-        <CursorText text={text} cursorPosition={cursorPosition} />
-        <BashHistoryHint text={text} bestMatch={bashHint} />
-      </Box>
-    </Box>
+    </>
   );
 }

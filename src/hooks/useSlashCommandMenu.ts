@@ -41,38 +41,32 @@ export function useSlashCommandMenu(
 
   const isOpen = input.startsWith('/') && !dismissed && filteredCommands.length > 0;
 
-  // Manage keyboard mode
-  useEffect(() => {
-    if (isOpen) {
-      dispatcher.pushMode('popup');
-      return () => {
-        dispatcher.popMode();
-      };
-    }
-  }, [isOpen, dispatcher]);
+  // Slash menu is an inline autocomplete — NOT a modal.
+  // Do NOT push a mode so text editing (backspace, typing) still works.
+  // Register handlers in 'normal' mode; they're cleaned up when menu closes.
 
   // Register handlers
   useEffect(() => {
     if (!isOpen) return;
 
-    const cleanupUp = dispatcher.register('popup', 'up', () => {
+    const cleanupUp = dispatcher.register('normal', 'up', () => {
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
       return true;
     });
 
-    const cleanupDown = dispatcher.register('popup', 'down', () => {
+    const cleanupDown = dispatcher.register('normal', 'down', () => {
       setSelectedIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
       return true;
     });
 
-    const cleanupEnter = dispatcher.register('popup', 'return', () => {
+    const cleanupEnter = dispatcher.register('normal', 'return', () => {
       if (filteredCommands[selectedIndex]) {
         onSelect(filteredCommands[selectedIndex].command);
       }
       return true;
     });
 
-    const cleanupEsc = dispatcher.register('popup', 'escape', () => {
+    const cleanupEsc = dispatcher.register('normal', 'escape', () => {
       setDismissed(true);
       onClose();
       return true;

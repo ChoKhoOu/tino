@@ -63,7 +63,7 @@ export class KeyboardDispatcher {
       return true;
     }
 
-    if (this.defaultHandler) {
+    if (this.defaultHandler && this.currentMode === 'normal') {
       return this.defaultHandler(event) === true;
     }
 

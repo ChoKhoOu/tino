@@ -122,13 +122,14 @@ export interface UseSessionRunnerResult {
 }
 
 export function useSessionRunner(
-  runtime: SessionRuntime,
+  runtime: SessionRuntime | null,
 ): UseSessionRunnerResult {
   const [state, dispatch] = useReducer(runReducer, initialState);
   const abortRef = useRef<AbortController | null>(null);
 
   const startRun = useCallback(
     async (input: string) => {
+      if (!runtime) return;
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -164,7 +165,7 @@ export function useSessionRunner(
   }, []);
 
   const respondToPermission = useCallback((toolId: string, allowed: boolean, alwaysAllow?: boolean) => {
-    runtime.respondToPermission(toolId, allowed, alwaysAllow);
+    runtime?.respondToPermission(toolId, allowed, alwaysAllow);
   }, [runtime]);
 
   const reset = useCallback(() => {

@@ -22,13 +22,14 @@ interface CommandHandlerDeps {
   bashHistory?: BashHistory | null;
   toggleVerbose?: () => void;
   openStylePicker?: () => void;
+  openInitWizard?: () => void;
 }
 
 export function useCommandHandler(deps: CommandHandlerDeps) {
   const {
     exit, openModelPopup, selectModel, isProcessing, runtime,
     saveMessage, resetNavigation, executeRun, setHistory, setError, extendedSlashDeps,
-    bashHistory, toggleVerbose, openStylePicker,
+    bashHistory, toggleVerbose, openStylePicker, openInitWizard,
   } = deps;
 
   const addDirectResponse = useCallback((query: string, answer: string) => {
@@ -79,6 +80,10 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
           openStylePicker();
           return;
         }
+        if (slashResult.action === 'init' && openInitWizard) {
+          openInitWizard();
+          return;
+        }
         if (slashResult.action) {
           const output = await runExtendedSlashAction(
             slashResult.action,
@@ -109,7 +114,7 @@ export function useCommandHandler(deps: CommandHandlerDeps) {
       const resolvedQuery = await resolveFileReferences(query);
       await executeRun(resolvedQuery);
     },
-    [exit, openModelPopup, selectModel, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory, toggleVerbose, openStylePicker],
+    [exit, openModelPopup, selectModel, isProcessing, saveMessage, resetNavigation, executeRun, addDirectResponse, runtime, setHistory, setError, extendedSlashDeps, bashHistory, toggleVerbose, openStylePicker, openInitWizard],
   );
 
   return { handleSubmit, addDirectResponse };

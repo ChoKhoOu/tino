@@ -18,7 +18,7 @@ import { TOKEN_BUDGET } from '@/utils/tokens.js';
 import { discoverAgentConfigs } from '@/agents/registry.js';
 
 interface SessionCommandOptions {
-  runtime: SessionRuntime;
+  runtime: SessionRuntime | null;
   runState: RunState;
   history: HistoryItem[];
   setHistory: React.Dispatch<React.SetStateAction<HistoryItem[]>>;
@@ -93,7 +93,7 @@ export function useSessionCommands(options: SessionCommandOptions): ExtendedSlas
       tokenUsage: tokenUsageRef.current,
       todos: activeTodosRef.current,
     });
-    runtime.loadFromSession(session);
+    runtime?.loadFromSession(session);
   }, [runtime, sessionCreatedAt, sessionId, sessionTitle]);
 
   return useMemo<ExtendedSlashDeps>(() => ({
@@ -156,7 +156,7 @@ export function useSessionCommands(options: SessionCommandOptions): ExtendedSlas
       const session = await sessionStore.load(resumeId);
       if (!session) return `Session not found: ${resumeId}`;
 
-      runtime.loadFromSession(session);
+      runtime?.loadFromSession(session);
       setHistory(sessionToHistoryItems(session));
       resetNavigation();
 

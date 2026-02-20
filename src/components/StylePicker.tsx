@@ -22,8 +22,6 @@ export function StylePicker({ isOpen, selectedIndex, styles }: StylePickerProps)
   }
 
   const visibleItems = styles.slice(start, start + VISIBLE_COUNT);
-  const showUpArrow = start > 0;
-  const showDownArrow = start + VISIBLE_COUNT < styles.length;
 
   return (
     <Box
@@ -37,12 +35,6 @@ export function StylePicker({ isOpen, selectedIndex, styles }: StylePickerProps)
       <Box marginBottom={0}>
         <Text color={colors.muted} bold>Output Style</Text>
       </Box>
-
-      {showUpArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▲</Text>
-        </Box>
-      )}
 
       {visibleItems.map((style, index) => {
         const realIndex = start + index;
@@ -72,12 +64,6 @@ export function StylePicker({ isOpen, selectedIndex, styles }: StylePickerProps)
           </Box>
         );
       })}
-
-      {showDownArrow && (
-        <Box justifyContent="center">
-          <Text color={colors.muted}>▼</Text>
-        </Box>
-      )}
     </Box>
   );
 }
