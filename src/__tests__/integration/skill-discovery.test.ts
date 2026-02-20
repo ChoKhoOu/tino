@@ -11,6 +11,7 @@ const EXPECTED_BUILTIN_SKILLS = [
   'comprehensive-research',
   'dcf-valuation',
   'factor-analysis',
+  'funding-rate-arb',
   'live-trade',
   'options-analysis',
   'paper-trade',
@@ -18,12 +19,12 @@ const EXPECTED_BUILTIN_SKILLS = [
 ] as const;
 
 describe('skill discovery and loading integration', () => {
-  test('discoverSkills finds all 8 builtin skills', () => {
+  test('discoverSkills finds all 9 builtin skills', () => {
     clearSkillCache();
     const builtinSkills = discoverSkills().filter((skill) => skill.source === 'builtin');
     const names = builtinSkills.map((skill) => skill.name).sort();
 
-    expect(builtinSkills).toHaveLength(8);
+    expect(builtinSkills).toHaveLength(9);
     expect(names).toEqual([...EXPECTED_BUILTIN_SKILLS].sort());
   });
 
