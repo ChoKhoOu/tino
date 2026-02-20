@@ -25,7 +25,7 @@ buf generate
 cd python && uv run pytest
 ```
 
-No ESLint, Prettier, or Biome configured. CI runs typecheck + test only.
+Biome linter enabled (formatter disabled). No ESLint or Prettier. CI runs typecheck + test only.
 
 ## Architecture
 
