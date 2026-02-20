@@ -66,3 +66,5 @@ proto/gen/
 
 logs/
 coverage.json
+
+.omc/

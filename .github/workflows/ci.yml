@@ -18,15 +18,33 @@ jobs:
             command: bun run typecheck
           - task: test
             command: bun test
+          - task: python-test
+            command: cd python && uv run pytest
+          - task: lint
+            command: bunx biome check .
+          - task: proto-check
+            command: buf breaking --against '.git#branch=main'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
+        if: matrix.task != 'python-test' && matrix.task != 'proto-check'
         with:
           bun-version: latest
 
-      - name: Install dependencies
+      - name: Install JS dependencies
+        if: matrix.task != 'python-test' && matrix.task != 'proto-check'
         run: bun install --frozen-lockfile --ignore-scripts
+
+      - uses: astral-sh/setup-uv@v4
+        if: matrix.task == 'python-test'
+        with:
+          version: latest
+
+      - uses: bufbuild/buf-setup-action@v1
+        if: matrix.task == 'proto-check'
 
       - name: Run ${{ matrix.task }}
         run: ${{ matrix.command }}
