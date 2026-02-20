@@ -68,3 +68,4 @@ logs/
 coverage.json
 
 .omc/
+.tino/
