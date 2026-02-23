@@ -1,0 +1,110 @@
+# Form-based label mapping for redhat-plumbers-in-action/advanced-issue-labeler
+# Maps dropdown selections from issue forms to labels
+
+policy:
+  # Bug Report template
+  - template: ["bug_report.yml"]
+    section:
+      - id: ["severity"]
+        block-list: []
+        label:
+          - name: "priority/critical"
+            keys: ["Critical (crash/data loss)"]
+          - name: "priority/high"
+            keys: ["High (major feature broken)"]
+          - name: "priority/medium"
+            keys: ["Medium (feature partially broken)"]
+          - name: "priority/low"
+            keys: ["Low (minor inconvenience)"]
+      - id: ["area"]
+        label:
+          - name: "area/cli"
+            keys: ["CLI / TUI"]
+          - name: "area/daemon"
+            keys: ["Python Daemon"]
+          - name: "area/grpc"
+            keys: ["gRPC / ConnectRPC"]
+          - name: "area/tools"
+            keys: ["Agent Tools"]
+          - name: "area/trading"
+            keys: ["Trading (Live/Paper)"]
+          - name: "area/data"
+            keys: ["Data Providers"]
+          - name: "area/config"
+            keys: ["Configuration"]
+
+  # Feature Request template
+  - template: ["feature_request.yml"]
+    section:
+      - id: ["priority"]
+        label:
+          - name: "priority/critical"
+            keys: ["Critical (blocking my workflow)"]
+          - name: "priority/high"
+            keys: ["High (significantly improves experience)"]
+          - name: "priority/medium"
+            keys: ["Medium (nice to have)"]
+          - name: "priority/low"
+            keys: ["Low (minor improvement)"]
+      - id: ["area"]
+        label:
+          - name: "area/cli"
+            keys: ["CLI / TUI"]
+          - name: "area/daemon"
+            keys: ["Python Daemon"]
+          - name: "area/grpc"
+            keys: ["gRPC / ConnectRPC"]
+          - name: "area/tools"
+            keys: ["Agent Tools"]
+          - name: "area/trading"
+            keys: ["Trading (Live/Paper)"]
+          - name: "area/data"
+            keys: ["Data Providers"]
+          - name: "area/config"
+            keys: ["Configuration"]
+      - id: ["effort"]
+        label:
+          - name: "effort/small"
+            keys: ["Small (a few hours)"]
+          - name: "effort/medium"
+            keys: ["Medium (a few days)"]
+          - name: "effort/large"
+            keys: ["Large (a week+)"]
+
+  # PRD template
+  - template: ["prd.yml"]
+    section:
+      - id: ["priority"]
+        label:
+          - name: "priority/critical"
+            keys: ["Critical"]
+          - name: "priority/high"
+            keys: ["High"]
+          - name: "priority/medium"
+            keys: ["Medium"]
+          - name: "priority/low"
+            keys: ["Low"]
+      - id: ["area"]
+        label:
+          - name: "area/cli"
+            keys: ["CLI / TUI"]
+          - name: "area/daemon"
+            keys: ["Python Daemon"]
+          - name: "area/grpc"
+            keys: ["gRPC / ConnectRPC"]
+          - name: "area/tools"
+            keys: ["Agent Tools"]
+          - name: "area/trading"
+            keys: ["Trading (Live/Paper)"]
+          - name: "area/data"
+            keys: ["Data Providers"]
+          - name: "area/config"
+            keys: ["Configuration"]
+      - id: ["effort"]
+        label:
+          - name: "effort/small"
+            keys: ["Small (a few hours)"]
+          - name: "effort/medium"
+            keys: ["Medium (a few days)"]
+          - name: "effort/large"
+            keys: ["Large (a week+)", "Epic (multiple weeks)"]

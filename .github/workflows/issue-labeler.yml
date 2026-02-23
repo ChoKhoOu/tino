@@ -1,0 +1,49 @@
+name: Issue Auto-Labeler
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  contents: read
+  actions: read
+
+jobs:
+  # Regex-based labeling: matches keywords in title and body
+  regex-label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/issue-labeler@v3.4
+        with:
+          configuration-path: .github/issue-labeler.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          include-title: 1
+          enable-versioned-regex: 0
+
+  # Form-based labeling: maps dropdown selections to labels
+  form-label:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    strategy:
+      matrix:
+        template:
+          - bug_report.yml
+          - feature_request.yml
+          - prd.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue form
+        id: parser
+        uses: stefanbuck/github-issue-parser@v3
+        with:
+          template-path: .github/ISSUE_TEMPLATE/${{ matrix.template }}
+
+      - name: Apply labels from form selections
+        if: steps.parser.outputs.jsonString != ''
+        uses: redhat-plumbers-in-action/advanced-issue-labeler@v3
+        with:
+          issue-form: ${{ steps.parser.outputs.jsonString }}
+          template: ${{ matrix.template }}
+          token: ${{ secrets.GITHUB_TOKEN }}

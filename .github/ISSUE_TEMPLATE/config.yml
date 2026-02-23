@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security Vulnerabilities
+    url: https://github.com/ChoKhoOu/tino/security/advisories
+    about: Report security vulnerabilities privately

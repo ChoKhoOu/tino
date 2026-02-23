@@ -1,0 +1,91 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["type/feature", "status/triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please describe your idea below.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A brief summary of the feature you'd like to see.
+      placeholder: One-paragraph description of the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why do you need this? What problem does it solve?
+      placeholder: |
+        As a [type of user], I want [feature] so that [benefit]...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this working? Include examples if possible.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this to you?
+      options:
+        - Critical (blocking my workflow)
+        - High (significantly improves experience)
+        - Medium (nice to have)
+        - Low (minor improvement)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Related Area
+      description: Which component(s) would this affect?
+      multiple: true
+      options:
+        - CLI / TUI
+        - Python Daemon
+        - gRPC / ConnectRPC
+        - Agent Tools
+        - Trading (Live/Paper)
+        - Data Providers
+        - Configuration
+        - New Component
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Effort
+      description: How much work do you think this requires? (optional)
+      options:
+        - Small (a few hours)
+        - Medium (a few days)
+        - Large (a week+)
+        - Unknown
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and feature requests
+          required: true
+        - label: I am willing to help implement this feature

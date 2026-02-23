@@ -1,0 +1,32 @@
+# Regex-based issue labeling rules for github/issue-labeler
+# Matches against issue title and body
+
+# Area labels
+area/cli:
+  - '(?i)(cli|command.line|terminal|tui|ink|react.ink)'
+area/daemon:
+  - '(?i)(daemon|python.daemon|nautilus|nautilustrader|backtest)'
+area/grpc:
+  - '(?i)(grpc|g.rpc|protobuf|connectrpc|connect.rpc|buf\b)'
+area/tools:
+  - '(?i)(tool|tools|agent.tool|definePlugin|tool.registry)'
+area/trading:
+  - '(?i)(trading|trade|order|position|portfolio|paper.trading|live.trading|exchange)'
+area/data:
+  - '(?i)(data.provider|polygon|alpha.vantage|yahoo.finance|market.data|quote|price|candle|ohlcv)'
+area/config:
+  - '(?i)(config|settings|permissions|hooks|\.tino)'
+
+# Type labels (supplement form-applied labels)
+type/bug:
+  - '(?i)(bug|crash|error|broken|not.working|regression|fail)'
+type/feature:
+  - '(?i)(feature|request|add.support|would.be.nice|implement)'
+type/docs:
+  - '(?i)(doc|documentation|readme|typo|spelling)'
+type/refactor:
+  - '(?i)(refactor|cleanup|clean.up|restructure|reorganize)'
+
+# Priority boost from keywords
+priority/critical:
+  - '(?i)(critical|urgent|blocker|production.down|data.loss|security)'

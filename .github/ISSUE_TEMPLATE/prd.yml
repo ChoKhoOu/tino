@@ -1,0 +1,146 @@
+name: PRD (Product Requirements Document)
+description: Submit a structured product requirements document
+title: "[PRD]: "
+labels: ["type/prd", "status/triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to submit a structured PRD for a significant feature or change.
+        For smaller feature requests, use the Feature Request template instead.
+
+  - type: input
+    id: title
+    attributes:
+      label: PRD Title
+      description: Short, descriptive title for this PRD.
+      placeholder: "e.g., Multi-Exchange Arbitrage Engine"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this solve? Who is affected?
+      placeholder: |
+        Describe the current pain point or gap...
+    validations:
+      required: true
+
+  - type: textarea
+    id: goals
+    attributes:
+      label: Goals
+      description: What are the specific goals of this feature?
+      placeholder: |
+        - Goal 1: ...
+        - Goal 2: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-Goals
+      description: What is explicitly out of scope?
+      placeholder: |
+        - Non-goal 1: ...
+        - Non-goal 2: ...
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Specific, testable criteria that must be met for this to be considered done.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-design
+    attributes:
+      label: Technical Design (optional)
+      description: High-level technical approach, architecture changes, or API design.
+      placeholder: |
+        ### Architecture
+        ...
+
+        ### API Changes
+        ...
+
+        ### Data Model
+        ...
+
+  - type: textarea
+    id: phases
+    attributes:
+      label: Implementation Phases
+      description: Break down into phases if the work is large.
+      placeholder: |
+        ### Phase 1: Foundation
+        - Task 1
+        - Task 2
+
+        ### Phase 2: Core Feature
+        - Task 3
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary Area
+      multiple: true
+      options:
+        - CLI / TUI
+        - Python Daemon
+        - gRPC / ConnectRPC
+        - Agent Tools
+        - Trading (Live/Paper)
+        - Data Providers
+        - Configuration
+        - New Component
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Effort
+      options:
+        - Small (a few hours)
+        - Medium (a few days)
+        - Large (a week+)
+        - Epic (multiple weeks)
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks & Open Questions
+      description: Any risks, unknowns, or open questions?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and PRDs for overlap
+          required: true
+        - label: Acceptance criteria are specific and testable
+          required: true

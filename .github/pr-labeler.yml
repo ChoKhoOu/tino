@@ -1,0 +1,68 @@
+# File-path based PR labeling rules for actions/labeler v5
+# Labels PRs based on which files are changed
+
+area/cli:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/cli.tsx"
+          - "src/commands/**"
+          - "src/components/**"
+          - "src/hooks/**"
+
+area/daemon:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "python/**"
+
+area/grpc:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "proto/**"
+          - "src/grpc/**"
+
+area/tools:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/tools/**"
+
+area/config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/config/**"
+          - "src/settings/**"
+
+area/agents:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/agents/**"
+
+area/runtime:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/runtime/**"
+
+type/docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+
+type/tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.test.ts"
+          - "**/__tests__/**"
+          - "python/**/test_*.py"
+
+type/ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+
+type/deps:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "package.json"
+          - "bun.lock"
+          - "python/pyproject.toml"
+          - "python/uv.lock"
