@@ -12,6 +12,8 @@ export interface AgentDefinition {
   permissions?: PermissionConfig;
   maxTurns?: number;
   color?: string;
+  description?: string;
+  temperature?: number;
   /** File path the agent was loaded from (if file-based). */
   path?: string;
   /** Where this agent was discovered from. */

@@ -2,8 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { AgentRegistry } from '../../agent/agent-registry.js';
-import { registerBuiltinAgents } from '../../agent/builtin/index.js';
+import { AgentRegistry, registerBuiltinAgents } from '../../agents/index.js';
 
 const BUILTIN_IDS = ['build', 'plan', 'explore', 'general', 'compaction'] as const;
 

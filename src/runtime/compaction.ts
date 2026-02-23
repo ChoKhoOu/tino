@@ -1,5 +1,5 @@
 import { generateText, streamText } from 'ai';
-import type { ModelBroker } from '@/runtime/model-broker.js';
+import type { ModelBroker } from './model-broker.js';
 
 const KEEP_RECENT_MESSAGES = 10;
 

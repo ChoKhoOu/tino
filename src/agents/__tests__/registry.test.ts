@@ -83,7 +83,6 @@ tools: [read]
 Prompt`);
 
     writeAgent(agentsDir, 'invalid.md', `---
-name: invalid
 tools: [read]
 ---
 Prompt`);

@@ -1,4 +1,4 @@
-import { compactMessages } from '@/agent/compaction.js';
+import { compactMessages } from './compaction.js';
 import { estimateTokens } from './token-usage-helpers.js';
 import type { ModelBroker } from './model-broker.js';
 

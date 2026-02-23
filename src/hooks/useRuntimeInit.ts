@@ -10,7 +10,7 @@ import { buildSystemPrompt } from '@/runtime/prompt-builder.js';
 import { configureTaskTool } from '@/tools/agent/task.tool.js';
 import { configureLspTool } from '@/tools/coding/lsp.tool.js';
 import { configureLspDiagnostics } from '@/tools/coding/lsp-diagnostics-helper.js';
-import { AgentRegistry, registerBuiltinAgents } from '@/agent/index.js';
+import { AgentRegistry, registerBuiltinAgents } from '@/agents/index.js';
 import { LspManager } from '@/lsp/lsp-manager.js';
 import { loadMcpConfig, McpClient } from '@/mcp/index.js';
 import { registerMcpTools } from '@/mcp/mcp-tool-adapter.js';

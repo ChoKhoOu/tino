@@ -1,12 +1,16 @@
 import type { AgentDefinition, AgentSource } from '@/domain/agent-def.js';
 
 export interface AgentConfig {
+  /** Explicit ID. Falls back to `name` when absent. */
+  id?: string;
   name: string;
-  description: string;
+  description?: string;
   systemPrompt: string;
-  allowedTools: string[];
+  allowedTools?: string[];
   model?: string;
   temperature?: number;
+  maxTurns?: number;
+  color?: string;
 }
 
 export interface DiscoveredAgentConfig extends AgentConfig {
@@ -16,11 +20,15 @@ export interface DiscoveredAgentConfig extends AgentConfig {
 
 export function toAgentDefinition(config: DiscoveredAgentConfig): AgentDefinition {
   return {
-    id: config.name,
+    id: config.id ?? config.name,
     name: config.name,
     systemPrompt: config.systemPrompt,
     model: config.model,
     tools: config.allowedTools,
+    description: config.description,
+    temperature: config.temperature,
+    maxTurns: config.maxTurns,
+    color: config.color,
     path: config.path,
     source: config.source,
   };

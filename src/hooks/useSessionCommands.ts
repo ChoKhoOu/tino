@@ -139,7 +139,7 @@ export function useSessionCommands(options: SessionCommandOptions): ExtendedSlas
       if (agents.length === 0) {
         return 'No custom agents found. Add markdown files in ~/.tino/agents or .tino/agents.';
       }
-      return ['Available agents:', ...agents.map((agent) => `- ${agent.name} (${agent.source}): ${agent.description}`)].join('\n');
+      return ['Available agents:', ...agents.map((agent) => `- ${agent.name} (${agent.source}): ${agent.description ?? 'No description'}`)].join('\n');
     },
     renameSession: async (name: string) => {
       setSessionTitle(name);

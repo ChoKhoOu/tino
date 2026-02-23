@@ -40,7 +40,9 @@ function scanDirectory(dir: AgentDirectory): DiscoveredAgentConfig[] {
     const filePath = resolve(dir.path, relativePath);
     try {
       results.push(loadAgentConfigFromPath(filePath, dir.source));
-    } catch {}
+    } catch {
+      // Skip invalid agent files silently (resilience pattern)
+    }
   }
 
   return results;
@@ -73,4 +75,27 @@ export function discoverAgentDefinitions(options: DiscoverAgentOptions = {}): Ag
 
 export function clearAgentRegistryCache(): void {
   cache = null;
+}
+
+export class AgentRegistry {
+  private agents = new Map<string, AgentDefinition>();
+
+  register(agent: AgentDefinition): void {
+    this.agents.set(agent.id, agent);
+  }
+
+  get(id: string): AgentDefinition | undefined {
+    return this.agents.get(id);
+  }
+
+  list(): AgentDefinition[] {
+    return Array.from(this.agents.values());
+  }
+
+  discoverFromDirectory(dirPath: string, source: AgentSource): AgentDefinition[] {
+    const configs = scanDirectory({ path: dirPath, source });
+    const definitions = configs.map(toAgentDefinition);
+    for (const agent of definitions) this.register(agent);
+    return definitions;
+  }
 }

@@ -1,4 +1,4 @@
-import type { AgentRegistry } from '../agent-registry.js';
+import type { AgentRegistry } from '../registry.js';
 import { buildAgent } from './build.js';
 import { planAgent } from './plan.js';
 import { exploreAgent } from './explore.js';
