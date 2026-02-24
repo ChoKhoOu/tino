@@ -1,6 +1,6 @@
 # Tools Reference
 
-Tino provides 15 consolidated tools that the AI agent uses to research, analyze, trade, and visualize. Tools are discovered automatically at startup from `src/tools/consolidated/`.
+Tino provides 14 consolidated tools that the AI agent uses to research, analyze, trade, and visualize. Tools are discovered automatically at startup from `src/tools/consolidated/`.
 
 ## market_data
 
@@ -40,18 +40,6 @@ Access company financial statements, ratios, analyst estimates, insider trades, 
 | `deep_dive` | Deep analysis by metric | `symbol`, `metric` |
 
 **Notes:** Provider fallback chain: Financial Datasets -> FMP -> Finnhub. Deep dive metrics: `dcf`, `earnings_transcripts`, `segmented_revenues`, `key_metrics`, `sentiment`.
-
-## filings
-
-Search and retrieve SEC EDGAR filings including full-text search, company submissions history, and structured company facts (XBRL data).
-
-| Action | Description | Required Params |
-|--------|-------------|-----------------|
-| `search` | Full-text search across EDGAR filings | `query` |
-| `submissions` | Company filing history by CIK | `ticker` |
-| `company_facts` | Structured XBRL financial facts | `ticker` |
-
-**Notes:** EDGAR is always available (no API key required). Search supports `dateRange` and `formType` filters.
 
 ## macro_data
 

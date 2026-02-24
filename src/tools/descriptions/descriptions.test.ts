@@ -2,7 +2,6 @@ import { describe, test, expect } from 'bun:test';
 import {
   MARKET_DATA_DESCRIPTION,
   FUNDAMENTALS_DESCRIPTION,
-  FILINGS_DESCRIPTION,
   MACRO_DATA_DESCRIPTION,
   QUANT_COMPUTE_DESCRIPTION,
   TRADING_SIM_DESCRIPTION,
@@ -28,7 +27,6 @@ import {
 const ALL_DESCRIPTIONS: Record<string, string> = {
   MARKET_DATA_DESCRIPTION,
   FUNDAMENTALS_DESCRIPTION,
-  FILINGS_DESCRIPTION,
   MACRO_DATA_DESCRIPTION,
   QUANT_COMPUTE_DESCRIPTION,
   TRADING_SIM_DESCRIPTION,
@@ -65,8 +63,8 @@ const NEW_DESCRIPTIONS: Record<string, string> = {
 };
 
 describe('tool descriptions', () => {
-  test('exports exactly 23 descriptions', () => {
-    expect(Object.keys(ALL_DESCRIPTIONS)).toHaveLength(23);
+  test('exports exactly 22 descriptions', () => {
+    expect(Object.keys(ALL_DESCRIPTIONS)).toHaveLength(22);
   });
 
   test('new batch has exactly 10 descriptions', () => {

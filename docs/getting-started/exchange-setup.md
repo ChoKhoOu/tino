@@ -167,14 +167,13 @@ export FRED_API_KEY="..."                 # GDP, CPI, interest rates (800k+ seri
 
 # Additional providers
 export FINNHUB_API_KEY="..."              # News, sentiment, earnings calendar
-export EODHD_API_KEY="..."               # Hong Kong market data
 
 # Search
 export EXASEARCH_API_KEY="..."            # Web search via Exa
 export TAVILY_API_KEY="..."               # Web search via Tavily
 ```
 
-Crypto data from CoinGecko and SEC EDGAR filings are free and require no API key.
+Crypto data from CoinGecko is free and requires no API key.
 
 ## Next Steps
 

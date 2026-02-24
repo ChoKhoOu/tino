@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Tino is an AI-powered quantitative trading CLI workbench. TypeScript CLI (Bun + React/Ink TUI) frontend, Python daemon (NautilusTrader) backend, connected via gRPC (ConnectRPC) on `127.0.0.1:50051`. Vercel AI SDK ReAct agent with 14 consolidated tools across 9 financial data providers.
+Tino is an AI-powered quantitative trading CLI workbench. TypeScript CLI (Bun + React/Ink TUI) frontend, Python daemon (NautilusTrader) backend, connected via gRPC (ConnectRPC) on `127.0.0.1:50051`. Vercel AI SDK ReAct agent with 13 consolidated tools across 6 financial data providers.
 
 ## Commands
 

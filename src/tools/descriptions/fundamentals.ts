@@ -21,7 +21,6 @@ Access company financial statements, ratios, analyst estimates, insider trades, 
 ## When NOT to Use
 
 - Stock prices or OHLCV bars (use market_data)
-- SEC filing content (use filings)
 - Macroeconomic indicators (use macro_data)
 - Quantitative calculations (use quant_compute)
 - General web searches (use web_search)

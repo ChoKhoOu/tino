@@ -51,7 +51,6 @@ const READ_TOOLS = new Set([
   'web_search',
   'market_data',
   'fundamentals',
-  'filings',
   'macro_data',
   'quant_compute',
   'portfolio',

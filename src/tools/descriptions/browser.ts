@@ -13,7 +13,6 @@ Control a web browser to navigate websites and extract information.
 
 - Simple queries that web_search can already answer
 - Structured financial data (use market_data or fundamentals)
-- SEC filings content (use filings)
 - General knowledge questions
 
 ## CRITICAL: Navigate Returns NO Content

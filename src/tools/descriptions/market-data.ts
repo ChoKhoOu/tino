@@ -20,7 +20,6 @@ Retrieve real-time and historical market data including stock prices, OHLCV bars
 ## When NOT to Use
 
 - Company financial statements or ratios (use fundamentals)
-- SEC filings content (use filings)
 - Macroeconomic data like GDP or CPI (use macro_data)
 - Quantitative computations on price data (use quant_compute)
 - General web searches (use web_search)

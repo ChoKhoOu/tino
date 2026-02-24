@@ -23,7 +23,7 @@
 
 Tino is a terminal-native AI agent built for quantitative finance. Ask it a question in plain English — it will pull market data, crunch numbers, generate trading strategies, run backtests, and manage live execution, all from your terminal.
 
-Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 14 consolidated tools across 9 financial data providers.
+Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 13 consolidated tools across 6 financial data providers.
 
 ```
  You: "Backtest a momentum strategy on AAPL over the last 2 years"
@@ -35,8 +35,8 @@ Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Py
 
 ## Features
 
-- **14 Consolidated Tools** — Market data, fundamentals, SEC filings, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, and skill workflows
-- **9 Financial Data Providers** — Polygon, FMP, Financial Datasets, FRED, Finnhub, CoinGecko, SEC EDGAR, EODHD, Binance with automatic fallback chains
+- **13 Consolidated Tools** — Market data, fundamentals, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, and skill workflows
+- **6 Financial Data Providers** — Polygon, FMP, Financial Datasets, FRED, Finnhub, CoinGecko, Binance with automatic fallback chains
 - **Portfolio Tracking** — SQLite-backed trade history, positions, daily PnL, and portfolio summaries with daemon restart persistence
 - **Terminal Charts** — ANSI candlestick, line, and subplot charts rendered directly in the terminal via plotext
 - **Real-Time Streaming** — Live market data via WebSocket (Polygon + Binance) with auto-reconnect and subscription management
@@ -94,7 +94,7 @@ Project settings take precedence over global settings.
 │                            │         127.0.0.1:50051           │                          │
 │  React/Ink TUI             │                                   │  NautilusTrader Engine   │
 │  ReAct Agent Loop          │                                   │  Backtest / Paper / Live │
-│  14 Tools + 8 Skills       │                                   │  Portfolio (SQLite)      │
+│  13 Tools + 8 Skills       │                                   │  Portfolio (SQLite)      │
 │  Multi-Provider LLM        │                                   │  Charts / Streaming      │
 │  Portfolio / Charts / Live │                                   │  8 gRPC Services         │
 └────────────────────────────┘                                   └─────────────────────────┘
@@ -110,7 +110,6 @@ Project settings take precedence over global settings.
 |------|--------|-------------|
 | `market_data` | Finance | Stock prices, OHLCV bars, options chains, crypto, ticker details |
 | `fundamentals` | Finance | Income statements, balance sheets, ratios, analyst estimates, insider trades, news |
-| `filings` | Finance | SEC EDGAR full-text search, XBRL company facts |
 | `macro_data` | Finance | FRED economic data — GDP, CPI, interest rates, employment |
 | `quant_compute` | Quant | Technical indicators, risk metrics, options pricing, factor analysis, portfolio optimization |
 | `trading_sim` | Trading | Backtest strategies, paper trade, view positions |
@@ -207,8 +206,6 @@ Providers with automatic fallback: Financial Datasets → FMP → Finnhub for fu
 | FRED | `FRED_API_KEY` | GDP, CPI, interest rates, employment, 800k+ series |
 | Finnhub | `FINNHUB_API_KEY` | News, sentiment, earnings calendar |
 | CoinGecko | _(free)_ | Crypto prices, market data, historical data |
-| SEC EDGAR | _(free)_ | EFTS full-text search, XBRL company facts |
-| EODHD | `EODHD_API_KEY` | Hong Kong market data |
 | Binance | `BINANCE_API_KEY` | Spot and USDT-M Futures trading, real-time WebSocket streams |
 
 ## Trading Safety
@@ -272,7 +269,7 @@ tino/
 │   ├── cli.tsx             # Main Ink component
 │   ├── agent/              # ReAct agent loop, prompts, scratchpad
 │   ├── runtime/            # Model broker, multi-provider LLM
-│   ├── tools/              # 14 consolidated tools + providers
+│   ├── tools/              # 13 consolidated tools + providers
 │   ├── grpc/               # gRPC clients (ConnectRPC)
 │   ├── daemon/             # Python daemon lifecycle management
 │   ├── skills/             # 8 skill workflows (markdown-driven)
@@ -308,7 +305,6 @@ FMP_API_KEY=
 POLYGON_API_KEY=
 FRED_API_KEY=
 FINNHUB_API_KEY=
-EODHD_API_KEY=
 
 # Binance (for crypto trading)
 BINANCE_API_KEY=

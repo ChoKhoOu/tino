@@ -1,6 +1,5 @@
 export { MARKET_DATA_DESCRIPTION } from './market-data.js';
 export { FUNDAMENTALS_DESCRIPTION } from './fundamentals.js';
-export { FILINGS_DESCRIPTION } from './filings.js';
 export { MACRO_DATA_DESCRIPTION } from './macro-data.js';
 export { QUANT_COMPUTE_DESCRIPTION } from './quant-compute.js';
 export { TRADING_SIM_DESCRIPTION } from './trading-sim.js';
