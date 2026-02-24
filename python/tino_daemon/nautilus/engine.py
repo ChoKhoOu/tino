@@ -7,6 +7,7 @@ import importlib.util
 import inspect
 import json
 import logging
+import math
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -163,8 +164,8 @@ class BacktestEngineWrapper:
         total_return = stats_pnls.get("PnL% (total)", 0.0)
         win_rate = stats_pnls.get("Win Rate", 0.0)
 
-        # --- trade counts from closed positions ---
-        closed_positions = cache.positions_closed(instrument_id=None)
+        # --- trade counts from closed positions (filtered by instrument) ---
+        closed_positions = self._get_closed_positions(cache, instrument)
         total_trades = len(closed_positions)
         winning_trades = sum(
             1 for p in closed_positions if float(p.realized_pnl) > 0
@@ -180,9 +181,9 @@ class BacktestEngineWrapper:
                 peak = cumulative.cummax()
                 drawdown = (cumulative - peak) / peak
                 max_drawdown = abs(float(drawdown.min()))
-                equity_curve = [float(v) for v in cumulative.tolist()]
+                equity_curve = [self._sanitize(v) for v in cumulative.tolist()]
         except Exception:
-            logger.debug("Could not compute equity curve / max drawdown", exc_info=True)
+            logger.warning("Could not compute equity curve / max drawdown", exc_info=True)
 
         # --- trades list ---
         trades: list[dict[str, object]] = []
@@ -210,10 +211,21 @@ class BacktestEngineWrapper:
         }
 
     @staticmethod
+    def _get_closed_positions(cache: object, instrument: str) -> list:
+        """Return closed positions, filtered by instrument when possible."""
+        try:
+            from nautilus_trader.model.identifiers import (  # type: ignore[import-not-found]
+                InstrumentId,
+            )
+
+            nt_id = InstrumentId.from_str(instrument)
+            return list(cache.positions_closed(instrument_id=nt_id))  # type: ignore[union-attr]
+        except Exception:
+            return list(cache.positions_closed(instrument_id=None))  # type: ignore[union-attr]
+
+    @staticmethod
     def _sanitize(value: object) -> float:
         """Convert value to float, replacing NaN/Inf with 0.0."""
-        import math
-
         try:
             f = float(value)  # type: ignore[arg-type]
             return 0.0 if (math.isnan(f) or math.isinf(f)) else f
