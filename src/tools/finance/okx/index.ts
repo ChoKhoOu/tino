@@ -86,7 +86,7 @@ export async function getKlines(
 
   // Cache only when both after and before are provided and fully historical
   const now = Date.now();
-  const cacheable = !!(after && before && before < now - 86_400_000);
+  const cacheable = !!(after && before && after < now - 86_400_000);
 
   const { data } = await fetchJson<OkxResponse<string[][]>>(
     url,
@@ -182,7 +182,7 @@ export async function getFundingRateHistory(
   const url = buildUrl('/public/funding-rate-history', params);
 
   const now = Date.now();
-  const cacheable = !!(after && before && before < now - 86_400_000);
+  const cacheable = !!(after && before && after < now - 86_400_000);
 
   const { data } = await fetchJson<OkxResponse<OkxFundingRateHistory[]>>(
     url,
