@@ -71,7 +71,10 @@ async def integration_server(
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
     await health_servicer.set("", SERVING_STATUS)
 
-    daemon_service = DaemonServicer(shutdown_event=shutdown_event)
+    daemon_service = DaemonServicer(
+        shutdown_event=shutdown_event,
+        service_names=["DataService", "BacktestService", "TradingService"],
+    )
     daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_service, server)
 
     catalog = DataCatalogWrapper(catalog_path=str(tmp_path / "catalog"))
@@ -199,3 +202,23 @@ async def test_health_check_returns_serving(integration_server):
         health_stub = health_pb2_grpc.HealthStub(channel)
         response = await health_stub.Check(health_pb2.HealthCheckRequest(service=""))
         assert response.status == SERVING_STATUS
+
+
+@pytest.mark.asyncio
+async def test_daemon_health_check_rpc(integration_server):
+    server, port = integration_server
+    del server
+
+    async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
+        daemon_stub = daemon_pb2_grpc.DaemonServiceStub(channel)
+        response = await daemon_stub.HealthCheck(daemon_pb2.HealthCheckRequest())
+        assert response.healthy is True
+        assert response.version != ""
+        assert float(response.uptime) >= 0
+        assert len(response.services) == 3
+        assert all(s.ready for s in response.services)
+        assert {s.name for s in response.services} == {
+            "DataService",
+            "BacktestService",
+            "TradingService",
+        }

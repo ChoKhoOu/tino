@@ -10,6 +10,14 @@ import {
 
 type DaemonServiceClient = Client<typeof DaemonService>;
 
+export interface HealthCheckResult {
+  healthy: boolean;
+  uptime: string;
+  version: string;
+  connectedExchanges: string[];
+  services: { name: string; ready: boolean }[];
+}
+
 export class DaemonClient extends GrpcClient {
   private readonly client: DaemonServiceClient;
 
@@ -31,13 +39,19 @@ export class DaemonClient extends GrpcClient {
     }
   }
 
-  async healthCheck(): Promise<boolean> {
+  async healthCheck(): Promise<HealthCheckResult | null> {
     try {
       const request = create(HealthCheckRequestSchema, {});
       const response = await this.client.healthCheck(request);
-      return response.healthy;
+      return {
+        healthy: response.healthy,
+        uptime: response.uptime,
+        version: response.version,
+        connectedExchanges: [...response.connectedExchanges],
+        services: response.services.map((s) => ({ name: s.name, ready: s.ready })),
+      };
     } catch {
-      return false;
+      return null;
     }
   }
 }
