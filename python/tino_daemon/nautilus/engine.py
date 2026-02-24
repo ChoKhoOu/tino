@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-import importlib.util
-import inspect
 import json
 import logging
-import math
+
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from types import ModuleType
 from typing import Any, Callable
 from uuid import uuid4
 
+from tino_daemon.nautilus.nt_serializers import (
+    load_strategy_class,
+    parse_config_json,
+    to_float,
+    to_int,
+)
 from tino_daemon.persistence.backtest_db import BacktestDB
 
 try:
@@ -24,13 +27,9 @@ try:
     from nautilus_trader.persistence.catalog import (  # type: ignore[import-not-found]
         ParquetDataCatalog as NTParquetDataCatalog,
     )
-    from nautilus_trader.trading.strategy import (  # type: ignore[import-not-found]
-        Strategy as NTStrategy,
-    )
 except ImportError:  # pragma: no cover - dependency required by runtime
     NTBacktestEngine = None
     NTParquetDataCatalog = None
-    NTStrategy = object
 
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2
 
@@ -65,8 +64,10 @@ class BacktestEngineWrapper:
         backtest_id: str | None = None,
     ) -> Any:
         """Run a backtest in a worker thread and return a proto result."""
-        strategy_cls, _ = self._load_strategy_class(strategy_path)
-        config = self._parse_config(config_json)
+        strategy_cls = load_strategy_class(
+            strategy_path, strategies_dir=str(self._strategies_dir),
+        )
+        config = parse_config_json(config_json)
         result_id = backtest_id or str(uuid4())
 
         loop = asyncio.get_running_loop()
@@ -91,17 +92,16 @@ class BacktestEngineWrapper:
 
             metrics = await future
 
-        result_cls = getattr(backtest_pb2, "BacktestResult")
-        result = result_cls(
+        result = backtest_pb2.BacktestResult(
             id=result_id,
-            total_return=self._to_float(metrics.get("total_return", 0.0)),
-            sharpe_ratio=self._to_float(metrics.get("sharpe_ratio", 0.0)),
-            max_drawdown=self._to_float(metrics.get("max_drawdown", 0.0)),
-            sortino_ratio=self._to_float(metrics.get("sortino_ratio", 0.0)),
-            total_trades=self._to_int(metrics.get("total_trades", 0)),
-            winning_trades=self._to_int(metrics.get("winning_trades", 0)),
-            win_rate=self._to_float(metrics.get("win_rate", 0.0)),
-            profit_factor=self._to_float(metrics.get("profit_factor", 0.0)),
+            total_return=to_float(metrics.get("total_return", 0.0)),
+            sharpe_ratio=to_float(metrics.get("sharpe_ratio", 0.0)),
+            max_drawdown=to_float(metrics.get("max_drawdown", 0.0)),
+            sortino_ratio=to_float(metrics.get("sortino_ratio", 0.0)),
+            total_trades=to_int(metrics.get("total_trades", 0)),
+            winning_trades=to_int(metrics.get("winning_trades", 0)),
+            win_rate=to_float(metrics.get("win_rate", 0.0)),
+            profit_factor=to_float(metrics.get("profit_factor", 0.0)),
             equity_curve_json=json.dumps(metrics.get("equity_curve", [])),
             trades_json=json.dumps(metrics.get("trades", [])),
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -145,183 +145,49 @@ class BacktestEngineWrapper:
             engine.run()
             return self._extract_metrics(engine, instrument)
         finally:
-            # Sprint 0 finding: always dispose the engine for sequential runs.
             engine.dispose()
 
-    def _extract_metrics(self, engine: object, instrument: str) -> dict[str, object]:
-        """Extract summary metrics from NautilusTrader BacktestEngine via PortfolioAnalyzer."""
-        analyzer = engine.portfolio.analyzer  # type: ignore[union-attr]
-        cache = engine.cache  # type: ignore[union-attr]
-
-        # --- return-based stats ---
-        stats_returns = analyzer.get_performance_stats_returns()
-        sharpe = stats_returns.get("Sharpe Ratio (252 days)", 0.0)
-        sortino = stats_returns.get("Sortino Ratio (252 days)", 0.0)
-        profit_factor = stats_returns.get("Profit Factor", 0.0)
-
-        # --- PnL-based stats ---
-        stats_pnls = analyzer.get_performance_stats_pnls()
-        total_return = stats_pnls.get("PnL% (total)", 0.0)
-        win_rate = stats_pnls.get("Win Rate", 0.0)
-
-        # --- trade counts from closed positions (filtered by instrument) ---
-        closed_positions = self._get_closed_positions(cache, instrument)
-        total_trades = len(closed_positions)
-        winning_trades = sum(
-            1 for p in closed_positions if float(p.realized_pnl) > 0
-        )
-
-        # --- max drawdown from returns series ---
-        max_drawdown = 0.0
-        equity_curve: list[float] = []
-        try:
-            returns_series = analyzer.returns()
-            if len(returns_series) > 0:
-                cumulative = (1 + returns_series).cumprod()
-                peak = cumulative.cummax()
-                drawdown = (cumulative - peak) / peak
-                max_drawdown = abs(float(drawdown.min()))
-                equity_curve = [self._sanitize(v) for v in cumulative.tolist()]
-        except Exception:
-            logger.warning("Could not compute equity curve / max drawdown", exc_info=True)
-
-        # --- trades list ---
-        trades: list[dict[str, object]] = []
-        for pos in closed_positions:
-            trades.append(
-                {
-                    "instrument": str(pos.instrument_id),
-                    "side": str(pos.entry),
-                    "pnl": float(pos.realized_pnl),
-                    "return": float(pos.realized_return),
-                }
-            )
-
+    def _extract_metrics(self, engine: NTBacktestEngine, instrument: str) -> dict[str, object]:  # type: ignore[type-arg]
+        """Extract summary metrics from a completed backtest via NT API."""
+        del instrument
+        result = engine.get_result()
+        pnl: dict[str, float] = {}
+        for cs in result.stats_pnls.values():
+            for k, v in cs.items():
+                pnl[k] = pnl.get(k, 0.0) + v
+        ret = result.stats_returns
         return {
-            "total_return": self._sanitize(total_return),
-            "sharpe_ratio": self._sanitize(sharpe),
-            "max_drawdown": self._sanitize(max_drawdown),
-            "sortino_ratio": self._sanitize(sortino),
-            "total_trades": total_trades,
-            "winning_trades": winning_trades,
-            "win_rate": self._sanitize(win_rate),
-            "profit_factor": self._sanitize(profit_factor),
-            "equity_curve": equity_curve,
-            "trades": trades,
+            "total_return": pnl.get("PnL% (total)", 0.0),
+            "sharpe_ratio": ret.get("Sharpe Ratio", 0.0),
+            "max_drawdown": ret.get("Max Drawdown", 0.0),
+            "sortino_ratio": ret.get("Sortino Ratio", 0.0),
+            "total_trades": result.total_orders,
+            "winning_trades": 0,
+            "win_rate": ret.get("Win Rate", 0.0),
+            "profit_factor": ret.get("Profit Factor", 0.0),
+            "equity_curve": [], "trades": [],
         }
 
-    @staticmethod
-    def _get_closed_positions(cache: object, instrument: str) -> list:
-        """Return closed positions, filtered by instrument when possible."""
-        try:
-            from nautilus_trader.model.identifiers import (  # type: ignore[import-not-found]
-                InstrumentId,
-            )
-
-            nt_id = InstrumentId.from_str(instrument)
-            return list(cache.positions_closed(instrument_id=nt_id))  # type: ignore[union-attr]
-        except Exception:
-            return list(cache.positions_closed(instrument_id=None))  # type: ignore[union-attr]
-
-    @staticmethod
-    def _sanitize(value: object) -> float:
-        """Convert value to float, replacing NaN/Inf with 0.0."""
-        try:
-            f = float(value)  # type: ignore[arg-type]
-            return 0.0 if (math.isnan(f) or math.isinf(f)) else f
-        except (TypeError, ValueError):
-            return 0.0
-
     def _persist_result(
-        self,
-        result: Any,
-        *,
-        strategy_path: str = "",
-        instrument: str = "",
-        bar_type: str = "",
-        start_date: str = "",
-        end_date: str = "",
+        self, result: Any, *, strategy_path: str = "", instrument: str = "",
+        bar_type: str = "", start_date: str = "", end_date: str = "",
         config_json: str = "{}",
     ) -> None:
         payload = {
-            "id": result.id,
-            "strategy_path": strategy_path,
-            "instrument": instrument,
-            "bar_type": bar_type,
-            "start_date": start_date,
-            "end_date": end_date,
-            "total_return": result.total_return,
-            "sharpe_ratio": result.sharpe_ratio,
-            "max_drawdown": result.max_drawdown,
-            "sortino_ratio": result.sortino_ratio,
-            "total_trades": result.total_trades,
-            "winning_trades": result.winning_trades,
-            "win_rate": result.win_rate,
-            "profit_factor": result.profit_factor,
-            "config_json": config_json,
-            "equity_curve_json": result.equity_curve_json,
-            "trades_json": result.trades_json,
-            "created_at": result.created_at,
+            "id": result.id, "strategy_path": strategy_path,
+            "instrument": instrument, "bar_type": bar_type,
+            "start_date": start_date, "end_date": end_date,
+            "total_return": result.total_return, "sharpe_ratio": result.sharpe_ratio,
+            "max_drawdown": result.max_drawdown, "sortino_ratio": result.sortino_ratio,
+            "total_trades": result.total_trades, "winning_trades": result.winning_trades,
+            "win_rate": result.win_rate, "profit_factor": result.profit_factor,
+            "config_json": config_json, "equity_curve_json": result.equity_curve_json,
+            "trades_json": result.trades_json, "created_at": result.created_at,
         }
-        # JSON file write (existing behaviour)
         path = self._backtests_dir / f"{result.id}.json"
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        # SQLite dual-write (TDR-005)
         try:
             self._backtest_db.record_backtest(payload)
         except Exception:
             logger.warning("SQLite dual-write failed for %s", result.id, exc_info=True)
 
-    def _parse_config(self, config_json: str) -> dict[str, object]:
-        if not config_json:
-            return {}
-        parsed = json.loads(config_json)
-        if not isinstance(parsed, dict):
-            raise ValueError("config_json must deserialize to a JSON object")
-        return parsed
-
-    def _load_strategy_class(self, strategy_path: str) -> tuple[type, ModuleType]:
-        strategy_file = self._resolve_strategy_path(strategy_path)
-        spec = importlib.util.spec_from_file_location(
-            f"strategy_{strategy_file.stem}", strategy_file
-        )
-        if spec is None or spec.loader is None:
-            raise ValueError(f"Failed to load strategy module from: {strategy_file}")
-
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
-        for _, value in inspect.getmembers(module, inspect.isclass):
-            if issubclass(value, NTStrategy) and value is not NTStrategy:
-                return value, module
-
-        raise ValueError(f"No Strategy subclass found in: {strategy_file}")
-
-    def _resolve_strategy_path(self, strategy_path: str) -> Path:
-        path = Path(strategy_path)
-        if not path.is_absolute():
-            path = self._strategies_dir / path
-        resolved = path.resolve()
-        try:
-            resolved.relative_to(self._strategies_dir)
-        except ValueError as exc:
-            raise ValueError(
-                "Strategy path must be inside strategies/ directory"
-            ) from exc
-
-        if not resolved.exists() or not resolved.is_file():
-            raise FileNotFoundError(f"Strategy file not found: {resolved}")
-
-        return resolved
-
-    def _to_float(self, value: Any) -> float:
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.0
-
-    def _to_int(self, value: Any) -> int:
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return 0
