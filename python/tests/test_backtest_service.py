@@ -68,7 +68,7 @@ async def test_run_backtest_streams_progress_events(
             return _sample_result("bt-progress")
 
         monkeypatch.setattr(
-            "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+            "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
             fake_run_backtest,
         )
 
@@ -104,7 +104,7 @@ async def test_run_backtest_returns_completed_result(
         return _sample_result("bt-completed")
 
     monkeypatch.setattr(
-        "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+        "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
         fake_run_backtest,
     )
 
@@ -142,7 +142,7 @@ async def test_cancel_backtest_sets_cancel_event(backtest_server):
 
         monkeypatch = pytest.MonkeyPatch()
         monkeypatch.setattr(
-            "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+            "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
             fake_run_backtest,
         )
 
@@ -186,7 +186,7 @@ async def test_get_result_returns_stored_result(
         return _sample_result("bt-get")
 
     monkeypatch.setattr(
-        "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+        "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
         fake_run_backtest,
     )
 
@@ -220,7 +220,7 @@ async def test_list_results_returns_all_results(
         return _sample_result(ids.pop(0))
 
     monkeypatch.setattr(
-        "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+        "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
         fake_run_backtest,
     )
 

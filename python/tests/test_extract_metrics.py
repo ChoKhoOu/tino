@@ -1,4 +1,4 @@
-"""Tests for BacktestEngineWrapper._extract_metrics()."""
+"""Tests for BacktestServiceServicer._extract_metrics()."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tino_daemon.nautilus.engine import BacktestEngineWrapper
+from tino_daemon.services.backtest import BacktestServiceServicer
 
 
 @pytest.fixture
@@ -17,9 +17,11 @@ def wrapper(tmp_path, monkeypatch):
         "tino_daemon.persistence.backtest_db.BacktestDB.__init__",
         lambda self, db_path=None: None,
     )
+    catalog = MagicMock()
+    catalog.path = tmp_path / "catalog"
     (tmp_path / "strategies").mkdir()
-    return BacktestEngineWrapper(
-        catalog_path=str(tmp_path / "catalog"),
+    return BacktestServiceServicer(
+        catalog=catalog,
         backtests_dir=str(tmp_path / "backtests"),
         strategies_dir=str(tmp_path / "strategies"),
     )
@@ -145,3 +147,27 @@ class TestExtractMetrics:
         ]
         for field in non_zero_fields:
             assert metrics[field] != 0, f"{field} should not be zero"
+
+
+
+class TestSanitize:
+    def test_normal_float(self):
+        assert BacktestServiceServicer._sanitize(1.5) == 1.5
+
+    def test_nan_to_zero(self):
+        assert BacktestServiceServicer._sanitize(float("nan")) == 0.0
+
+    def test_inf_to_zero(self):
+        assert BacktestServiceServicer._sanitize(float("inf")) == 0.0
+
+    def test_neg_inf_to_zero(self):
+        assert BacktestServiceServicer._sanitize(float("-inf")) == 0.0
+
+    def test_none_to_zero(self):
+        assert BacktestServiceServicer._sanitize(None) == 0.0
+
+    def test_string_to_zero(self):
+        assert BacktestServiceServicer._sanitize("not a number") == 0.0
+
+    def test_int_value(self):
+        assert BacktestServiceServicer._sanitize(42) == 42.0
