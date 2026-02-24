@@ -19,46 +19,7 @@ import pytest
 from tino_daemon.proto.tino.streaming.v1 import streaming_pb2
 from tino_daemon.streaming.subscription_registry import SubscriptionRegistry
 
-
-class FakeContext:
-    """Simulates a gRPC context that cancels after a set number of checks."""
-
-    def __init__(self, cancel_after: int = 0) -> None:
-        self._check_count = 0
-        self._cancel_after = cancel_after
-        self._cancelled = False
-
-    def cancelled(self) -> bool:
-        if self._cancelled:
-            return True
-        self._check_count += 1
-        if self._cancel_after > 0 and self._check_count > self._cancel_after:
-            self._cancelled = True
-        return self._cancelled
-
-    def cancel(self) -> None:
-        self._cancelled = True
-
-
-def _make_fake_client(
-    messages: list[str] | None = None,
-) -> AsyncMock:
-    """Create a mock WS client with a pre-loaded message queue."""
-    client = AsyncMock()
-    client.connect = AsyncMock()
-    client.disconnect = AsyncMock()
-    client.subscribe = AsyncMock()
-    client.unsubscribe = AsyncMock()
-    client.start_receiving = MagicMock()
-    client.stop_receiving = AsyncMock()
-
-    q: asyncio.Queue[str] = asyncio.Queue()
-    if messages:
-        for msg in messages:
-            q.put_nowait(msg)
-    client.message_queue = q
-
-    return client
+from conftest import FakeContext, _make_fake_client
 
 
 def _make_servicer(
@@ -173,7 +134,7 @@ async def test_subscribe_error_cleans_up():
     ]
     assert len(error_events) >= 1
     error_data = json.loads(error_events[0].data_json)
-    assert "subscription failed" in error_data.get("error", "")
+    assert error_data.get("error") == "subscribe failed"
 
     # Cleanup: disconnect called and registry entry removed
     fake_client.disconnect.assert_awaited()
@@ -312,3 +273,242 @@ async def test_subscribe_max_subscriptions_yields_error():
 
     # connect() should never have been called
     fake_client.connect.assert_not_awaited()
+
+
+# ---------------------------------------------------------------------------
+# New tests for receive-loop reconnect, connect-failure cleanup, and
+# input-validation coverage.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_receive_loop_reconnect_and_resubscribe():
+    """When _ws_recv() raises during operation, receive loop reconnects and resubscribes."""
+    from tino_daemon.streaming.ws_client import BaseWSClient
+
+    class ReconnectTestClient(BaseWSClient):
+        def __init__(self) -> None:
+            super().__init__(url="wss://test.example.com", max_retries=1)
+            self.recv_calls = 0
+            self.subscribe_calls: list[tuple[str, str]] = []
+            self._mock_ws_connected = True
+
+        async def _ws_connect(self) -> None:
+            pass
+
+        async def _ws_send(self, data: str) -> None:
+            pass
+
+        async def _ws_recv(self) -> str:
+            self.recv_calls += 1
+            if self.recv_calls == 1:
+                raise ConnectionError("simulated disconnect")
+            if self.recv_calls <= 3:
+                return json.dumps({"data": self.recv_calls})
+            # After 3 messages, stop by setting connected=False
+            self._connected = False
+            raise ConnectionError("done")
+
+        async def _ws_close(self) -> None:
+            pass
+
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            self.subscribe_calls.append((instrument, event_type))
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+    client = ReconnectTestClient()
+    await client.connect()
+    client.start_receiving("BTCUSDT", "trade")
+
+    # Wait for the loop to process
+    await asyncio.sleep(0.5)
+
+    # Should have called subscribe during reconnect
+    assert len(client.subscribe_calls) >= 1
+    assert client.subscribe_calls[0] == ("BTCUSDT", "trade")
+
+    # Should have enqueued messages
+    assert not client.message_queue.empty()
+
+    await client.stop_receiving()
+
+
+@pytest.mark.asyncio
+async def test_receive_loop_reconnect_failure_stops_loop():
+    """When reconnect fails inside receive loop, the loop terminates and _connected becomes False."""
+    from tino_daemon.streaming.ws_client import BaseWSClient
+
+    class FailReconnectClient(BaseWSClient):
+        def __init__(self) -> None:
+            super().__init__(url="wss://test.example.com", max_retries=1)
+            self.connect_count = 0
+
+        async def _ws_connect(self) -> None:
+            self.connect_count += 1
+            if self.connect_count > 1:
+                raise ConnectionError("reconnect failed")
+
+        async def _ws_send(self, data: str) -> None:
+            pass
+
+        async def _ws_recv(self) -> str:
+            raise ConnectionError("connection lost")
+
+        async def _ws_close(self) -> None:
+            pass
+
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+    client = FailReconnectClient()
+    await client.connect()
+    assert client.connected is True
+
+    client.start_receiving("AAPL", "trade")
+    await asyncio.sleep(1.0)  # Give loop time to fail
+
+    assert client.connected is False
+    assert client._recv_task is not None
+    assert client._recv_task.done()
+
+
+@pytest.mark.asyncio
+async def test_subscribe_connect_failure_cleans_up():
+    """When connect() fails at the servicer level, an error response is yielded and cleanup happens."""
+    from tino_daemon.services.streaming import StreamingServiceServicer
+
+    registry = SubscriptionRegistry()
+    servicer = StreamingServiceServicer(registry=registry)
+
+    request = streaming_pb2.SubscribeRequest(
+        instrument="AAPL",
+        source="binance",
+        event_type="trade",
+    )
+
+    ctx = FakeContext()
+    events: list[Any] = []
+
+    with patch.object(servicer, "_create_ws_client") as mock_factory:
+        fake_client = _make_fake_client()
+        fake_client.connect = AsyncMock(side_effect=ConnectionError("refused"))
+        mock_factory.return_value = fake_client
+
+        async for event in servicer.Subscribe(request, ctx):
+            events.append(event)
+
+    assert len(events) == 1
+    assert events[0].type == streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR
+    error_data = json.loads(events[0].data_json)
+    assert error_data["error"] == "connection failed"  # generic, no exception detail
+    assert len(registry.list_all()) == 0
+
+
+@pytest.mark.asyncio
+async def test_subscribe_invalid_instrument_rejected():
+    """Subscribe rejects instruments with invalid characters."""
+    from tino_daemon.services.streaming import StreamingServiceServicer
+
+    servicer = StreamingServiceServicer()
+
+    # Test with invalid characters
+    request = streaming_pb2.SubscribeRequest(
+        instrument="AAPL; DROP TABLE",
+        source="binance",
+        event_type="trade",
+    )
+
+    events: list[Any] = []
+    async for event in servicer.Subscribe(request, FakeContext()):
+        events.append(event)
+
+    assert len(events) == 1
+    error_data = json.loads(events[0].data_json)
+    assert error_data["error"] == "invalid instrument"
+
+
+@pytest.mark.asyncio
+async def test_subscribe_invalid_source_rejected():
+    """Subscribe rejects unknown data sources."""
+    from tino_daemon.services.streaming import StreamingServiceServicer
+
+    servicer = StreamingServiceServicer()
+
+    request = streaming_pb2.SubscribeRequest(
+        instrument="AAPL",
+        source="evil_exchange",
+        event_type="trade",
+    )
+
+    events: list[Any] = []
+    async for event in servicer.Subscribe(request, FakeContext()):
+        events.append(event)
+
+    assert len(events) == 1
+    error_data = json.loads(events[0].data_json)
+    assert error_data["error"] == "unsupported source"
+
+
+@pytest.mark.asyncio
+async def test_subscribe_invalid_event_type_rejected():
+    """Subscribe rejects unknown event types."""
+    from tino_daemon.services.streaming import StreamingServiceServicer
+
+    servicer = StreamingServiceServicer()
+
+    request = streaming_pb2.SubscribeRequest(
+        instrument="AAPL",
+        source="binance",
+        event_type="malicious",
+    )
+
+    events: list[Any] = []
+    async for event in servicer.Subscribe(request, FakeContext()):
+        events.append(event)
+
+    assert len(events) == 1
+    error_data = json.loads(events[0].data_json)
+    assert error_data["error"] == "invalid event type"
+
+
+@pytest.mark.asyncio
+async def test_receive_loop_max_reconnects_exceeded():
+    """Receive loop stops after exceeding _MAX_LOOP_RECONNECTS consecutive failures."""
+    from tino_daemon.streaming.ws_client import BaseWSClient
+
+    class AlwaysFailRecvClient(BaseWSClient):
+        def __init__(self) -> None:
+            super().__init__(url="wss://test.example.com", max_retries=1)
+
+        async def _ws_connect(self) -> None:
+            pass
+
+        async def _ws_send(self, data: str) -> None:
+            pass
+
+        async def _ws_recv(self) -> str:
+            raise ConnectionError("always fails")
+
+        async def _ws_close(self) -> None:
+            pass
+
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+    client = AlwaysFailRecvClient()
+    await client.connect()
+    client.start_receiving("AAPL", "trade")
+
+    await asyncio.sleep(2.0)  # Give time for retries
+
+    assert client.connected is False
+    assert client._recv_task is not None
+    assert client._recv_task.done()

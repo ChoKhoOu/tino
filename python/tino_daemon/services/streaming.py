@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
@@ -24,6 +25,11 @@ _EVENT_TYPE_MAP = {
     "bar": streaming_pb2.SubscribeResponse.EVENT_TYPE_BAR,
 }
 
+_VALID_SOURCES = frozenset({"binance", "okx", "bybit", "polygon"})
+_VALID_EVENT_TYPES = frozenset({"trade", "quote", "bar"})
+_MAX_INSTRUMENT_LEN = 64
+_MAX_MESSAGE_SIZE = 65536  # 64KB
+
 
 class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
     def __init__(self, registry: SubscriptionRegistry | None = None) -> None:
@@ -31,6 +37,8 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         self._clients: dict[str, BaseWSClient] = {}
 
     def _create_ws_client(self, source: str) -> BaseWSClient:
+        if source not in _VALID_SOURCES:
+            raise ValueError(f"unsupported source: {source!r}")
         if source == "binance":
             return BinanceWSClient()
         if source == "okx":
@@ -47,6 +55,36 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         instrument = request.instrument
         source = request.source
         event_type = request.event_type or "trade"
+
+        if not instrument or len(instrument) > _MAX_INSTRUMENT_LEN or not re.match(r'^[A-Za-z0-9._/-]+$', instrument):
+            yield streaming_pb2.SubscribeResponse(
+                type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
+                instrument=instrument,
+                source=source,
+                data_json=json.dumps({"error": "invalid instrument"}),
+                timestamp=_now_iso(),
+            )
+            return
+
+        if source not in _VALID_SOURCES:
+            yield streaming_pb2.SubscribeResponse(
+                type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
+                instrument=instrument,
+                source=source,
+                data_json=json.dumps({"error": "unsupported source"}),
+                timestamp=_now_iso(),
+            )
+            return
+
+        if event_type not in _VALID_EVENT_TYPES:
+            yield streaming_pb2.SubscribeResponse(
+                type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
+                instrument=instrument,
+                source=source,
+                data_json=json.dumps({"error": "invalid event type"}),
+                timestamp=_now_iso(),
+            )
+            return
 
         if not self._registry.add(instrument, source, event_type):
             yield streaming_pb2.SubscribeResponse(
@@ -65,12 +103,14 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         try:
             await client.connect()
         except Exception as exc:
+            logger.error("WS connect failed for %s/%s: %s", instrument, source, exc)
             self._registry.remove(instrument, source)
+            self._clients.pop(client_key, None)
             yield streaming_pb2.SubscribeResponse(
                 type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
                 instrument=instrument,
                 source=source,
-                data_json=json.dumps({"error": str(exc)}),
+                data_json=json.dumps({"error": "connection failed"}),
                 timestamp=_now_iso(),
             )
             return
@@ -78,6 +118,7 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         try:
             await client.subscribe(instrument, event_type)
         except Exception as exc:
+            logger.error("WS subscribe failed for %s/%s: %s", instrument, source, exc)
             await client.disconnect()
             self._registry.remove(instrument, source)
             self._clients.pop(client_key, None)
@@ -85,7 +126,7 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
                 type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
                 instrument=instrument,
                 source=source,
-                data_json=json.dumps({"error": f"subscribe failed: {exc}"}),
+                data_json=json.dumps({"error": "subscribe failed"}),
                 timestamp=_now_iso(),
             )
             return
@@ -105,10 +146,19 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         )
 
         try:
-            while not context.cancelled():
+            while not context.cancelled() and client.connected:
                 try:
                     msg = await asyncio.wait_for(client.message_queue.get(), timeout=0.5)
                 except (TimeoutError, asyncio.TimeoutError):
+                    continue
+
+                if len(msg) > _MAX_MESSAGE_SIZE:
+                    logger.warning("Oversized WS message dropped (%d bytes)", len(msg))
+                    continue
+                try:
+                    json.loads(msg)  # validate JSON
+                except (json.JSONDecodeError, ValueError):
+                    logger.warning("Non-JSON WS message dropped")
                     continue
 
                 yield streaming_pb2.SubscribeResponse(

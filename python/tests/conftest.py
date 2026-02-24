@@ -5,13 +5,56 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock
 
 import grpc
 import pytest
 import pytest_asyncio
 
 from tino_daemon.config import DaemonConfig
+
+
+class FakeContext:
+    """Simulates a gRPC context that cancels after a set number of checks."""
+
+    def __init__(self, cancel_after: int = 0) -> None:
+        self._check_count = 0
+        self._cancel_after = cancel_after
+        self._cancelled = False
+
+    def cancelled(self) -> bool:
+        if self._cancelled:
+            return True
+        self._check_count += 1
+        if self._cancel_after > 0 and self._check_count > self._cancel_after:
+            self._cancelled = True
+        return self._cancelled
+
+    def cancel(self) -> None:
+        self._cancelled = True
+
+
+def _make_fake_client(
+    messages: list[str] | None = None,
+) -> AsyncMock:
+    """Create a mock WS client with a pre-loaded message queue."""
+    client = AsyncMock()
+    client.connect = AsyncMock()
+    client.disconnect = AsyncMock()
+    client.subscribe = AsyncMock()
+    client.unsubscribe = AsyncMock()
+    client.start_receiving = MagicMock()
+    client.stop_receiving = AsyncMock()
+    client.connected = True
+
+    q: asyncio.Queue[str] = asyncio.Queue()
+    if messages:
+        for msg in messages:
+            q.put_nowait(msg)
+    client.message_queue = q
+
+    return client
 
 # Proto-generated code uses absolute imports like `from tino.data.v1 import data_pb2`
 # so the proto output root must be on sys.path.

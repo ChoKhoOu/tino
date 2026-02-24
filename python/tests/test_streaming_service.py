@@ -5,23 +5,14 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from tino_daemon.proto.tino.streaming.v1 import streaming_pb2
 from tino_daemon.streaming.subscription_registry import SubscriptionRegistry
 
-
-class FakeContext:
-    def __init__(self) -> None:
-        self._cancelled = False
-
-    def cancelled(self) -> bool:
-        return self._cancelled
-
-    def cancel(self) -> None:
-        self._cancelled = True
+from conftest import FakeContext
 
 
 @pytest.mark.asyncio
@@ -51,8 +42,8 @@ async def test_subscribe_receives_messages():
         fake_client.connect = AsyncMock()
         fake_client.disconnect = AsyncMock()
         fake_client.subscribe = AsyncMock()
-        from unittest.mock import MagicMock
         fake_client.start_receiving = MagicMock()
+        fake_client.connected = True
 
         q: asyncio.Queue = asyncio.Queue()
         await q.put(json.dumps({"price": 150.0, "size": 100}))

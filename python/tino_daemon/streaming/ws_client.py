@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 _DEFAULT_MAX_RETRIES = 10
 _DEFAULT_MAX_BACKOFF = 30.0
 _DEFAULT_QUEUE_MAXSIZE = 1000
+_MAX_LOOP_RECONNECTS = 5
 
 
 class BaseWSClient(abc.ABC):
@@ -87,6 +88,8 @@ class BaseWSClient(abc.ABC):
 
     def start_receiving(self, instrument: str, event_type: str = "trade") -> None:
         """Start background task to receive WS messages and enqueue them."""
+        if self._recv_task and not self._recv_task.done():
+            raise RuntimeError("Receive loop already running; call stop_receiving() first")
         self._current_instrument = instrument
         self._current_event_type = event_type
         self._recv_task = asyncio.create_task(self._receive_loop())
@@ -102,16 +105,23 @@ class BaseWSClient(abc.ABC):
             self._recv_task = None
 
     async def _receive_loop(self) -> None:
+        reconnect_count = 0
         while self._connected:
             try:
                 msg = await self._ws_recv()
                 await self.enqueue_message(msg)
+                reconnect_count = 0  # reset on successful receive
             except asyncio.CancelledError:
                 break
             except Exception as exc:
                 if not self._connected:
                     break
-                logger.warning("WS receive error: %s, reconnecting...", exc)
+                reconnect_count += 1
+                if reconnect_count > _MAX_LOOP_RECONNECTS:
+                    logger.error("Max reconnects (%d) exceeded, stopping receive loop", _MAX_LOOP_RECONNECTS)
+                    self._connected = False
+                    break
+                logger.warning("WS receive error: %s, reconnecting (%d/%d)...", exc, reconnect_count, _MAX_LOOP_RECONNECTS)
                 try:
                     await self.reconnect()
                     await self.subscribe(
@@ -119,12 +129,14 @@ class BaseWSClient(abc.ABC):
                     )
                 except Exception as re_exc:
                     logger.error("WS reconnect failed: %s", re_exc)
+                    self._connected = False
                     break
 
     async def enqueue_message(self, message: str) -> None:
         if self.message_queue.full():
             try:
                 self.message_queue.get_nowait()
+                logger.debug("Queue full, dropped oldest message")
             except asyncio.QueueEmpty:
                 pass
         self.message_queue.put_nowait(message)
