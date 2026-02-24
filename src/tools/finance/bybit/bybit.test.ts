@@ -121,7 +121,7 @@ describe('Bybit public client', () => {
     mockFetch(async () => {
       return new Response(JSON.stringify(bybitOk({ category: 'linear', list: [] })), { status: 200 });
     });
-    expect(getFundingRate('UNKNOWN')).rejects.toThrow('No funding rate data');
+    await expect(getFundingRate('UNKNOWN')).rejects.toThrow('No funding rate data');
   });
 
   // ==========================================================================
@@ -185,6 +185,6 @@ describe('Bybit public client', () => {
     mockFetch(async () => {
       return new Response(JSON.stringify({ retCode: 10001, retMsg: 'Invalid symbol', result: {} }), { status: 200 });
     });
-    expect(getKlines('INVALID', '60')).rejects.toThrow('Invalid symbol');
+    await expect(getKlines('INVALID', '60')).rejects.toThrow('Invalid symbol');
   });
 });

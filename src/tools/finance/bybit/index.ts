@@ -78,10 +78,11 @@ export async function getKlines(
   interval: string,
   start?: number,
   end?: number,
-  limit = 200
+  limit = 200,
+  category = 'spot'
 ): Promise<BybitKline[]> {
   const params: Record<string, string | number | undefined> = {
-    category: 'spot',
+    category,
     symbol: symbol.toUpperCase(),
     interval,
     limit,
