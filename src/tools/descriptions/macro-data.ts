@@ -19,7 +19,6 @@ Access FRED (Federal Reserve Economic Data) macroeconomic data including series 
 
 - Company financial data (use fundamentals)
 - Stock prices or market data (use market_data)
-- SEC filings (use filings)
 - Quantitative calculations (use quant_compute)
 - General web searches (use web_search)
 

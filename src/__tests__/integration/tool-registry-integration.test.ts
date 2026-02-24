@@ -2,9 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { ToolRegistry, MAX_TOOLS } from '../../runtime/tool-registry.js';
 
 const EXPECTED_CONSOLIDATED_IDS = [
-  'market_data', 'fundamentals', 'filings', 'macro_data',
+  'market_data', 'fundamentals', 'macro_data',
   'quant_compute', 'trading_sim', 'trading_live', 'strategy_lab',
   'web_search', 'browser', 'skill', 'portfolio', 'chart', 'streaming',
+  'backtest_history',
 ] as const;
 
 const EXPECTED_CODING_IDS = [

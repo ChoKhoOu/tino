@@ -10,7 +10,7 @@ Focus on completing the specific task you were given. Be thorough but stay scope
   tools: [
     'read', 'grep', 'glob', 'bash', 'lsp',
     'edit', 'write',
-    'market_data', 'fundamentals', 'filings', 'macro_data',
+    'market_data', 'fundamentals', 'macro_data',
     'quant_compute', 'trading_sim', 'trading_live',
     'strategy_lab', 'web_search', 'browser',
     'skill', 'portfolio', 'chart', 'streaming',

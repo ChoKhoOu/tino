@@ -8,7 +8,6 @@ interface ToolLike {
 const RICH_TOOL_DESCRIPTIONS: Record<string, string> = {
   market_data: descriptions.MARKET_DATA_DESCRIPTION,
   fundamentals: descriptions.FUNDAMENTALS_DESCRIPTION,
-  filings: descriptions.FILINGS_DESCRIPTION,
   macro_data: descriptions.MACRO_DATA_DESCRIPTION,
   quant_compute: descriptions.QUANT_COMPUTE_DESCRIPTION,
   trading_sim: descriptions.TRADING_SIM_DESCRIPTION,

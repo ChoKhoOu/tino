@@ -12,7 +12,7 @@ Search the web for current information on any topic. Supports multiple search pr
 ## When NOT to Use
 
 - Financial data queries (use market_data or fundamentals — structured, reliable data)
-- Stock prices, company financials, SEC filings, or analyst estimates
+- Stock prices, company financials, or analyst estimates
 - Pure conceptual/definitional questions ("What is a DCF?") — answer directly
 - Macroeconomic indicators (use macro_data)
 

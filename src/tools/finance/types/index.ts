@@ -27,14 +27,6 @@ export type {
 } from './crypto.js';
 
 export type {
-  EdgarFiling,
-  EdgarSearchResponse,
-  EdgarCompanyFact,
-  EdgarCompanyFacts,
-  EdgarSubmissions,
-} from './edgar.js';
-
-export type {
   PolygonBar,
   PolygonBarsResponse,
   PolygonTickerDetails,
@@ -51,13 +43,6 @@ export type {
   FinnhubInsiderTransaction,
   FinnhubInsiderResponse,
 } from './finnhub.js';
-
-export type {
-  EodhdRealTimeQuote,
-  EodhdHistoricalPrice,
-  EodhdFundamentals,
-  HkStockPrice,
-} from './eodhd.js';
 
 export type {
   OptionsContract,

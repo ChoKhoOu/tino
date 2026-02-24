@@ -12,7 +12,6 @@ export const TOOL_DIRS = [
 const BUNDLED_TOOL_LOADERS = [
   () => import('../tools/consolidated/market-data.tool.js'),
   () => import('../tools/consolidated/fundamentals.tool.js'),
-  () => import('../tools/consolidated/filings.tool.js'),
   () => import('../tools/consolidated/macro-data.tool.js'),
   () => import('../tools/consolidated/quant-compute.tool.js'),
   () => import('../tools/consolidated/trading-sim.tool.js'),
