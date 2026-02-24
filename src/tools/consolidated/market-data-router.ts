@@ -1,5 +1,4 @@
-import { getOptionalApiKey } from '../finance/shared.js';
-import { getSetting } from '../../config/settings.js';
+import { getOptionalApiKey, isLegacyEnabled, LEGACY_HINT } from '../finance/shared.js';
 import {
   getPolygonBars,
   getPolygonSnapshot,
@@ -31,17 +30,6 @@ function fmtError(message: string): string {
   return JSON.stringify({ error: message });
 }
 
-function isLegacyEnabled(provider: string): boolean {
-  // Env var override: TINO_LEGACY_PROVIDERS=fmp,finnhub,financialdatasets
-  const envOverride = process.env.TINO_LEGACY_PROVIDERS;
-  if (envOverride !== undefined) {
-    return envOverride.split(',').map(s => s.trim()).includes(provider);
-  }
-  const raw = getSetting<string[] | undefined>('enabledLegacyProviders', undefined);
-  return Array.isArray(raw) && raw.includes(provider);
-}
-
-const LEGACY_HINT = 'These providers require opt-in via enabledLegacyProviders in .tino/settings.json with the corresponding API key in .env.';
 
 async function handlePrices(input: MarketDataInput): Promise<string> {
   const ticker = requireSymbol(input.symbol);

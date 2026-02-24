@@ -1,5 +1,4 @@
-import { getOptionalApiKey } from '../finance/shared.js';
-import { getSetting } from '../../config/settings.js';
+import { getOptionalApiKey, isLegacyEnabled, LEGACY_HINT } from '../finance/shared.js';
 
 type Params = Record<string, string | number | undefined>;
 
@@ -9,21 +8,11 @@ function fdParams(symbol: string, opts: { period?: string; limit?: number; start
   return { ticker: symbol, period: opts.period, limit: opts.limit, report_period_gte: opts.start_date, report_period_lte: opts.end_date };
 }
 
-function isLegacyEnabled(provider: string): boolean {
-  // Env var override: TINO_LEGACY_PROVIDERS=fmp,finnhub,financialdatasets
-  const envOverride = process.env.TINO_LEGACY_PROVIDERS;
-  if (envOverride !== undefined) {
-    return envOverride.split(',').map(s => s.trim()).includes(provider);
-  }
-  const raw = getSetting<string[] | undefined>('enabledLegacyProviders', undefined);
-  return Array.isArray(raw) && raw.includes(provider);
-}
 
 function hasFdKey(): boolean { return isLegacyEnabled('financialdatasets') && !!getOptionalApiKey('FINANCIAL_DATASETS_API_KEY'); }
 function hasFmpKey(): boolean { return isLegacyEnabled('fmp') && !!getOptionalApiKey('FMP_API_KEY'); }
 function hasFinnhubKey(): boolean { return isLegacyEnabled('finnhub') && !!getOptionalApiKey('FINNHUB_API_KEY'); }
 
-const LEGACY_HINT = 'These providers require opt-in via enabledLegacyProviders in .tino/settings.json with the corresponding API key in .env.';
 
 async function fdStatement(endpoint: string, responseKey: string, symbol: string, opts: { period?: string; limit?: number; start_date?: string; end_date?: string }): Promise<string> {
   const { callApi } = await import('../finance/api.js');
