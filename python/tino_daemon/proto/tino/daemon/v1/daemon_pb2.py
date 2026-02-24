@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1btino/daemon/v1/daemon.proto\x12\x0etino.daemon.v1\"\x16\n\x14GetSystemInfoRequest\"\xaf\x01\n\x15GetSystemInfoResponse\x12%\n\x0epython_version\x18\x01 \x01(\tR\rpythonVersion\x12)\n\x10nautilus_version\x18\x02 \x01(\tR\x0fnautilusVersion\x12,\n\x12memory_usage_bytes\x18\x03 \x01(\x04R\x10memoryUsageBytes\x12\x16\n\x06uptime\x18\x04 \x01(\tR\x06uptime\"\x11\n\x0fShutdownRequest\",\n\x10ShutdownResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\"\x14\n\x12HealthCheckRequest\"\x92\x01\n\x13HealthCheckResponse\x12\x18\n\x07healthy\x18\x01 \x01(\x08R\x07healthy\x12\x16\n\x06uptime\x18\x02 \x01(\tR\x06uptime\x12\x18\n\x07version\x18\x03 \x01(\tR\x07version\x12/\n\x13\x63onnected_exchanges\x18\x04 \x03(\tR\x12\x63onnectedExchanges2\x94\x02\n\rDaemonService\x12\\\n\rGetSystemInfo\x12$.tino.daemon.v1.GetSystemInfoRequest\x1a%.tino.daemon.v1.GetSystemInfoResponse\x12M\n\x08Shutdown\x12\x1f.tino.daemon.v1.ShutdownRequest\x1a .tino.daemon.v1.ShutdownResponse\x12V\n\x0bHealthCheck\x12\".tino.daemon.v1.HealthCheckRequest\x1a#.tino.daemon.v1.HealthCheckResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1btino/daemon/v1/daemon.proto\x12\x0etino.daemon.v1\"\x16\n\x14GetSystemInfoRequest\"\xaf\x01\n\x15GetSystemInfoResponse\x12%\n\x0epython_version\x18\x01 \x01(\tR\rpythonVersion\x12)\n\x10nautilus_version\x18\x02 \x01(\tR\x0fnautilusVersion\x12,\n\x12memory_usage_bytes\x18\x03 \x01(\x04R\x10memoryUsageBytes\x12\x16\n\x06uptime\x18\x04 \x01(\tR\x06uptime\"\x11\n\x0fShutdownRequest\",\n\x10ShutdownResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\"\x14\n\x12HealthCheckRequest\"\xcd\x01\n\x13HealthCheckResponse\x12\x18\n\x07healthy\x18\x01 \x01(\x08R\x07healthy\x12\x16\n\x06uptime\x18\x02 \x01(\tR\x06uptime\x12\x18\n\x07version\x18\x03 \x01(\tR\x07version\x12/\n\x13\x63onnected_exchanges\x18\x04 \x03(\tR\x12\x63onnectedExchanges\x12\x39\n\x08services\x18\x05 \x03(\x0b\x32\x1d.tino.daemon.v1.ServiceStatusR\x08services\"9\n\rServiceStatus\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n\x05ready\x18\x02 \x01(\x08R\x05ready2\x94\x02\n\rDaemonService\x12\\\n\rGetSystemInfo\x12$.tino.daemon.v1.GetSystemInfoRequest\x1a%.tino.daemon.v1.GetSystemInfoResponse\x12M\n\x08Shutdown\x12\x1f.tino.daemon.v1.ShutdownRequest\x1a .tino.daemon.v1.ShutdownResponse\x12V\n\x0bHealthCheck\x12\".tino.daemon.v1.HealthCheckRequest\x1a#.tino.daemon.v1.HealthCheckResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -42,7 +42,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_HEALTHCHECKREQUEST']._serialized_start=314
   _globals['_HEALTHCHECKREQUEST']._serialized_end=334
   _globals['_HEALTHCHECKRESPONSE']._serialized_start=337
-  _globals['_HEALTHCHECKRESPONSE']._serialized_end=483
-  _globals['_DAEMONSERVICE']._serialized_start=486
-  _globals['_DAEMONSERVICE']._serialized_end=762
+  _globals['_HEALTHCHECKRESPONSE']._serialized_end=542
+  _globals['_SERVICESTATUS']._serialized_start=544
+  _globals['_SERVICESTATUS']._serialized_end=601
+  _globals['_DAEMONSERVICE']._serialized_start=604
+  _globals['_DAEMONSERVICE']._serialized_end=880
 # @@protoc_insertion_point(module_scope)

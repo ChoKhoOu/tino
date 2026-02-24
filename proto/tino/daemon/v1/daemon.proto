@@ -26,4 +26,10 @@ message HealthCheckResponse {
   string uptime = 2;
   string version = 3;
   repeated string connected_exchanges = 4;
+  repeated ServiceStatus services = 5;
+}
+
+message ServiceStatus {
+  string name = 1;
+  bool ready = 2;
 }

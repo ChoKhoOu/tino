@@ -69,7 +69,10 @@ async def serve(config: DaemonConfig) -> None:
     )
 
     # --- DaemonService (proto-generated servicer base) ---
-    daemon_servicer = DaemonServicer(shutdown_event=shutdown_event)
+    daemon_servicer = DaemonServicer(
+        shutdown_event=shutdown_event,
+        service_names=["DataService", "BacktestService", "TradingService", "PortfolioService", "ChartService"],
+    )
     daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_servicer, server)
 
     # --- DataService (proto-generated servicer base) ---

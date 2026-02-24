@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tino/daemon/v1/daemon.proto.
  */
 export const file_tino_daemon_v1_daemon: GenFile = /*@__PURE__*/
-  fileDesc("Cht0aW5vL2RhZW1vbi92MS9kYWVtb24ucHJvdG8SDnRpbm8uZGFlbW9uLnYxIhYKFEdldFN5c3RlbUluZm9SZXF1ZXN0InUKFUdldFN5c3RlbUluZm9SZXNwb25zZRIWCg5weXRob25fdmVyc2lvbhgBIAEoCRIYChBuYXV0aWx1c192ZXJzaW9uGAIgASgJEhoKEm1lbW9yeV91c2FnZV9ieXRlcxgDIAEoBBIOCgZ1cHRpbWUYBCABKAkiEQoPU2h1dGRvd25SZXF1ZXN0IiMKEFNodXRkb3duUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIUChJIZWFsdGhDaGVja1JlcXVlc3QiZAoTSGVhbHRoQ2hlY2tSZXNwb25zZRIPCgdoZWFsdGh5GAEgASgIEg4KBnVwdGltZRgCIAEoCRIPCgd2ZXJzaW9uGAMgASgJEhsKE2Nvbm5lY3RlZF9leGNoYW5nZXMYBCADKAkylAIKDURhZW1vblNlcnZpY2USXAoNR2V0U3lzdGVtSW5mbxIkLnRpbm8uZGFlbW9uLnYxLkdldFN5c3RlbUluZm9SZXF1ZXN0GiUudGluby5kYWVtb24udjEuR2V0U3lzdGVtSW5mb1Jlc3BvbnNlEk0KCFNodXRkb3duEh8udGluby5kYWVtb24udjEuU2h1dGRvd25SZXF1ZXN0GiAudGluby5kYWVtb24udjEuU2h1dGRvd25SZXNwb25zZRJWCgtIZWFsdGhDaGVjaxIiLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVxdWVzdBojLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVzcG9uc2ViBnByb3RvMw");
+  fileDesc("Cht0aW5vL2RhZW1vbi92MS9kYWVtb24ucHJvdG8SDnRpbm8uZGFlbW9uLnYxIhYKFEdldFN5c3RlbUluZm9SZXF1ZXN0InUKFUdldFN5c3RlbUluZm9SZXNwb25zZRIWCg5weXRob25fdmVyc2lvbhgBIAEoCRIYChBuYXV0aWx1c192ZXJzaW9uGAIgASgJEhoKEm1lbW9yeV91c2FnZV9ieXRlcxgDIAEoBBIOCgZ1cHRpbWUYBCABKAkiEQoPU2h1dGRvd25SZXF1ZXN0IiMKEFNodXRkb3duUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCCIUChJIZWFsdGhDaGVja1JlcXVlc3QilQEKE0hlYWx0aENoZWNrUmVzcG9uc2USDwoHaGVhbHRoeRgBIAEoCBIOCgZ1cHRpbWUYAiABKAkSDwoHdmVyc2lvbhgDIAEoCRIbChNjb25uZWN0ZWRfZXhjaGFuZ2VzGAQgAygJEi8KCHNlcnZpY2VzGAUgAygLMh0udGluby5kYWVtb24udjEuU2VydmljZVN0YXR1cyIsCg1TZXJ2aWNlU3RhdHVzEgwKBG5hbWUYASABKAkSDQoFcmVhZHkYAiABKAgylAIKDURhZW1vblNlcnZpY2USXAoNR2V0U3lzdGVtSW5mbxIkLnRpbm8uZGFlbW9uLnYxLkdldFN5c3RlbUluZm9SZXF1ZXN0GiUudGluby5kYWVtb24udjEuR2V0U3lzdGVtSW5mb1Jlc3BvbnNlEk0KCFNodXRkb3duEh8udGluby5kYWVtb24udjEuU2h1dGRvd25SZXF1ZXN0GiAudGluby5kYWVtb24udjEuU2h1dGRvd25SZXNwb25zZRJWCgtIZWFsdGhDaGVjaxIiLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVxdWVzdBojLnRpbm8uZGFlbW9uLnYxLkhlYWx0aENoZWNrUmVzcG9uc2ViBnByb3RvMw");
 
 /**
  * @generated from message tino.daemon.v1.GetSystemInfoRequest
@@ -123,6 +123,11 @@ export type HealthCheckResponse = Message<"tino.daemon.v1.HealthCheckResponse"> 
    * @generated from field: repeated string connected_exchanges = 4;
    */
   connectedExchanges: string[];
+
+  /**
+   * @generated from field: repeated tino.daemon.v1.ServiceStatus services = 5;
+   */
+  services: ServiceStatus[];
 };
 
 /**
@@ -131,6 +136,28 @@ export type HealthCheckResponse = Message<"tino.daemon.v1.HealthCheckResponse"> 
  */
 export const HealthCheckResponseSchema: GenMessage<HealthCheckResponse> = /*@__PURE__*/
   messageDesc(file_tino_daemon_v1_daemon, 5);
+
+/**
+ * @generated from message tino.daemon.v1.ServiceStatus
+ */
+export type ServiceStatus = Message<"tino.daemon.v1.ServiceStatus"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: bool ready = 2;
+   */
+  ready: boolean;
+};
+
+/**
+ * Describes the message tino.daemon.v1.ServiceStatus.
+ * Use `create(ServiceStatusSchema)` to create a new message.
+ */
+export const ServiceStatusSchema: GenMessage<ServiceStatus> = /*@__PURE__*/
+  messageDesc(file_tino_daemon_v1_daemon, 6);
 
 /**
  * @generated from service tino.daemon.v1.DaemonService

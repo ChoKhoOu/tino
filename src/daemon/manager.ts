@@ -32,6 +32,7 @@ export class DaemonManager {
   private proc: ReturnType<typeof Bun.spawn> | null = null;
   private stopping = false;
   private restartCount = 0;
+  private grpcClient: DaemonClient | null = null;
 
   constructor(options: DaemonManagerOptions) {
     this.projectDir = resolve(options.projectDir);
@@ -112,9 +113,11 @@ export class DaemonManager {
 
     // Try gRPC health check for authoritative status
     try {
-      const client = new DaemonClient({ port: this.port });
-      const healthy = await client.healthCheck();
-      return { running: healthy, pid, port: this.port };
+      if (!this.grpcClient) {
+        this.grpcClient = new DaemonClient({ port: this.port });
+      }
+      const result = await this.grpcClient.healthCheck();
+      return { running: result?.healthy ?? false, pid, port: this.port };
     } catch {
       // gRPC failed but process is alive — report as running (starting up)
       return { running: processAlive, pid, port: this.port };
@@ -192,6 +195,7 @@ export class DaemonManager {
 
   private cleanup(): void {
     this.proc = null;
+    this.grpcClient = null;
     removePidFile(this.pidFilePath);
   }
 

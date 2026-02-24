@@ -33,8 +33,9 @@ def _get_nautilus_version() -> str:
 class DaemonServicer(daemon_pb2_grpc.DaemonServiceServicer):
     """Implements DaemonService RPCs using proto-generated base class."""
 
-    def __init__(self, shutdown_event: asyncio.Event) -> None:
+    def __init__(self, shutdown_event: asyncio.Event, service_names: list[str] | None = None) -> None:
         self._shutdown_event = shutdown_event
+        self._service_names = service_names or []
 
     async def GetSystemInfo(
         self,
@@ -66,3 +67,30 @@ class DaemonServicer(daemon_pb2_grpc.DaemonServiceServicer):
         # Schedule shutdown slightly in the future so we can respond first
         asyncio.get_running_loop().call_later(0.5, self._shutdown_event.set)
         return daemon_pb2.ShutdownResponse(success=True)
+
+    async def HealthCheck(
+        self,
+        request: daemon_pb2.HealthCheckRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> daemon_pb2.HealthCheckResponse:
+        """Return health status of the daemon and its sub-services."""
+        del context
+        uptime_seconds = round(time.monotonic() - _START_TIME, 1)
+
+        # TODO: Probe actual service readiness instead of hardcoding True.
+        # Currently all registered services are reported as ready if the daemon
+        # is running. Extend with per-service health callbacks when needed.
+        services = [
+            daemon_pb2.ServiceStatus(name=name, ready=True)
+            for name in self._service_names
+        ]
+
+        response = daemon_pb2.HealthCheckResponse(
+            healthy=True,
+            uptime=str(uptime_seconds),
+            version=_get_nautilus_version(),
+            connected_exchanges=[],
+            services=services,
+        )
+        logger.debug("HealthCheck: %s", response)
+        return response
