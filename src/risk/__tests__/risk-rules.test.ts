@@ -20,6 +20,7 @@ const baseOrder: OrderInput = {
 
 const baseState: RiskState = {
   positions: {},
+  prices: {},
   dailyPnl: 0,
   peakEquity: 10_000,
   currentEquity: 10_000,
@@ -71,6 +72,53 @@ describe('checkMaxGrossExposure', () => {
     const result = checkMaxGrossExposure(order, baseState, baseConfig);
     expect(result.pass).toBe(false);
     expect(result.reason).toContain('Gross exposure');
+  });
+
+  test('fails when existing positions plus new order exceed limit', () => {
+    const state: RiskState = {
+      ...baseState,
+      positions: { BTCUSDT: 1.0 },
+      prices: { BTCUSDT: 40_000 },
+    };
+    // Existing: 1.0 * 40_000 = 40_000. New: 0.5 * 40_000 = 20_000. Total: 60_000 > 50_000
+    const result = checkMaxGrossExposure(baseOrder, state, baseConfig);
+    expect(result.pass).toBe(false);
+    expect(result.reason).toContain('Gross exposure');
+  });
+
+  test('uses order price for matching instrument in existing positions', () => {
+    const state: RiskState = {
+      ...baseState,
+      positions: { BTCUSDT: 0.2 },
+      prices: { BTCUSDT: 30_000 },
+    };
+    // order.price = 40_000 used for BTCUSDT (matching instrument)
+    // Existing: 0.2 * 40_000 = 8_000. New: 0.5 * 40_000 = 20_000. Total: 28_000 < 50_000
+    const result = checkMaxGrossExposure(baseOrder, state, baseConfig);
+    expect(result.pass).toBe(true);
+  });
+
+  test('uses stored price for non-matching instruments', () => {
+    const state: RiskState = {
+      ...baseState,
+      positions: { ETHUSDT: 10.0 },
+      prices: { ETHUSDT: 3_000 },
+    };
+    // ETHUSDT uses stored price: 10 * 3_000 = 30_000. New BTCUSDT: 0.5 * 40_000 = 20_000. Total: 50_000
+    const config = { ...baseConfig, maxGrossExposure: 49_999 };
+    const result = checkMaxGrossExposure(baseOrder, state, config);
+    expect(result.pass).toBe(false);
+  });
+
+  test('treats unknown instrument price as zero', () => {
+    const state: RiskState = {
+      ...baseState,
+      positions: { ETHUSDT: 10.0 },
+      prices: {},
+    };
+    // ETHUSDT has no stored price → 0. New BTCUSDT: 0.5 * 40_000 = 20_000. Total: 20_000 < 50_000
+    const result = checkMaxGrossExposure(baseOrder, state, baseConfig);
+    expect(result.pass).toBe(true);
   });
 });
 

@@ -19,6 +19,7 @@ export class RiskEngine {
     this.config = config ?? loadRiskConfig();
     this.state = {
       positions: {},
+      prices: {},
       dailyPnl: 0,
       peakEquity: 0,
       currentEquity: 0,
@@ -40,6 +41,10 @@ export class RiskEngine {
 
   updatePosition(instrument: string, quantity: number): void {
     this.state.positions[instrument] = quantity;
+  }
+
+  updatePrice(instrument: string, price: number): void {
+    this.state.prices[instrument] = price;
   }
 
   updatePnl(pnl: number): void {
