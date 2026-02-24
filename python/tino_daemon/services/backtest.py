@@ -55,9 +55,8 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
                 progress_queue.put_nowait, (progress_pct, message)
             )
 
-        response_cls = getattr(backtest_pb2, "RunBacktestResponse")
-        yield response_cls(
-            type=response_cls.EVENT_TYPE_PROGRESS,
+        yield backtest_pb2.RunBacktestResponse(
+            type=backtest_pb2.RunBacktestResponse.EVENT_TYPE_PROGRESS,
             message=f"Backtest started: {backtest_id}",
             progress_pct=0.0,
         )
@@ -83,8 +82,8 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
                         progress_queue.get(),
                         timeout=0.5,
                     )
-                    yield response_cls(
-                        type=response_cls.EVENT_TYPE_PROGRESS,
+                    yield backtest_pb2.RunBacktestResponse(
+                        type=backtest_pb2.RunBacktestResponse.EVENT_TYPE_PROGRESS,
                         message=message,
                         progress_pct=progress_pct,
                     )
@@ -93,21 +92,21 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
 
             result = await task
             self._results[result.id] = result
-            yield response_cls(
-                type=response_cls.EVENT_TYPE_COMPLETED,
+            yield backtest_pb2.RunBacktestResponse(
+                type=backtest_pb2.RunBacktestResponse.EVENT_TYPE_COMPLETED,
                 message=f"Backtest completed: {result.id}",
                 progress_pct=100.0,
                 result=result,
             )
         except asyncio.CancelledError:
-            yield response_cls(
-                type=response_cls.EVENT_TYPE_ERROR,
+            yield backtest_pb2.RunBacktestResponse(
+                type=backtest_pb2.RunBacktestResponse.EVENT_TYPE_ERROR,
                 message=f"Backtest cancelled: {backtest_id}",
             )
         except Exception as exc:
             logger.exception("RunBacktest failed")
-            yield response_cls(
-                type=response_cls.EVENT_TYPE_ERROR,
+            yield backtest_pb2.RunBacktestResponse(
+                type=backtest_pb2.RunBacktestResponse.EVENT_TYPE_ERROR,
                 message=f"Backtest failed: {exc}",
             )
         finally:
@@ -122,9 +121,9 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
         del context
         cancel_event = self._active_backtests.get(request.id)
         if cancel_event is None:
-            return getattr(backtest_pb2, "CancelBacktestResponse")(success=False)
+            return backtest_pb2.CancelBacktestResponse(success=False)
         cancel_event.set()
-        return getattr(backtest_pb2, "CancelBacktestResponse")(success=True)
+        return backtest_pb2.CancelBacktestResponse(success=True)
 
     async def GetResult(
         self,
@@ -137,7 +136,7 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
             await context.abort(
                 grpc.StatusCode.NOT_FOUND, f"Result not found: {request.id}"
             )
-        return getattr(backtest_pb2, "GetResultResponse")(result=result)
+        return backtest_pb2.GetResultResponse(result=result)
 
     async def ListResults(
         self,
@@ -150,17 +149,16 @@ class BacktestServiceServicer(backtest_pb2_grpc.BacktestServiceServicer):
         results = sorted(
             self._results.values(), key=lambda r: r.created_at, reverse=True
         )
-        return getattr(backtest_pb2, "ListResultsResponse")(results=results)
+        return backtest_pb2.ListResultsResponse(results=results)
 
     def _load_results_from_disk(self) -> None:
-        result_cls = getattr(backtest_pb2, "BacktestResult")
         for path in sorted(self._backtests_dir.glob("*.json")):
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
             except Exception:
                 continue
 
-            result = result_cls(
+            result = backtest_pb2.BacktestResult(
                 id=str(payload.get("id", "")),
                 total_return=float(payload.get("total_return", 0.0)),
                 sharpe_ratio=float(payload.get("sharpe_ratio", 0.0)),

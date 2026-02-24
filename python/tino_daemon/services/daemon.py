@@ -25,7 +25,7 @@ def _get_nautilus_version() -> str:
     try:
         import nautilus_trader
 
-        return getattr(nautilus_trader, "__version__", "unknown")
+        return nautilus_trader.__version__
     except ImportError:
         return "unavailable"
 

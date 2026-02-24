@@ -37,8 +37,9 @@ def main() -> None:
     config = DaemonConfig.from_args(port=args.port, log_level=args.log_level)
 
     # Configure Python logging
+    level_map = logging.getLevelNamesMapping()
     logging.basicConfig(
-        level=getattr(logging, config.log_level, logging.INFO),
+        level=level_map.get(config.log_level, logging.INFO),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         stream=sys.stderr,
     )
