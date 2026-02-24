@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -322,8 +322,8 @@ async def test_receive_loop_reconnect_and_resubscribe():
     await client.connect()
     client.start_receiving("BTCUSDT", "trade")
 
-    # Wait for the loop to process
-    await asyncio.sleep(0.5)
+    # Wait for the receive loop task to finish
+    await asyncio.wait_for(client._recv_task, timeout=5.0)
 
     # Should have called subscribe during reconnect
     assert len(client.subscribe_calls) >= 1
@@ -331,8 +331,6 @@ async def test_receive_loop_reconnect_and_resubscribe():
 
     # Should have enqueued messages
     assert not client.message_queue.empty()
-
-    await client.stop_receiving()
 
 
 @pytest.mark.asyncio
@@ -370,11 +368,9 @@ async def test_receive_loop_reconnect_failure_stops_loop():
     assert client.connected is True
 
     client.start_receiving("AAPL", "trade")
-    await asyncio.sleep(1.0)  # Give loop time to fail
+    await asyncio.wait_for(client._recv_task, timeout=5.0)
 
     assert client.connected is False
-    assert client._recv_task is not None
-    assert client._recv_task.done()
 
 
 @pytest.mark.asyncio
@@ -506,9 +502,6 @@ async def test_receive_loop_max_reconnects_exceeded():
     client = AlwaysFailRecvClient()
     await client.connect()
     client.start_receiving("AAPL", "trade")
-
-    await asyncio.sleep(2.0)  # Give time for retries
+    await asyncio.wait_for(client._recv_task, timeout=5.0)
 
     assert client.connected is False
-    assert client._recv_task is not None
-    assert client._recv_task.done()

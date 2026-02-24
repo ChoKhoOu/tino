@@ -29,6 +29,7 @@ _VALID_SOURCES = frozenset({"binance", "okx", "bybit", "polygon"})
 _VALID_EVENT_TYPES = frozenset({"trade", "quote", "bar"})
 _MAX_INSTRUMENT_LEN = 64
 _MAX_MESSAGE_SIZE = 65536  # 64KB
+_INSTRUMENT_RE = re.compile(r'^[A-Za-z0-9._/-]+$')
 
 
 class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
@@ -56,7 +57,11 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         source = request.source
         event_type = request.event_type or "trade"
 
-        if not instrument or len(instrument) > _MAX_INSTRUMENT_LEN or not re.match(r'^[A-Za-z0-9._/-]+$', instrument):
+        if (
+            not instrument
+            or len(instrument) > _MAX_INSTRUMENT_LEN
+            or not _INSTRUMENT_RE.match(instrument)
+        ):
             yield streaming_pb2.SubscribeResponse(
                 type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
                 instrument=instrument,
@@ -177,6 +182,14 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
         del context
         instrument = request.instrument
         source = request.source
+
+        if (
+            not instrument
+            or len(instrument) > _MAX_INSTRUMENT_LEN
+            or not _INSTRUMENT_RE.match(instrument)
+            or source not in _VALID_SOURCES
+        ):
+            return streaming_pb2.UnsubscribeResponse(success=False)
 
         client_key = f"{instrument}:{source}"
         client = self._clients.pop(client_key, None)
