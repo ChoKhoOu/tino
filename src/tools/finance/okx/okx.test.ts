@@ -131,7 +131,7 @@ describe('OKX public client', () => {
       return new Response(JSON.stringify(okxResp([])), { status: 200 });
     });
 
-    expect(getFundingRate('INVALID-SWAP')).rejects.toThrow('No funding rate data');
+    await expect(getFundingRate('INVALID-SWAP')).rejects.toThrow('No funding rate data');
   });
 
   // ==========================================================================
@@ -216,6 +216,6 @@ describe('OKX public client', () => {
       );
     });
 
-    expect(getTicker('INVALID')).rejects.toThrow('Invalid instId');
+    await expect(getTicker('INVALID')).rejects.toThrow('Invalid instId');
   });
 });
