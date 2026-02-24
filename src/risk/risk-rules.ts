@@ -10,6 +10,7 @@ export interface OrderInput {
 
 export interface RiskState {
   positions: Record<string, number>;
+  prices: Record<string, number>;
   dailyPnl: number;
   peakEquity: number;
   currentEquity: number;
@@ -49,7 +50,8 @@ export function checkMaxGrossExposure(
 ): RuleResult {
   let totalExposure = 0;
   for (const [instrument, qty] of Object.entries(state.positions)) {
-    totalExposure += Math.abs(qty) * (instrument === order.instrument ? order.price : order.price);
+    const price = instrument === order.instrument ? order.price : (state.prices[instrument] ?? 0);
+    totalExposure += Math.abs(qty) * price;
   }
   const newExposure = totalExposure + order.quantity * order.price;
 
