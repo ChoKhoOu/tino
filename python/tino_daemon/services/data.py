@@ -16,6 +16,7 @@ import grpc
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.wranglers.base import BaseWrangler
+from tino_daemon.wranglers.binance_wrangler import BinanceWrangler
 from tino_daemon.wranglers.csv_wrangler import CsvWrangler
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,8 @@ def _get_wrangler(source_type: str) -> BaseWrangler:
     if source_type not in _WRANGLERS:
         if source_type == "csv":
             _WRANGLERS[source_type] = CsvWrangler()
+        elif source_type == "binance":
+            _WRANGLERS[source_type] = BinanceWrangler()
         else:
             raise ValueError(f"Unsupported source type: {source_type}")
     return _WRANGLERS[source_type]
@@ -76,14 +79,24 @@ class DataServiceServicer(data_pb2_grpc.DataServiceServicer):
 
             wrangler = _get_wrangler(source)
 
+            if source == "binance":
+                fetch_msg = f"Fetching kline data from Binance for {instrument}"
+            else:
+                fetch_msg = f"Transforming data for {instrument}"
+
             yield data_pb2.IngestDataResponse(
                 type=data_pb2.IngestDataResponse.EVENT_TYPE_PROGRESS,
-                message=f"Transforming data for {instrument}",
+                message=fetch_msg,
                 progress_pct=30.0,
             )
 
             if source == "csv":
                 data_input = instrument
+            elif source == "binance":
+                data_input = {
+                    "start_date": request.start_date,
+                    "end_date": request.end_date,
+                }
             else:
                 data_input = instrument
 
