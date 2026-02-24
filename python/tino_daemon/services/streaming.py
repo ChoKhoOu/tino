@@ -75,6 +75,23 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
             )
             return
 
+        try:
+            await client.subscribe(instrument, event_type)
+        except Exception as exc:
+            await client.disconnect()
+            self._registry.remove(instrument, source)
+            self._clients.pop(client_key, None)
+            yield streaming_pb2.SubscribeResponse(
+                type=streaming_pb2.SubscribeResponse.EVENT_TYPE_ERROR,
+                instrument=instrument,
+                source=source,
+                data_json=json.dumps({"error": f"subscribe failed: {exc}"}),
+                timestamp=_now_iso(),
+            )
+            return
+
+        client.start_receiving(instrument, event_type)
+
         yield streaming_pb2.SubscribeResponse(
             type=streaming_pb2.SubscribeResponse.EVENT_TYPE_STATUS,
             instrument=instrument,
@@ -87,23 +104,24 @@ class StreamingServiceServicer(streaming_pb2_grpc.StreamingServiceServicer):
             event_type, streaming_pb2.SubscribeResponse.EVENT_TYPE_TRADE
         )
 
-        while not context.cancelled():
-            try:
-                msg = await asyncio.wait_for(client.message_queue.get(), timeout=0.5)
-            except (TimeoutError, asyncio.TimeoutError):
-                continue
+        try:
+            while not context.cancelled():
+                try:
+                    msg = await asyncio.wait_for(client.message_queue.get(), timeout=0.5)
+                except (TimeoutError, asyncio.TimeoutError):
+                    continue
 
-            yield streaming_pb2.SubscribeResponse(
-                type=proto_event_type,
-                instrument=instrument,
-                source=source,
-                data_json=msg,
-                timestamp=_now_iso(),
-            )
-
-        await client.disconnect()
-        self._registry.remove(instrument, source)
-        self._clients.pop(client_key, None)
+                yield streaming_pb2.SubscribeResponse(
+                    type=proto_event_type,
+                    instrument=instrument,
+                    source=source,
+                    data_json=msg,
+                    timestamp=_now_iso(),
+                )
+        finally:
+            await client.disconnect()
+            self._registry.remove(instrument, source)
+            self._clients.pop(client_key, None)
 
     async def Unsubscribe(self, request: Any, context: Any) -> Any:
         del context

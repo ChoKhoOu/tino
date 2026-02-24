@@ -50,6 +50,9 @@ async def test_subscribe_receives_messages():
         fake_client = AsyncMock()
         fake_client.connect = AsyncMock()
         fake_client.disconnect = AsyncMock()
+        fake_client.subscribe = AsyncMock()
+        from unittest.mock import MagicMock
+        fake_client.start_receiving = MagicMock()
 
         q: asyncio.Queue = asyncio.Queue()
         await q.put(json.dumps({"price": 150.0, "size": 100}))
@@ -100,6 +103,12 @@ async def test_reconnection_on_disconnect():
         async def _ws_close(self) -> None:
             pass
 
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
     client = TestClient()
     await client.connect()
     assert client.connect_attempts == 3
@@ -123,6 +132,12 @@ async def test_backpressure_drops_oldest():
             return "{}"
 
         async def _ws_close(self) -> None:
+            pass
+
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
             pass
 
     client = TestClient()
