@@ -127,7 +127,7 @@ async def test_data_and_backtest_services_work_together(
         )
 
     monkeypatch.setattr(
-        "tino_daemon.nautilus.engine.BacktestEngineWrapper.run_backtest",
+        "tino_daemon.services.backtest.BacktestServiceServicer.run_backtest",
         fake_run_backtest,
     )
 
