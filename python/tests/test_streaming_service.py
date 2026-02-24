@@ -5,23 +5,14 @@ from __future__ import annotations
 import asyncio
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from tino_daemon.proto.tino.streaming.v1 import streaming_pb2
 from tino_daemon.streaming.subscription_registry import SubscriptionRegistry
 
-
-class FakeContext:
-    def __init__(self) -> None:
-        self._cancelled = False
-
-    def cancelled(self) -> bool:
-        return self._cancelled
-
-    def cancel(self) -> None:
-        self._cancelled = True
+from conftest import FakeContext
 
 
 @pytest.mark.asyncio
@@ -50,6 +41,9 @@ async def test_subscribe_receives_messages():
         fake_client = AsyncMock()
         fake_client.connect = AsyncMock()
         fake_client.disconnect = AsyncMock()
+        fake_client.subscribe = AsyncMock()
+        fake_client.start_receiving = MagicMock()
+        fake_client.connected = True
 
         q: asyncio.Queue = asyncio.Queue()
         await q.put(json.dumps({"price": 150.0, "size": 100}))
@@ -100,6 +94,12 @@ async def test_reconnection_on_disconnect():
         async def _ws_close(self) -> None:
             pass
 
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
     client = TestClient()
     await client.connect()
     assert client.connect_attempts == 3
@@ -123,6 +123,12 @@ async def test_backpressure_drops_oldest():
             return "{}"
 
         async def _ws_close(self) -> None:
+            pass
+
+        async def subscribe(self, instrument: str, event_type: str = "trade") -> None:
+            pass
+
+        async def unsubscribe(self, instrument: str, event_type: str = "trade") -> None:
             pass
 
     client = TestClient()
