@@ -5,6 +5,7 @@ const EXPECTED_CONSOLIDATED_IDS = [
   'market_data', 'fundamentals', 'macro_data',
   'quant_compute', 'trading_sim', 'trading_live', 'strategy_lab',
   'web_search', 'browser', 'skill', 'portfolio', 'chart', 'streaming',
+  'backtest_history',
 ] as const;
 
 const EXPECTED_CODING_IDS = [
@@ -14,7 +15,7 @@ const EXPECTED_CODING_IDS = [
 const EXPECTED_AGENT_IDS = ['task', 'todo_write', 'question'] as const;
 
 describe('tool registry integration', () => {
-  test('discoverTools finds all 13 consolidated tools', async () => {
+  test('discoverTools finds all 14 consolidated tools', async () => {
     const registry = new ToolRegistry();
     const tools = await registry.discoverTools();
     const ids = tools.map((t) => t.id).sort();
@@ -57,7 +58,7 @@ describe('tool registry integration', () => {
     const tools = await registry.discoverTools();
 
     expect(tools.length).toBeLessThanOrEqual(MAX_TOOLS);
-    expect(tools.length).toBeGreaterThanOrEqual(23);
+    expect(tools.length).toBeGreaterThanOrEqual(24);
   });
 
   test('each tool is retrievable by ID after registration', async () => {

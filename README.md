@@ -23,7 +23,7 @@
 
 Tino is a terminal-native AI agent built for quantitative finance. Ask it a question in plain English — it will pull market data, crunch numbers, generate trading strategies, run backtests, and manage live execution, all from your terminal.
 
-Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 13 consolidated tools across 6 financial data providers.
+Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Python daemon** (NautilusTrader), connected via gRPC. A ReAct-style agent loop powered by the Vercel AI SDK orchestrates 14 consolidated tools across 6 financial data providers.
 
 ```
  You: "Backtest a momentum strategy on AAPL over the last 2 years"
@@ -35,7 +35,7 @@ Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Py
 
 ## Features
 
-- **13 Consolidated Tools** — Market data, fundamentals, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, and skill workflows
+- **14 Consolidated Tools** — Market data, fundamentals, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, backtest history, and skill workflows
 - **6 Financial Data Providers** — Polygon, FMP, Financial Datasets, FRED, Finnhub, CoinGecko, Binance with automatic fallback chains
 - **Portfolio Tracking** — SQLite-backed trade history, positions, daily PnL, and portfolio summaries with daemon restart persistence
 - **Terminal Charts** — ANSI candlestick, line, and subplot charts rendered directly in the terminal via plotext
@@ -94,7 +94,7 @@ Project settings take precedence over global settings.
 │                            │         127.0.0.1:50051           │                          │
 │  React/Ink TUI             │                                   │  NautilusTrader Engine   │
 │  ReAct Agent Loop          │                                   │  Backtest / Paper / Live │
-│  13 Tools + 8 Skills       │                                   │  Portfolio (SQLite)      │
+│  14 Tools + 8 Skills       │                                   │  Portfolio (SQLite)      │
 │  Multi-Provider LLM        │                                   │  Charts / Streaming      │
 │  Portfolio / Charts / Live │                                   │  8 gRPC Services         │
 └────────────────────────────┘                                   └─────────────────────────┘
@@ -269,7 +269,7 @@ tino/
 │   ├── cli.tsx             # Main Ink component
 │   ├── agent/              # ReAct agent loop, prompts, scratchpad
 │   ├── runtime/            # Model broker, multi-provider LLM
-│   ├── tools/              # 13 consolidated tools + providers
+│   ├── tools/              # 14 consolidated tools + providers
 │   ├── grpc/               # gRPC clients (ConnectRPC)
 │   ├── daemon/             # Python daemon lifecycle management
 │   ├── skills/             # 8 skill workflows (markdown-driven)

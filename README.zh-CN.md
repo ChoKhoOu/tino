@@ -23,7 +23,7 @@
 
 Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提问 — 它会拉取市场数据、计算指标、生成交易策略、运行回测、管理实盘执行，全部在终端内完成。
 
-底层架构将 **TypeScript CLI** (Bun + React/Ink) 与 **Python 守护进程** (NautilusTrader) 通过 gRPC 连接。基于 Vercel AI SDK 的 ReAct 风格 Agent 循环协调 13 个整合工具和 6 个金融数据源。
+底层架构将 **TypeScript CLI** (Bun + React/Ink) 与 **Python 守护进程** (NautilusTrader) 通过 gRPC 连接。基于 Vercel AI SDK 的 ReAct 风格 Agent 循环协调 14 个整合工具和 6 个金融数据源。
 
 ```
  你: "用 AAPL 过去两年的数据回测一个动量策略"
@@ -35,7 +35,7 @@ Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提
 
 ## 功能特性
 
-- **13 个整合工具** — 市场数据、基本面、宏观数据、量化计算、模拟交易、实盘交易、策略实验室、投资组合追踪、终端图表、实时行情流、网络搜索、浏览器自动化、技能工作流
+- **14 个整合工具** — 市场数据、基本面、宏观数据、量化计算、模拟交易、实盘交易、策略实验室、投资组合追踪、终端图表、实时行情流、网络搜索、浏览器自动化、回测历史、技能工作流
 - **6 个金融数据源** — Polygon、FMP、Financial Datasets、FRED、Finnhub、CoinGecko、Binance，支持自动降级
 - **投资组合追踪** — 基于 SQLite 的交易记录、持仓、每日盈亏和组合概览，支持守护进程重启后数据持久化
 - **终端图表** — 通过 plotext 在终端内直接渲染 ANSI K线图、折线图和子图
@@ -94,7 +94,7 @@ Tino 使用两级配置系统：
 │                            │         127.0.0.1:50051           │                          │
 │  React/Ink TUI             │                                   │  NautilusTrader 引擎      │
 │  ReAct Agent 循环           │                                   │  回测 / 模拟 / 实盘        │
-│  13 个工具 + 8 个技能        │                                   │  投资组合 (SQLite)        │
+│  14 个工具 + 8 个技能        │                                   │  投资组合 (SQLite)        │
 │  多 LLM 提供商              │                                   │  图表 / 实时行情          │
 │  组合 / 图表 / 实时行情      │                                   │  8 个 gRPC 服务           │
 └────────────────────────────┘                                   └─────────────────────────┘
@@ -269,7 +269,7 @@ tino/
 │   ├── cli.tsx             # 主 Ink 组件
 │   ├── agent/              # ReAct Agent 循环、提示词、草稿板
 │   ├── runtime/            # 模型代理、多提供商 LLM
-│   ├── tools/              # 13 个整合工具 + 数据源
+│   ├── tools/              # 14 个整合工具 + 数据源
 │   ├── grpc/               # gRPC 客户端 (ConnectRPC)
 │   ├── daemon/             # Python 守护进程生命周期管理
 │   ├── skills/             # 8 个技能工作流 (Markdown 驱动)
