@@ -4,7 +4,6 @@ import {
   conditionalValueAtRisk, calmarRatio, winRate, profitFactor,
 } from '../quant/risk.js';
 import { blackScholesCall, blackScholesPut, blackScholesGreeks, impliedVolatility } from '../quant/options.js';
-import { famaFrenchThreeFactorRegression, factorExposure } from '../quant/factors.js';
 import {
   equalWeightPortfolio, minVariancePortfolio, meanVarianceOptimization,
   riskParityPortfolio, portfolioReturn,
@@ -85,17 +84,6 @@ function computeOptions(inputs: Inputs): Record<string, unknown> {
     optionType, price, greeks,
     ...(impliedVol !== undefined ? { impliedVolatility: impliedVol } : {}),
     inputs: { spot, strike, rate, timeToExpiry, volatility, dividendYield: dividendYield ?? 0 },
-  };
-}
-
-function computeFactor(inputs: Inputs): Record<string, unknown> {
-  const factorInputs = inputs as {
-    assetReturns: number[]; marketExcessReturns: number[];
-    smbReturns: number[]; hmlReturns: number[]; riskFreeRate?: number[] | number;
-  };
-  return {
-    regression: famaFrenchThreeFactorRegression(factorInputs),
-    factorExposure: factorExposure(factorInputs),
   };
 }
 
@@ -191,7 +179,6 @@ export function routeQuantCompute(action: string, inputs: Inputs): Record<string
     case 'indicators': return computeIndicators(inputs);
     case 'risk': return computeRisk(inputs);
     case 'options': return computeOptions(inputs);
-    case 'factor': return computeFactor(inputs);
     case 'portfolio': return computePortfolio(inputs);
     case 'correlation': return computeCorrelation(inputs);
     case 'stats': return computeStats(inputs);

@@ -8,7 +8,6 @@ const schema = z.object({
     'indicators',
     'risk',
     'options',
-    'factor',
     'portfolio',
     'correlation',
     'stats',

@@ -65,17 +65,6 @@ You: /skill dcf-valuation
 You: What is the fair value of MSFT?
 ```
 
-### factor-analysis
-
-Fama-French factor exposure diagnostics, style-bias analysis, and performance attribution.
-
-**Triggers:** "factor exposure", "Fama-French", "style bias", "performance attribution"
-
-```
-You: /skill factor-analysis
-You: What are the factor exposures for my portfolio?
-```
-
 ### options-analysis
 
 Options pricing, Greeks calculation, strategy comparison, and payoff analysis.
