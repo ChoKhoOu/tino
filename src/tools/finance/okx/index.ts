@@ -13,6 +13,8 @@ import type {
   OkxFundingRateHistory,
   OkxOrderBook,
 } from './types.js';
+import type { UnifiedTicker, UnifiedKline, UnifiedFundingRate, UnifiedOrderBook } from '../types/crypto.js';
+import { parseDashSymbol } from '../types/crypto.js';
 
 const BASE_URL = 'https://www.okx.com/api/v5';
 const SOURCE = 'OKX';
@@ -218,4 +220,65 @@ export async function getOrderBook(
     throw new Error(`[${SOURCE}] No order book data for ${instId}`);
   }
   return rows[0]!;
+}
+
+// ============================================================================
+// Unified type adapters
+// ============================================================================
+
+/** Convert an OKX ticker to a UnifiedTicker. */
+export function toUnifiedTicker(t: OkxTicker): UnifiedTicker {
+  const { base, quote, unified } = parseDashSymbol(t.instId);
+  return {
+    exchange: 'okx',
+    symbol: unified,
+    baseAsset: base,
+    quoteAsset: quote,
+    last: parseFloat(t.last),
+    bid: parseFloat(t.bidPx),
+    ask: parseFloat(t.askPx),
+    volume24h: parseFloat(t.vol24h),
+    timestamp: Number(t.ts),
+  };
+}
+
+/** Convert an OKX kline to a UnifiedKline. */
+export function toUnifiedKline(k: OkxKline, instId: string, interval: string): UnifiedKline {
+  const { unified } = parseDashSymbol(instId);
+  return {
+    exchange: 'okx',
+    symbol: unified,
+    interval,
+    open: parseFloat(k.open),
+    high: parseFloat(k.high),
+    low: parseFloat(k.low),
+    close: parseFloat(k.close),
+    volume: parseFloat(k.vol),
+    timestamp: k.ts,
+  };
+}
+
+/** Convert an OKX funding rate to a UnifiedFundingRate. */
+export function toUnifiedFundingRate(fr: OkxFundingRate): UnifiedFundingRate {
+  const { unified } = parseDashSymbol(fr.instId);
+  return {
+    exchange: 'okx',
+    symbol: unified,
+    rate: parseFloat(fr.fundingRate),
+    nextFundingTime: Number(fr.nextFundingTime),
+    markPrice: 0,
+    indexPrice: 0,
+  };
+}
+
+/** Convert an OKX order book to a UnifiedOrderBook. */
+export function toUnifiedOrderBook(book: OkxOrderBook, instId: string): UnifiedOrderBook {
+  const { unified } = parseDashSymbol(instId);
+  return {
+    exchange: 'okx',
+    symbol: unified,
+    bids: book.bids.map((e) => [parseFloat(e[0]), parseFloat(e[1])]),
+    asks: book.asks.map((e) => [parseFloat(e[0]), parseFloat(e[1])]),
+    timestamp: Number(book.ts),
+  };
 }

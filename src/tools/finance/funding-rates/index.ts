@@ -8,6 +8,8 @@
  */
 import { fetchJson } from '../shared.js';
 import type { FundingRateEntry, BinanceFundingRateRaw } from './types.js';
+import type { UnifiedFundingRate } from '../types/crypto.js';
+import { parseConcatSymbol } from '../types/crypto.js';
 
 const BASE_URL = 'https://fapi.binance.com/fapi/v1';
 const SOURCE = 'Binance Futures';
@@ -105,4 +107,21 @@ export async function getHistoricalFundingRates(
   );
 
   return data.map(parseEntry);
+}
+
+// ============================================================================
+// Unified type adapter
+// ============================================================================
+
+/** Convert a Binance FundingRateEntry to a UnifiedFundingRate. */
+export function toUnifiedFundingRate(entry: FundingRateEntry): UnifiedFundingRate {
+  const { unified } = parseConcatSymbol(entry.symbol);
+  return {
+    exchange: 'binance',
+    symbol: unified,
+    rate: entry.fundingRate,
+    nextFundingTime: 0,
+    markPrice: entry.markPrice,
+    indexPrice: 0,
+  };
 }
