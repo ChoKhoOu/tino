@@ -1,0 +1,156 @@
+syntax = "proto3";
+package tino.exchange.v1;
+
+service ExchangeService {
+  rpc GetTicker(GetTickerRequest) returns (GetTickerResponse);
+  rpc GetKlines(GetKlinesRequest) returns (GetKlinesResponse);
+  rpc GetFundingRate(GetFundingRateRequest) returns (GetFundingRateResponse);
+  rpc GetOrderbook(GetOrderbookRequest) returns (GetOrderbookResponse);
+  rpc GetAccountBalance(GetAccountBalanceRequest) returns (GetAccountBalanceResponse);
+  rpc GetExchangePositions(GetExchangePositionsRequest) returns (GetExchangePositionsResponse);
+  rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse);
+  rpc CancelExchangeOrder(CancelExchangeOrderRequest) returns (CancelExchangeOrderResponse);
+}
+
+// --- Ticker ---
+
+message GetTickerRequest {
+  string exchange = 1;
+  string symbol = 2;
+}
+
+message GetTickerResponse {
+  string symbol = 1;
+  double last_price = 2;
+  double bid_price = 3;
+  double ask_price = 4;
+  double volume_24h = 5;
+  double high_24h = 6;
+  double low_24h = 7;
+  string timestamp = 8;
+}
+
+// --- Klines ---
+
+message GetKlinesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string interval = 3;
+  int32 limit = 4;
+  string start_time = 5;
+  string end_time = 6;
+}
+
+message Kline {
+  int64 open_time = 1;
+  double open = 2;
+  double high = 3;
+  double low = 4;
+  double close = 5;
+  double volume = 6;
+  int64 close_time = 7;
+}
+
+message GetKlinesResponse {
+  repeated Kline klines = 1;
+}
+
+// --- Funding Rate ---
+
+message GetFundingRateRequest {
+  string exchange = 1;
+  string symbol = 2;
+}
+
+message GetFundingRateResponse {
+  string symbol = 1;
+  double funding_rate = 2;
+  string next_funding_time = 3;
+  string timestamp = 4;
+}
+
+// --- Orderbook ---
+
+message GetOrderbookRequest {
+  string exchange = 1;
+  string symbol = 2;
+  int32 limit = 3;
+}
+
+message OrderbookLevel {
+  double price = 1;
+  double quantity = 2;
+}
+
+message GetOrderbookResponse {
+  repeated OrderbookLevel bids = 1;
+  repeated OrderbookLevel asks = 2;
+  string timestamp = 3;
+}
+
+// --- Account Balance ---
+
+message GetAccountBalanceRequest {
+  string exchange = 1;
+}
+
+message BalanceEntry {
+  string asset = 1;
+  double free = 2;
+  double locked = 3;
+  double total = 4;
+}
+
+message GetAccountBalanceResponse {
+  repeated BalanceEntry balances = 1;
+}
+
+// --- Exchange Positions ---
+
+message GetExchangePositionsRequest {
+  string exchange = 1;
+  string symbol = 2;
+}
+
+message ExchangePosition {
+  string symbol = 1;
+  string side = 2;
+  double quantity = 3;
+  double entry_price = 4;
+  double unrealized_pnl = 5;
+  double leverage = 6;
+}
+
+message GetExchangePositionsResponse {
+  repeated ExchangePosition positions = 1;
+}
+
+// --- Place Order ---
+
+message PlaceOrderRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string side = 3;
+  string order_type = 4;
+  double quantity = 5;
+  double price = 6;
+}
+
+message PlaceOrderResponse {
+  string order_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+// --- Cancel Order ---
+
+message CancelExchangeOrderRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string order_id = 3;
+}
+
+message CancelExchangeOrderResponse {
+  bool success = 1;
+  string message = 2;
+}
