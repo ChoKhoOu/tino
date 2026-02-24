@@ -41,9 +41,9 @@ Under the hood, Tino combines a **TypeScript CLI** (Bun + React/Ink) with a **Py
 - **Terminal Charts** — ANSI candlestick, line, and subplot charts rendered directly in the terminal via plotext
 - **Real-Time Streaming** — Live market data via WebSocket (Polygon + Binance) with auto-reconnect and subscription management
 - **Binance Exchange** — Spot and USDT-M Futures trading on testnet and mainnet with instrument normalization
-- **Local Quant Engine** — Technical indicators, risk metrics, options pricing (Black-Scholes/Greeks), factor analysis (Fama-French), portfolio optimization — all computed locally, no API calls
+- **Local Quant Engine** — Technical indicators, risk metrics, options pricing (Black-Scholes/Greeks), portfolio optimization — all computed locally, no API calls
 - **NautilusTrader Backend** — Professional-grade backtesting and live trading engine via gRPC
-- **8 Skill Workflows** — Pre-built research pipelines: backtest, comprehensive research, DCF valuation, factor analysis, options analysis, strategy generation, paper trading, live trading
+- **7 Skill Workflows** — Pre-built research pipelines: backtest, comprehensive research, DCF valuation, options analysis, strategy generation, paper trading, live trading
 - **Multi-Provider LLM** — OpenAI, Anthropic, Google, xAI, Moonshot, OpenRouter, Ollama, and custom endpoints
 - **Rich Terminal UI** — ANSI charts, streaming tickers, interactive input, model switching — built with React/Ink
 - **Strategy Lifecycle** — Generate → validate → backtest → paper trade → go live, all guided by AI
@@ -111,7 +111,7 @@ Project settings take precedence over global settings.
 | `market_data` | Finance | Stock prices, OHLCV bars, options chains, crypto, ticker details |
 | `fundamentals` | Finance | Income statements, balance sheets, ratios, analyst estimates, insider trades, news |
 | `macro_data` | Finance | FRED economic data — GDP, CPI, interest rates, employment |
-| `quant_compute` | Quant | Technical indicators, risk metrics, options pricing, factor analysis, portfolio optimization |
+| `quant_compute` | Quant | Technical indicators, risk metrics, options pricing, portfolio optimization |
 | `trading_sim` | Trading | Backtest strategies, paper trade, view positions |
 | `trading_live` | Trading | Submit live orders, kill switch (requires explicit confirmation) |
 | `strategy_lab` | Strategy | Generate and validate NautilusTrader strategy code |
@@ -131,7 +131,6 @@ Skills are guided multi-step workflows. Type `/skill` in Tino to browse them.
 | `backtest` | Configure, run, and analyze historical strategy simulations |
 | `comprehensive-research` | End-to-end investment analysis combining fundamentals, technicals, and risk |
 | `dcf-valuation` | Discounted cash flow analysis to estimate intrinsic value |
-| `factor-analysis` | Fama-French factor exposure, style-bias diagnostics, performance attribution |
 | `options-analysis` | Options pricing, Greeks, strategy comparison, payoff analysis |
 | `strategy-generation` | Generate NautilusTrader strategy code from natural language descriptions |
 | `paper-trade` | Simulate live trading without real capital |

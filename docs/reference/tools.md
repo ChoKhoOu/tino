@@ -57,14 +57,13 @@ Access FRED (Federal Reserve Economic Data) macroeconomic data including series 
 
 ## quant_compute
 
-Perform quantitative computations: technical indicators, risk metrics, options pricing, factor analysis, portfolio optimization, correlation analysis, and statistics. All computations run locally -- no API calls.
+Perform quantitative computations: technical indicators, risk metrics, options pricing, portfolio optimization, correlation analysis, and statistics. All computations run locally -- no API calls.
 
 | Action | Description | Key Inputs |
 |--------|-------------|------------|
 | `indicators` | Technical analysis (SMA, EMA, RSI, MACD, Bollinger, ATR, Stochastic, OBV, VWAP) | `closes`, `indicator`, `period` |
 | `risk` | Risk metrics (Sharpe, Sortino, max drawdown, VaR, CVaR, Calmar, win rate) | `returns`, `riskFreeRate` |
 | `options` | Black-Scholes pricing and Greeks (delta, gamma, theta, vega, rho) | `spot`, `strike`, `rate`, `timeToExpiry`, `volatility` |
-| `factor` | Fama-French 3-factor regression | `assetReturns`, `marketReturns`, `smbReturns`, `hmlReturns` |
 | `portfolio` | Portfolio optimization (Markowitz, min variance, equal weight, risk parity) | `returnsMatrix`, `method` |
 | `correlation` | Correlation matrix and rolling correlation | `seriesA`, `seriesB`, `window` |
 | `stats` | Descriptive statistics and linear regression | `values`, `xValues` |

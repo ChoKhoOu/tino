@@ -195,34 +195,6 @@ describe('quant_compute consolidated tool', () => {
     });
   });
 
-  describe('factor action', () => {
-    test('runs Fama-French 3-factor regression', async () => {
-      const n = 20;
-      const assetReturns = Array.from({ length: n }, () => (Math.random() - 0.5) * 0.1);
-      const marketExcessReturns = Array.from({ length: n }, () => (Math.random() - 0.5) * 0.08);
-      const smbReturns = Array.from({ length: n }, () => (Math.random() - 0.5) * 0.04);
-      const hmlReturns = Array.from({ length: n }, () => (Math.random() - 0.5) * 0.04);
-
-      const result = parse(
-        await plugin.execute(
-          {
-            action: 'factor',
-            inputs: { assetReturns, marketExcessReturns, smbReturns, hmlReturns },
-          },
-          ctx,
-        ),
-      );
-      expect(result.data.regression.alpha).toBeTypeOf('number');
-      expect(result.data.regression.betaMarket).toBeTypeOf('number');
-      expect(result.data.regression.betaSMB).toBeTypeOf('number');
-      expect(result.data.regression.betaHML).toBeTypeOf('number');
-      expect(result.data.regression.rSquared).toBeTypeOf('number');
-      expect(result.data.factorExposure.market).toBeTypeOf('number');
-      expect(result.data.factorExposure.size).toBeTypeOf('number');
-      expect(result.data.factorExposure.value).toBeTypeOf('number');
-    });
-  });
-
   describe('portfolio action', () => {
     test('computes equal weight portfolio', async () => {
       const result = parse(

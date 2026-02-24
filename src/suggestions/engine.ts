@@ -13,7 +13,6 @@ const SKILL_SUGGESTIONS: Record<string, string> = {
   backtest: 'Optimize parameters',
   'comprehensive-research': 'Summarize the key investment risks',
   dcf: 'Run a DCF valuation',
-  'factor-analysis': 'Check factor exposures by regime',
   'options-analysis': 'Stress-test Greeks under volatility shifts',
   'paper-trade': 'Paper trade this strategy',
   'live-trade': 'Review risk controls before going live',

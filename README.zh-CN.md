@@ -41,9 +41,9 @@ Tino 是一个为量化金融打造的终端原生 AI Agent。用自然语言提
 - **终端图表** — 通过 plotext 在终端内直接渲染 ANSI K线图、折线图和子图
 - **实时行情流** — 通过 WebSocket（Polygon + Binance）获取实时市场数据，支持自动重连和订阅管理
 - **币安交易所** — 支持现货和 USDT 合约在测试网和主网的交易，含标的标准化
-- **本地量化引擎** — 技术指标、风险指标、期权定价 (Black-Scholes/Greeks)、因子分析 (Fama-French)、投资组合优化 — 全部本地计算，无需 API
+- **本地量化引擎** — 技术指标、风险指标、期权定价 (Black-Scholes/Greeks)、投资组合优化 — 全部本地计算，无需 API
 - **NautilusTrader 后端** — 专业级回测和实盘交易引擎，通过 gRPC 通信
-- **8 个技能工作流** — 预置研究流程：回测、深度研究、DCF 估值、因子分析、期权分析、策略生成、模拟交易、实盘交易
+- **7 个技能工作流** — 预置研究流程：回测、深度研究、DCF 估值、期权分析、策略生成、模拟交易、实盘交易
 - **多 LLM 提供商** — OpenAI、Anthropic、Google、xAI、Moonshot、OpenRouter、Ollama 及自定义端点
 - **丰富的终端 UI** — ANSI 图表、实时行情、交互式输入、模型切换 — 基于 React/Ink 构建
 - **策略全生命周期** — 生成 → 验证 → 回测 → 模拟交易 → 实盘，全程由 AI 引导
@@ -111,7 +111,7 @@ Tino 使用两级配置系统：
 | `market_data` | 金融 | 股票价格、OHLCV K线、期权链、加密货币、标的详情 |
 | `fundamentals` | 金融 | 利润表、资产负债表、财务比率、分析师预估、内部交易、新闻 |
 | `macro_data` | 金融 | FRED 经济数据 — GDP、CPI、利率、就业 |
-| `quant_compute` | 量化 | 技术指标、风险指标、期权定价、因子分析、投资组合优化 |
+| `quant_compute` | 量化 | 技术指标、风险指标、期权定价、投资组合优化 |
 | `trading_sim` | 交易 | 策略回测、模拟交易、查看持仓 |
 | `trading_live` | 交易 | 提交实盘订单、紧急停止（需明确确认） |
 | `strategy_lab` | 策略 | 生成和验证 NautilusTrader 策略代码 |
@@ -131,7 +131,6 @@ Tino 使用两级配置系统：
 | `backtest` | 配置、运行和分析历史策略模拟 |
 | `comprehensive-research` | 结合基本面、技术面和风险的端到端投资分析 |
 | `dcf-valuation` | 现金流折现分析，估算内在价值 |
-| `factor-analysis` | Fama-French 因子暴露、风格偏差诊断、绩效归因 |
 | `options-analysis` | 期权定价、Greeks、策略对比、收益分析 |
 | `strategy-generation` | 根据自然语言描述生成 NautilusTrader 策略代码 |
 | `paper-trade` | 无真实资金的模拟实盘交易 |

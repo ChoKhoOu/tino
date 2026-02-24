@@ -40,11 +40,3 @@ export interface RegressionResult {
   rSquared: number;
 }
 
-export interface FamaFrenchThreeFactorResult {
-  alpha: number;
-  betaMarket: number;
-  betaSMB: number;
-  betaHML: number;
-  rSquared: number;
-  residualStdError: number;
-}

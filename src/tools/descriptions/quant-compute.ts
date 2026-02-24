@@ -3,14 +3,13 @@
  * Used in the system prompt to guide the LLM on when and how to use this tool.
  */
 export const QUANT_COMPUTE_DESCRIPTION = `
-Perform quantitative computations including technical indicators, risk metrics, options pricing, factor analysis, portfolio optimization, correlation analysis, and statistical analysis. All computations are pure (no external API calls) — always available.
+Perform quantitative computations including technical indicators, risk metrics, options pricing, portfolio optimization, correlation analysis, and statistical analysis. All computations are pure (no external API calls) — always available.
 
 ## When to Use
 
 - Technical indicators: SMA, EMA, RSI, MACD, Bollinger Bands, ATR, Stochastic, OBV, VWAP
 - Risk metrics: Sharpe ratio, Sortino ratio, max drawdown, VaR, CVaR, Calmar ratio, win rate, profit factor
 - Option pricing: Black-Scholes pricing, Greeks (delta, gamma, theta, vega, rho), implied volatility
-- Factor analysis: Fama-French 3-factor regression, factor exposure (market, size, value)
 - Portfolio optimization: Mean-variance (Markowitz), minimum variance, equal weight, risk parity
 - Correlation analysis: Correlation matrix, rolling correlation
 - Statistics: Descriptive stats, linear regression, rolling mean/std
@@ -29,7 +28,6 @@ Perform quantitative computations including technical indicators, risk metrics, 
 | indicators | Technical analysis indicators | closes, highs, lows, volumes, indicator type, period |
 | risk | Risk and performance metrics | returns array, riskFreeRate |
 | options | Black-Scholes pricing and Greeks | spot, strike, rate, timeToExpiry, volatility |
-| factor | Fama-French factor analysis | assetReturns, marketReturns, smbReturns, hmlReturns |
 | portfolio | Portfolio optimization | returnsMatrix, method (markowitz/min_variance/equal/risk_parity) |
 | correlation | Correlation analysis | seriesA, seriesB, window |
 | stats | Descriptive statistics and regression | values, optional xValues for regression |

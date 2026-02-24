@@ -16,8 +16,8 @@ hero:
 features:
   - title: 14 Consolidated Tools
     details: Market data, fundamentals, macro data, quant compute, simulated trading, live trading, strategy lab, portfolio tracking, terminal charts, real-time streaming, web search, browser automation, backtest history, and skill workflows.
-  - title: 9 Skills
-    details: Pre-built research pipelines for backtesting, comprehensive research, DCF valuation, factor analysis, options analysis, strategy generation, paper trading, live trading, and funding rate arbitrage.
+  - title: 8 Skills
+    details: Pre-built research pipelines for backtesting, comprehensive research, DCF valuation, options analysis, strategy generation, paper trading, live trading, and funding rate arbitrage.
   - title: Multi-Exchange Trading
     details: Binance spot and USDT-M futures on testnet and mainnet. NautilusTrader-powered backtesting and live execution engine via gRPC.
   - title: Risk Management
