@@ -20,6 +20,7 @@ describe('fundamentals consolidated tool', () => {
     process.env.FINANCIAL_DATASETS_API_KEY = 'test-fd-key';
     process.env.FMP_API_KEY = 'test-fmp-key';
     process.env.FINNHUB_API_KEY = 'test-finnhub-key';
+    process.env.TINO_LEGACY_PROVIDERS = 'fmp,finnhub,financialdatasets';
   });
 
   afterEach(() => {
@@ -298,5 +299,11 @@ describe('fundamentals consolidated tool', () => {
     delete process.env.FMP_API_KEY;
     const result = JSON.parse(await plugin.execute({ action: 'income_statement', symbol: 'AAPL' }, ctx));
     expect(result.error).toBeTruthy();
+  });
+
+  test('returns error when legacy providers are not enabled', async () => {
+    delete process.env.TINO_LEGACY_PROVIDERS;
+    const result = JSON.parse(await plugin.execute({ action: 'income_statement', symbol: 'AAPL' }, ctx));
+    expect(result.error).toContain('opt-in');
   });
 });

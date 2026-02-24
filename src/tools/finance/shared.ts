@@ -8,6 +8,8 @@ import { readCache, writeCache, describeRequest } from '../../utils/cache.js';
 import { logger } from '../../utils/logger.js';
 import { getRateLimitDelay, recordRateLimit } from './rate-limiter.js';
 
+import { getSetting } from '../../config/settings.js';
+
 // Re-export rate-limiter utilities so existing imports from shared.ts keep working
 export {
   getRateLimitDelay,
@@ -15,6 +17,28 @@ export {
   validateApiKey,
   getOptionalApiKey,
 } from './rate-limiter.js';
+
+// ============================================================================
+// Legacy provider helpers
+// ============================================================================
+
+/**
+ * Check whether a deprecated data provider is explicitly opted-in.
+ *
+ * Supports two mechanisms (env var takes precedence):
+ *  - `TINO_LEGACY_PROVIDERS=fmp,finnhub,financialdatasets`
+ *  - `enabledLegacyProviders` array in `.tino/settings.json`
+ */
+export function isLegacyEnabled(provider: string): boolean {
+  const envOverride = process.env.TINO_LEGACY_PROVIDERS;
+  if (envOverride !== undefined) {
+    return envOverride.split(',').map(s => s.trim()).includes(provider);
+  }
+  const raw = getSetting<string[] | undefined>('enabledLegacyProviders', undefined);
+  return Array.isArray(raw) && raw.includes(provider);
+}
+
+export const LEGACY_HINT = 'These providers require opt-in via enabledLegacyProviders in .tino/settings.json with the corresponding API key in .env.';
 
 // ============================================================================
 // Types

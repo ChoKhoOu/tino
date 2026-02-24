@@ -1,5 +1,4 @@
-import { callApi } from '../finance/api.js';
-import { getOptionalApiKey } from '../finance/shared.js';
+import { getOptionalApiKey, isLegacyEnabled, LEGACY_HINT } from '../finance/shared.js';
 import {
   getPolygonBars,
   getPolygonSnapshot,
@@ -16,7 +15,6 @@ import {
   getCurrentFundingRates,
   getHistoricalFundingRates,
 } from '../finance/funding-rates/index.js';
-import { getFmpPrices } from '../finance/fmp/index.js';
 import type { MarketDataInput } from './market-data.tool.js';
 
 function requireSymbol(symbol: string | undefined): string {
@@ -32,24 +30,25 @@ function fmtError(message: string): string {
   return JSON.stringify({ error: message });
 }
 
+
 async function handlePrices(input: MarketDataInput): Promise<string> {
   const ticker = requireSymbol(input.symbol);
   const from = input.from ?? '';
   const to = input.to ?? '';
 
-  const fdKey = getOptionalApiKey('FINANCIAL_DATASETS_API_KEY');
-  if (fdKey) {
+  if (isLegacyEnabled('financialdatasets') && getOptionalApiKey('FINANCIAL_DATASETS_API_KEY')) {
+    const { callApi } = await import('../finance/api.js');
     const { data } = await callApi('/prices/', { ticker, start_date: from, end_date: to });
     return fmt(data);
   }
 
-  const fmpKey = getOptionalApiKey('FMP_API_KEY');
-  if (fmpKey) {
+  if (isLegacyEnabled('fmp') && getOptionalApiKey('FMP_API_KEY')) {
+    const { getFmpPrices } = await import('../finance/fmp/index.js');
     const data = await getFmpPrices(ticker, from || undefined, to || undefined);
     return fmt(data);
   }
 
-  return fmtError('No API key available for prices. Set FINANCIAL_DATASETS_API_KEY or FMP_API_KEY.');
+  return fmtError(`No provider available for prices. ${LEGACY_HINT}`);
 }
 
 function dateToUnix(dateStr: string): number {

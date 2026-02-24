@@ -47,6 +47,7 @@ describe('market_data consolidated tool', () => {
     process.env.FINANCIAL_DATASETS_API_KEY = 'test-fd-key';
     process.env.POLYGON_API_KEY = 'test-polygon-key';
     process.env.FMP_API_KEY = 'test-fmp-key';
+    process.env.TINO_LEGACY_PROVIDERS = 'fmp,finnhub,financialdatasets';
   });
 
   afterEach(() => {
@@ -121,7 +122,20 @@ describe('market_data consolidated tool', () => {
 
       const parsed = JSON.parse(result);
       expect(parsed.error).toBeDefined();
-      expect(parsed.error).toContain('API key');
+    });
+
+    test('returns error when legacy providers are not enabled', async () => {
+      delete process.env.TINO_LEGACY_PROVIDERS;
+
+      const result = await executeAction({
+        action: 'prices',
+        symbol: 'AAPL',
+        from: '2024-01-01',
+        to: '2024-01-31',
+      });
+
+      const parsed = JSON.parse(result);
+      expect(parsed.error).toContain('opt-in');
     });
   });
 
