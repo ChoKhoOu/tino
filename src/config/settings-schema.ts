@@ -23,6 +23,13 @@ export const ProviderOverrideSchema = z.object({
   defaultModel: z.string().optional(),
 });
 
+/**
+ * Legacy financial data providers that are opt-in (disabled by default).
+ * Enable via `enabledLegacyProviders` in .tino/settings.json.
+ */
+export const LEGACY_PROVIDERS = ['fmp', 'finnhub', 'financialdatasets'] as const;
+export type LegacyProvider = (typeof LEGACY_PROVIDERS)[number];
+
 export const GraduationThresholdsSchema = z.object({
   backtestSharpe: z.number().optional(),
   backtestMaxDrawdown: z.number().optional(),
@@ -42,6 +49,7 @@ export const SettingsSchema = z.object({
   customProviders: z.record(z.string(), CustomProviderSchema).optional(),
   providers: z.record(z.string(), ProviderOverrideSchema).optional(),
   providerOverrides: z.record(z.string(), ProviderOverrideSchema).optional(),
+  enabledLegacyProviders: z.array(z.enum(LEGACY_PROVIDERS)).optional(),
   graduationThresholds: GraduationThresholdsSchema,
 }).passthrough(); // Allow additional unknown keys for forward compatibility
 
@@ -56,5 +64,6 @@ export interface SettingsData {
   customProviders?: Record<string, CustomProviderConfig>;
   providers?: Record<string, ProviderOverrideConfig>;
   providerOverrides?: Record<string, ProviderOverrideConfig>;
+  enabledLegacyProviders?: LegacyProvider[];
   [key: string]: unknown;
 }
