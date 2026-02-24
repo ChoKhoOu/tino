@@ -148,24 +148,77 @@ class BacktestEngineWrapper:
             engine.dispose()
 
     def _extract_metrics(self, engine: object, instrument: str) -> dict[str, object]:
-        """Best-effort extraction of common summary metrics."""
-        del instrument
-        results = getattr(engine, "results", None)
-        if isinstance(results, dict):
-            return dict(results)
+        """Extract summary metrics from NautilusTrader BacktestEngine via PortfolioAnalyzer."""
+        analyzer = engine.portfolio.analyzer  # type: ignore[union-attr]
+        cache = engine.cache  # type: ignore[union-attr]
+
+        # --- return-based stats ---
+        stats_returns = analyzer.get_performance_stats_returns()
+        sharpe = stats_returns.get("Sharpe Ratio (252 days)", 0.0)
+        sortino = stats_returns.get("Sortino Ratio (252 days)", 0.0)
+        profit_factor = stats_returns.get("Profit Factor", 0.0)
+
+        # --- PnL-based stats ---
+        stats_pnls = analyzer.get_performance_stats_pnls()
+        total_return = stats_pnls.get("PnL% (total)", 0.0)
+        win_rate = stats_pnls.get("Win Rate", 0.0)
+
+        # --- trade counts from closed positions ---
+        closed_positions = cache.positions_closed(instrument_id=None)
+        total_trades = len(closed_positions)
+        winning_trades = sum(
+            1 for p in closed_positions if float(p.realized_pnl) > 0
+        )
+
+        # --- max drawdown from returns series ---
+        max_drawdown = 0.0
+        equity_curve: list[float] = []
+        try:
+            returns_series = analyzer.returns()
+            if len(returns_series) > 0:
+                cumulative = (1 + returns_series).cumprod()
+                peak = cumulative.cummax()
+                drawdown = (cumulative - peak) / peak
+                max_drawdown = abs(float(drawdown.min()))
+                equity_curve = [float(v) for v in cumulative.tolist()]
+        except Exception:
+            logger.debug("Could not compute equity curve / max drawdown", exc_info=True)
+
+        # --- trades list ---
+        trades: list[dict[str, object]] = []
+        for pos in closed_positions:
+            trades.append(
+                {
+                    "instrument": str(pos.instrument_id),
+                    "side": str(pos.entry),
+                    "pnl": float(pos.realized_pnl),
+                    "return": float(pos.realized_return),
+                }
+            )
 
         return {
-            "total_return": 0.0,
-            "sharpe_ratio": 0.0,
-            "max_drawdown": 0.0,
-            "sortino_ratio": 0.0,
-            "total_trades": 0,
-            "winning_trades": 0,
-            "win_rate": 0.0,
-            "profit_factor": 0.0,
-            "equity_curve": [],
-            "trades": [],
+            "total_return": self._sanitize(total_return),
+            "sharpe_ratio": self._sanitize(sharpe),
+            "max_drawdown": self._sanitize(max_drawdown),
+            "sortino_ratio": self._sanitize(sortino),
+            "total_trades": total_trades,
+            "winning_trades": winning_trades,
+            "win_rate": self._sanitize(win_rate),
+            "profit_factor": self._sanitize(profit_factor),
+            "equity_curve": equity_curve,
+            "trades": trades,
         }
+
+    @staticmethod
+    def _sanitize(value: object) -> float:
+        """Convert value to float, replacing NaN/Inf with 0.0."""
+        import math
+
+        try:
+            f = float(value)  # type: ignore[arg-type]
+            return 0.0 if (math.isnan(f) or math.isinf(f)) else f
+        except (TypeError, ValueError):
+            return 0.0
 
     def _persist_result(
         self,
