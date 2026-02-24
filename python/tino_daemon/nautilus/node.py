@@ -139,6 +139,10 @@ class TradingNodeWrapper:
                 for pos in node.cache.positions_open():
                     self._strategy.close_position(pos)
         node.stop()
+        if self._run_thread is not None:
+            self._run_thread.join(timeout=5.0)
+            if self._run_thread.is_alive():
+                logger.warning("Trading node run thread did not exit within 5s")
         node.dispose()
         self._node = None
         self._strategy = None
@@ -147,7 +151,20 @@ class TradingNodeWrapper:
 
     def _get_positions_sync(self) -> list[dict[str, Any]]:
         node = self._require_node()
-        return [position_to_dict(p) for p in node.cache.positions_open()]
+        results: list[dict[str, Any]] = []
+        for pos in node.cache.positions_open():
+            d = position_to_dict(pos)
+            try:
+                last_tick = node.cache.trade_tick(pos.instrument_id)
+                if last_tick is not None:
+                    unrealized = pos.unrealized_pnl(last_tick.price)
+                    d["unrealized_pnl"] = (
+                        float(unrealized.as_double()) if unrealized is not None else 0.0
+                    )
+            except Exception:
+                pass  # Keep default 0.0 from position_to_dict
+            results.append(d)
+        return results
 
     def _get_orders_sync(self, limit: int) -> list[dict[str, Any]]:
         node = self._require_node()
