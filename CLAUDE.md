@@ -52,21 +52,21 @@ cli.tsx (Ink TUI)          ◄────────────────�
 
 ## Where to Look
 
-| Task | Location |
-|------|----------|
-| Add LLM provider | `src/runtime/model-broker.ts` — `PREFIX_MAP` + `createModel()` |
-| Add agent tool | `src/tools/consolidated/*.tool.ts` — `definePlugin()` + description in `descriptions/` |
-| Add data source | `src/tools/finance/` — follow existing provider pattern |
-| Modify agent behavior | `src/runtime/prompt-builder.ts` — system prompt |
-| Modify agent loop | `src/runtime/session-runtime.ts` |
-| Add gRPC service | `proto/` → `buf generate` → `src/grpc/` + `python/tino_daemon/services/` |
-| Add skill workflow | `src/skills/<name>/SKILL.md` — YAML frontmatter + markdown |
-| Add UI component | `src/components/` — Ink (`<Box>`, `<Text>`), not DOM |
-| Slash commands | `src/commands/slash.ts` — `parseSlashCommand()` |
-| Settings | `src/config/settings.ts` — global `~/.tino/settings.json` + project `.tino/settings.json` |
-| Permissions | `src/config/permissions.ts` → `.tino/permissions.json` |
-| Hooks | `src/config/hooks.ts` → `.tino/hooks.json` |
-| Trading safety | `src/tools/consolidated/trading-live.tool.ts` — `confirmed=true` gate |
+| Task                  | Location                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| Add LLM provider      | `src/runtime/model-broker.ts` — `PREFIX_MAP` + `createModel()`                            |
+| Add agent tool        | `src/tools/consolidated/*.tool.ts` — `definePlugin()` + description in `descriptions/`    |
+| Add data source       | `src/tools/finance/` — follow existing provider pattern                                   |
+| Modify agent behavior | `src/runtime/prompt-builder.ts` — system prompt                                           |
+| Modify agent loop     | `src/runtime/session-runtime.ts`                                                          |
+| Add gRPC service      | `proto/` → `buf generate` → `src/grpc/` + `python/tino_daemon/services/`                  |
+| Add skill workflow    | `src/skills/<name>/SKILL.md` — YAML frontmatter + markdown                                |
+| Add UI component      | `src/components/` — Ink (`<Box>`, `<Text>`), not DOM                                      |
+| Slash commands        | `src/commands/slash.ts` — `parseSlashCommand()`                                           |
+| Settings              | `src/config/settings.ts` — global `~/.tino/settings.json` + project `.tino/settings.json` |
+| Permissions           | `src/config/permissions.ts` → `.tino/permissions.json`                                    |
+| Hooks                 | `src/config/hooks.ts` → `.tino/hooks.json`                                                |
+| Trading safety        | `src/tools/consolidated/trading-live.tool.ts` — `confirmed=true` gate                     |
 
 ## Conventions
 
@@ -74,7 +74,6 @@ cli.tsx (Ink TUI)          ◄────────────────�
 - **Modules**: ESM-only (`"type": "module"`). Use `.js` extensions in imports even for `.ts` files.
 - **Path alias**: `@/*` → `./src/*` (tsconfig paths).
 - **State**: React `useState`/`useCallback`/`useRef` only. No Redux/Zustand.
-- **File size**: 200 LOC hard limit per file. Single responsibility.
 - **AI SDK**: Vercel AI SDK (`ai` package) for `streamText`/`generateText`. Not LangChain.
 - **Error resilience**: Cache ops never throw. IO config ops (settings, env, permissions, hooks, PID files) are non-fatal. Agent captures tool errors as strings and continues.
 - **Protobuf**: Proto IDL in `proto/` is source of truth. Never edit generated files in `src/grpc/gen/` or `python/tino_daemon/proto/`.

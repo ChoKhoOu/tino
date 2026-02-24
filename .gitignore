@@ -69,3 +69,10 @@ coverage.json
 
 .omc/
 .tino/
+
+# Generated planning/strategy documents
+docs/requirements/
+docs/product-strategy/
+docs/refactoring-plan.md
+docs/project-status.md
+docs/feature-roadmap.md
