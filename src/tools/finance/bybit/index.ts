@@ -17,6 +17,8 @@ import type {
   BybitOrderBookRaw,
   BybitOrderBookLevel,
 } from './types.js';
+import type { UnifiedTicker, UnifiedKline, UnifiedFundingRate, UnifiedOrderBook } from '../types/crypto.js';
+import { parseConcatSymbol } from '../types/crypto.js';
 
 const BASE_URL = 'https://api.bybit.com/v5';
 const SOURCE = 'Bybit';
@@ -246,5 +248,66 @@ export async function getOrderBook(
     bids: raw.b.map(parseLevel),
     timestamp: raw.ts,
     updateId: raw.u,
+  };
+}
+
+// ============================================================================
+// Unified type adapters
+// ============================================================================
+
+/** Convert a Bybit ticker to a UnifiedTicker. */
+export function toUnifiedTicker(t: BybitTicker): UnifiedTicker {
+  const { base, quote, unified } = parseConcatSymbol(t.symbol);
+  return {
+    exchange: 'bybit',
+    symbol: unified,
+    baseAsset: base,
+    quoteAsset: quote,
+    last: parseFloat(t.lastPrice),
+    bid: parseFloat(t.bid1Price),
+    ask: parseFloat(t.ask1Price),
+    volume24h: parseFloat(t.volume24h),
+    timestamp: Date.now(),
+  };
+}
+
+/** Convert a Bybit kline to a UnifiedKline. */
+export function toUnifiedKline(k: BybitKline, symbol: string, interval: string): UnifiedKline {
+  const { unified } = parseConcatSymbol(symbol);
+  return {
+    exchange: 'bybit',
+    symbol: unified,
+    interval,
+    open: parseFloat(k.open),
+    high: parseFloat(k.high),
+    low: parseFloat(k.low),
+    close: parseFloat(k.close),
+    volume: parseFloat(k.volume),
+    timestamp: k.openTime,
+  };
+}
+
+/** Convert a Bybit funding rate to a UnifiedFundingRate. */
+export function toUnifiedFundingRate(fr: BybitFundingRate): UnifiedFundingRate {
+  const { unified } = parseConcatSymbol(fr.symbol);
+  return {
+    exchange: 'bybit',
+    symbol: unified,
+    rate: parseFloat(fr.fundingRate),
+    nextFundingTime: 0,
+    markPrice: 0,
+    indexPrice: 0,
+  };
+}
+
+/** Convert a Bybit order book to a UnifiedOrderBook. */
+export function toUnifiedOrderBook(book: BybitOrderBook): UnifiedOrderBook {
+  const { unified } = parseConcatSymbol(book.symbol);
+  return {
+    exchange: 'bybit',
+    symbol: unified,
+    bids: book.bids.map((l) => [parseFloat(l.price), parseFloat(l.size)]),
+    asks: book.asks.map((l) => [parseFloat(l.price), parseFloat(l.size)]),
+    timestamp: book.timestamp,
   };
 }

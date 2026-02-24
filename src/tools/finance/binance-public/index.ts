@@ -6,6 +6,8 @@
  */
 import { fetchJson } from '../shared.js';
 import type { BinanceKline, BinanceTicker24h } from './types.js';
+import type { UnifiedTicker, UnifiedKline } from '../types/crypto.js';
+import { parseConcatSymbol } from '../types/crypto.js';
 
 const BASE_URL = 'https://api.binance.com/api/v3';
 const SOURCE = 'Binance';
@@ -114,4 +116,40 @@ export async function getTicker24h(
   );
 
   return data;
+}
+
+// ============================================================================
+// Unified type adapters
+// ============================================================================
+
+/** Convert a Binance 24h ticker to a UnifiedTicker. */
+export function toUnifiedTicker(t: BinanceTicker24h): UnifiedTicker {
+  const { base, quote, unified } = parseConcatSymbol(t.symbol);
+  return {
+    exchange: 'binance',
+    symbol: unified,
+    baseAsset: base,
+    quoteAsset: quote,
+    last: parseFloat(t.lastPrice),
+    bid: parseFloat(t.bidPrice),
+    ask: parseFloat(t.askPrice),
+    volume24h: parseFloat(t.volume),
+    timestamp: t.closeTime,
+  };
+}
+
+/** Convert a Binance kline to a UnifiedKline. */
+export function toUnifiedKline(k: BinanceKline, symbol: string, interval: string): UnifiedKline {
+  const { unified } = parseConcatSymbol(symbol);
+  return {
+    exchange: 'binance',
+    symbol: unified,
+    interval,
+    open: parseFloat(k.open),
+    high: parseFloat(k.high),
+    low: parseFloat(k.low),
+    close: parseFloat(k.close),
+    volume: parseFloat(k.volume),
+    timestamp: k.openTime,
+  };
 }

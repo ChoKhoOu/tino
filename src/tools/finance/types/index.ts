@@ -19,12 +19,20 @@ export type {
 } from './macro.js';
 
 export type {
+  CryptoExchange,
+  UnifiedTicker,
+  UnifiedOrderBook,
+  UnifiedFundingRate,
+  UnifiedPosition,
+  UnifiedKline,
   CoinGeckoPriceEntry,
   CoinGeckoPrice,
   CoinGeckoMarketData,
   CoinGeckoHistoryPoint,
   CoinGeckoCoin,
 } from './crypto.js';
+
+export { parseConcatSymbol, parseDashSymbol } from './crypto.js';
 
 export type {
   PolygonBar,
