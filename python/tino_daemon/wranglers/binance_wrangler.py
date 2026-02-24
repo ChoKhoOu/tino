@@ -5,7 +5,7 @@ Supports:
 - Multiple timeframes: 1m, 5m, 15m, 1h, 4h, 1d
 - Incremental updates (only fetches missing time ranges)
 - Local Parquet caching
-- API rate limiting (1200 requests/minute)
+- API rate limiting (1200 weight/minute)
 
 Binance klines API: https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
 """
@@ -46,7 +46,8 @@ _NT_TO_BINANCE_INTERVAL: dict[str, str] = {
 _BINANCE_API_BASE = "https://api.binance.com"
 _KLINES_ENDPOINT = "/api/v3/klines"
 _MAX_KLINES_LIMIT = 1000
-_RATE_LIMIT_PER_MIN = 1200
+_RATE_LIMIT_WEIGHT_PER_MIN = 1200
+_KLINES_REQUEST_WEIGHT = 10  # weight for limit=1000
 _DEFAULT_CACHE_DIR = "~/.tino/cache/binance"
 _REQUEST_TIMEOUT = 30
 
@@ -56,7 +57,7 @@ class BinanceWrangler(BaseWrangler):
 
     Features:
     - Paginated fetching (max 1000 klines per request)
-    - Rate limiting (1200 requests/minute)
+    - Weight-based rate limiting (1200 weight/minute; 10 weight per klines request)
     - Local Parquet caching with incremental updates
     """
 
@@ -158,30 +159,57 @@ class BinanceWrangler(BaseWrangler):
                     )
                 return self._dataframe_to_bars(df_range, bar_type)
 
-            # Incremental: only fetch what's missing after cached data
-            if cached_end_ms >= start_ms:
-                fetch_start_ms = cached_end_ms + 1
+            # Incremental: fetch gaps before and/or after cached data
+            pre_gap_df = None
+            post_gap_df = None
 
-        # Fetch from Binance API
+            if cached_start_ms > start_ms:
+                pre_gap_df = self._fetch_klines(
+                    symbol, binance_interval, start_ms, cached_start_ms - 1
+                )
+
+            if cached_end_ms < end_ms:
+                post_gap_df = self._fetch_klines(
+                    symbol, binance_interval, cached_end_ms + 1, end_ms
+                )
+
+            # Merge: pre_gap + cached + post_gap
+            parts = [
+                part for part in (pre_gap_df, cached_df, post_gap_df)
+                if part is not None and not part.empty
+            ]
+            if parts:
+                df = pd.concat(parts)
+                df = df[~df.index.duplicated(keep="last")]
+                df = df.sort_index()
+            else:
+                raise ValueError(
+                    f"No data available for {symbol} {binance_interval} "
+                    f"in range {start_date} to {end_date}"
+                )
+
+            # Save merged data to cache
+            self._save_cache(df, cache_path)
+
+            # Filter to requested range and convert
+            df_range = df.loc[start_dt:end_dt_exclusive]
+            if df_range.empty:
+                raise ValueError(f"No data in range {start_date} to {end_date}")
+
+            return self._dataframe_to_bars(df_range, bar_type)
+
+        # No cache — fetch full range from Binance API
         new_df = self._fetch_klines(
             symbol, binance_interval, fetch_start_ms, fetch_end_ms
         )
 
-        # Merge with cache
-        if cached_df is not None and not cached_df.empty:
-            if new_df is not None and not new_df.empty:
-                df = pd.concat([cached_df, new_df])
-                df = df[~df.index.duplicated(keep="last")]
-                df = df.sort_index()
-            else:
-                df = cached_df
-        elif new_df is not None and not new_df.empty:
-            df = new_df
-        else:
+        if new_df is None or new_df.empty:
             raise ValueError(
                 f"No data available for {symbol} {binance_interval} "
                 f"in range {start_date} to {end_date}"
             )
+
+        df = new_df
 
         # Save merged data to cache
         self._save_cache(df, cache_path)
@@ -366,14 +394,19 @@ class BinanceWrangler(BaseWrangler):
     # ------------------------------------------------------------------
 
     def _throttle(self) -> None:
-        """Enforce Binance rate limit of 1200 requests per minute."""
+        """Enforce Binance weight-based rate limit (1200 weight/minute).
+
+        Each klines request with limit=1000 costs 10 weight, so the effective
+        request cap is 1200 / 10 = 120 requests per minute.
+        """
         now = time.monotonic()
         # Drop timestamps outside the 60-second window
         self._request_timestamps = [
             ts for ts in self._request_timestamps if now - ts < 60.0
         ]
 
-        if len(self._request_timestamps) >= _RATE_LIMIT_PER_MIN:
+        max_requests = _RATE_LIMIT_WEIGHT_PER_MIN // _KLINES_REQUEST_WEIGHT
+        if len(self._request_timestamps) >= max_requests:
             sleep_time = 60.0 - (now - self._request_timestamps[0])
             if sleep_time > 0:
                 logger.info("Rate limit reached, sleeping %.1fs", sleep_time)

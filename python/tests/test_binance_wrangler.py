@@ -247,8 +247,8 @@ class TestCaching:
         cache_file = wrangler._cache_dir / "BTCUSDT" / "1h.parquet"
         assert cache_file.exists()
 
-    def test_incremental_fetch(self, wrangler: BinanceWrangler) -> None:
-        """After caching some data, a broader range only fetches the gap."""
+    def test_incremental_fetch_post_gap(self, wrangler: BinanceWrangler) -> None:
+        """After caching some data, a broader range only fetches the post-cache gap."""
         initial_klines = _make_sample_klines(5, start_ms=1_704_067_200_000)
 
         with patch.object(wrangler, "_http_get_json", return_value=initial_klines):
@@ -267,10 +267,83 @@ class TestCaching:
                 instrument=INSTRUMENT,
                 bar_type=BAR_TYPE,
             )
-            # Should have fetched once for the new range
+            # Should have fetched once for the post-cache gap
             assert mock.call_count == 1
 
         assert len(bars) == 8  # 5 cached + 3 new
+
+    def test_incremental_fetch_pre_gap(self, wrangler: BinanceWrangler) -> None:
+        """When cache starts after the requested range, the pre-cache gap is fetched."""
+        # Cache data starting Jan 5 00:00 UTC (5 hourly klines)
+        jan5_ms = 1_704_067_200_000 + 4 * 24 * 3_600_000  # Jan 5 00:00 UTC
+        initial_klines = _make_sample_klines(5, start_ms=jan5_ms)
+
+        with patch.object(wrangler, "_http_get_json", return_value=initial_klines):
+            wrangler.wrangle(
+                data={"start_date": "2024-01-05", "end_date": "2024-01-05"},
+                instrument=INSTRUMENT,
+                bar_type=BAR_TYPE,
+            )
+
+        # Now request Jan 1-5 — must fetch the pre-cache gap (Jan 1 to Jan 4)
+        pre_gap_klines = _make_sample_klines(4, start_ms=1_704_067_200_000)
+
+        call_count = 0
+
+        def mock_fetch(url: str) -> list:
+            nonlocal call_count
+            call_count += 1
+            return pre_gap_klines
+
+        with patch.object(wrangler, "_http_get_json", side_effect=mock_fetch):
+            bars = wrangler.wrangle(
+                data={"start_date": "2024-01-01", "end_date": "2024-01-05"},
+                instrument=INSTRUMENT,
+                bar_type=BAR_TYPE,
+            )
+
+        # Should have fetched for the pre-cache gap
+        assert call_count >= 1
+        # Result should include both pre-gap and cached data
+        assert len(bars) == 9  # 4 pre-gap + 5 cached
+
+    def test_incremental_fetch_both_gaps(self, wrangler: BinanceWrangler) -> None:
+        """When cache covers the middle, both pre and post gaps are fetched."""
+        # Cache data for Jan 3 (3 hourly klines)
+        jan3_ms = 1_704_067_200_000 + 2 * 24 * 3_600_000  # Jan 3 00:00 UTC
+        initial_klines = _make_sample_klines(3, start_ms=jan3_ms)
+
+        with patch.object(wrangler, "_http_get_json", return_value=initial_klines):
+            wrangler.wrangle(
+                data={"start_date": "2024-01-03", "end_date": "2024-01-03"},
+                instrument=INSTRUMENT,
+                bar_type=BAR_TYPE,
+            )
+
+        # Now request Jan 1-5 — must fetch both pre-gap (Jan 1-2) and post-gap (Jan 3+)
+        pre_klines = _make_sample_klines(2, start_ms=1_704_067_200_000)
+        post_klines = _make_sample_klines(2, start_ms=jan3_ms + 3 * 3_600_000)
+
+        call_count = 0
+
+        def mock_fetch(url: str) -> list:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return pre_klines
+            return post_klines
+
+        with patch.object(wrangler, "_http_get_json", side_effect=mock_fetch):
+            bars = wrangler.wrangle(
+                data={"start_date": "2024-01-01", "end_date": "2024-01-05"},
+                instrument=INSTRUMENT,
+                bar_type=BAR_TYPE,
+            )
+
+        # Both pre-gap and post-gap should be fetched
+        assert call_count == 2
+        # Result: 2 pre-gap + 3 cached + 2 post-gap
+        assert len(bars) == 7
 
 
 class TestRateLimiting:
