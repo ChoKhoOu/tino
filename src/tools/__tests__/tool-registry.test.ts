@@ -18,20 +18,21 @@ const EXPECTED_TOOL_IDS = [
   'chart',
   'streaming',
   'backtest_history',
+  'crypto_derivatives',
 ] as const;
 
 const CONSOLIDATED_DIR = join(resolveSrcDir(), 'tools', 'consolidated');
 
 describe('consolidated tool registry', () => {
-  test('discovers exactly 14 tools', async () => {
+  test('discovers exactly 15 tools', async () => {
     const registry = new ToolRegistry();
     const plugins = await registry.discoverTools(CONSOLIDATED_DIR);
     registry.registerAll(plugins);
 
-    expect(plugins.length).toBe(14);
+    expect(plugins.length).toBe(15);
   });
 
-  test('all 14 expected tool IDs are present', async () => {
+  test('all 15 expected tool IDs are present', async () => {
     const registry = new ToolRegistry();
     const plugins = await registry.discoverTools(CONSOLIDATED_DIR);
     registry.registerAll(plugins);

@@ -49,3 +49,15 @@ export type {
   OptionQuote,
   OptionsChainData,
 } from './options.js';
+
+export type {
+  CoinGlassResponse,
+  CoinGlassFundingRate,
+  CoinGlassFundingRateHistory,
+  CoinGlassOpenInterest,
+  CoinGlassOpenInterestHistory,
+  CoinGlassLongShortRatio,
+  CoinGlassLiquidation,
+  CoinGlassLiquidationHistory,
+  CoinGlassFuturesPremium,
+} from './coinglass.js';
