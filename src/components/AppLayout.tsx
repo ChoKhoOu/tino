@@ -8,9 +8,11 @@ import { PermissionPrompt } from './PermissionPrompt.js';
 import { ScrollableContent } from './ScrollableContent.js';
 import { ModelSwitchPopup } from './ModelSwitchPopup.js';
 import { StylePicker } from './StylePicker.js';
+import { CommandPalette } from './CommandPalette.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { useModelSwitchPopup } from '../hooks/useModelSwitchPopup.js';
 import { useStylePicker } from '../hooks/useStylePicker.js';
+import { useCommandPalette } from '../hooks/useCommandPalette.js';
 import { KeyboardProvider } from '../keyboard/use-keyboard.js';
 import type { KeyboardDispatcher } from '../keyboard/dispatcher.js';
 import type { HistoryItem } from './index.js';
@@ -78,6 +80,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
   modelPopupRef,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
+  const commandPalette = useCommandPalette(handleSubmit);
   const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
   const stylePicker = useStylePicker();
   const { tasks } = useBackgroundTasks();
@@ -145,6 +148,14 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
         subMenuIndex={rewindMenu.subMenuIndex}
       />
       
+      <CommandPalette 
+        isOpen={commandPalette.isOpen} 
+        query={commandPalette.query} 
+        setQuery={commandPalette.setQuery} 
+        selectedIndex={commandPalette.selectedIndex} 
+        items={commandPalette.items} 
+        onSelect={commandPalette.select} 
+      />
       <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
       <StylePicker isOpen={stylePicker.isOpen} selectedIndex={stylePicker.selectedIndex} styles={stylePicker.styles} />
       <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} onSlashSelect={handleSubmit} />
