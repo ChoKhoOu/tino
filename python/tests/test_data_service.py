@@ -195,3 +195,38 @@ async def test_ingest_progress_events(data_server, sample_csv: Path):
         assert len(progress_events) >= 3
         pcts = [e.progress_pct for e in progress_events]
         assert pcts == sorted(pcts)
+
+
+@pytest.mark.asyncio
+async def test_delete_catalog_after_ingest(data_server, sample_csv: Path):
+    """Ingest data then delete it — verifies catalog cache management."""
+    server, port = data_server
+    async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
+        stub = data_pb2_grpc.DataServiceStub(channel)
+
+        # Ingest first
+        request = data_pb2.IngestDataRequest(
+            source="csv",
+            instrument=str(sample_csv),
+            bar_type=BAR_TYPE,
+        )
+        async for _ in stub.IngestData(request):
+            pass
+
+        # Verify data exists
+        catalog_resp = await stub.ListCatalog(data_pb2.ListCatalogRequest())
+        assert len(catalog_resp.entries) >= 1
+
+        # Delete
+        del_resp = await stub.DeleteCatalog(
+            data_pb2.DeleteCatalogRequest(
+                instrument=catalog_resp.entries[0].instrument,
+                bar_type=BAR_TYPE,
+            )
+        )
+        assert del_resp.success is True
+
+        # Verify deleted
+        after_resp = await stub.ListCatalog(data_pb2.ListCatalogRequest())
+        remaining = [e for e in after_resp.entries if e.bar_type == BAR_TYPE]
+        assert len(remaining) == 0
