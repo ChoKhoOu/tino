@@ -16,6 +16,8 @@ import { loadMcpConfig, McpClient } from '@/mcp/index.js';
 import { registerMcpTools } from '@/mcp/mcp-tool-adapter.js';
 import { loadPermissions } from '@/config/permissions.js';
 import { loadHooks } from '@/config/hooks.js';
+import { loadSettings } from '@/config/settings.js';
+import { createNotificationHook } from '@/notifications/notification-hook.js';
 import { discoverPlugins } from '@/plugins/discover.js';
 import { SessionStore } from '@/session/index.js';
 import { SnapshotManager } from '@/snapshot/index.js';
@@ -34,7 +36,28 @@ export function useRuntimeInit(): UseRuntimeInitResult {
   const broker = useMemo(() => new ModelBroker(), []);
   const registry = useMemo(() => new ToolRegistry(), []);
   const permissions = useMemo(() => new PermissionEngine(loadPermissions()), []);
-  const hooks = useMemo(() => new HookRunner(loadHooks()), []);
+  const hooks = useMemo(() => {
+    const hookDefs = loadHooks();
+    const settings = loadSettings();
+    const tg = settings.telegram as
+      | { enabled?: boolean; botToken?: string; chatId?: string; events?: Record<string, boolean>; pnlReportInterval?: string }
+      | undefined;
+    if (tg?.enabled && tg.botToken && tg.chatId) {
+      hookDefs.push(createNotificationHook({
+        botToken: tg.botToken,
+        chatId: tg.chatId,
+        enabled: true,
+        events: {
+          tradeSignals: tg.events?.tradeSignals ?? true,
+          pnlReports: tg.events?.pnlReports ?? true,
+          riskAlerts: tg.events?.riskAlerts ?? true,
+          backtestComplete: tg.events?.backtestComplete ?? false,
+        },
+        pnlReportInterval: (tg.pnlReportInterval as 'hourly' | 'daily') ?? 'daily',
+      }));
+    }
+    return new HookRunner(hookDefs);
+  }, []);
   const sessionStore = useMemo(() => new SessionStore(), []);
   const agentRegistry = useMemo(() => new AgentRegistry(), []);
   const lspManager = useMemo(() => new LspManager(), []);

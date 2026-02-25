@@ -58,6 +58,21 @@ export const ThemeSettingsSchema = z.object({
   overrides: ThemeOverrideSchema.optional(),
 });
 
+export const TelegramEventsSchema = z.object({
+  tradeSignals: z.boolean().default(true),
+  pnlReports: z.boolean().default(true),
+  riskAlerts: z.boolean().default(true),
+  backtestComplete: z.boolean().default(false),
+}).default({});
+
+export const TelegramSettingsSchema = z.object({
+  botToken: z.string(),
+  chatId: z.string(),
+  enabled: z.boolean().default(false),
+  events: TelegramEventsSchema,
+  pnlReportInterval: z.enum(['hourly', 'daily']).default('daily'),
+});
+
 export const SettingsSchema = z.object({
   provider: z.string().optional(),
   modelId: z.string().optional(),
@@ -71,6 +86,7 @@ export const SettingsSchema = z.object({
   graduationThresholds: GraduationThresholdsSchema,
   onboardingCompleted: z.boolean().optional(),
   theme: ThemeSettingsSchema.optional(),
+  telegram: TelegramSettingsSchema.optional(),
 }).passthrough(); // Allow additional unknown keys for forward compatibility
 
 export type CustomProviderConfig = z.infer<typeof CustomProviderSchema>;
