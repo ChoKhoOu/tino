@@ -16,6 +16,7 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarkPriceInfo,
     MarginType,
     Orderbook,
     OrderbookLevel,
@@ -254,11 +255,11 @@ class BinanceConnector(BaseExchangeConnector):
         order_type: str,
         quantity: float,
         price: float | None = None,
-        *,
-        is_futures: bool | None = None,
+        **kwargs: object,
     ) -> OrderResult:
         # Auto-detect futures vs spot if not explicitly specified
-        futures = is_futures if is_futures is not None else self._is_futures_symbol(symbol)
+        is_futures = kwargs.get("is_futures")
+        futures = bool(is_futures) if is_futures is not None else self._is_futures_symbol(symbol)
         base_url = _FUTURES_BASE if futures else _SPOT_BASE
         endpoint = "/fapi/v1/order" if futures else "/api/v3/order"
 
@@ -364,13 +365,17 @@ class BinanceConnector(BaseExchangeConnector):
             logger.error("set_margin_type failed for %s: %s", symbol, exc)
             return False
 
-    async def get_mark_price(self, symbol: str) -> float:
+    async def get_mark_price(self, symbol: str) -> MarkPriceInfo:
         data = await self._request(
             "GET",
             f"{_FUTURES_BASE}/fapi/v1/premiumIndex",
             params={"symbol": symbol},
         )
-        return float(data["markPrice"])
+        return MarkPriceInfo(
+            mark_price=float(data["markPrice"]),
+            index_price=float(data.get("indexPrice", 0)),
+            timestamp=str(data.get("time", "")),
+        )
 
     async def get_funding_rate_history(
         self, symbol: str, limit: int = 100
@@ -389,22 +394,6 @@ class BinanceConnector(BaseExchangeConnector):
             )
             for r in data
         ]
-
-    async def calculate_liquidation_price(
-        self,
-        symbol: str,
-        side: str,
-        entry_price: float,
-        leverage: int,
-        margin: float,
-    ) -> float:
-        # Maintenance margin rate for Binance USDT-M perpetuals (simplified)
-        # In production, this should be looked up from exchange bracket data.
-        maintenance_margin_rate = 0.004
-        if side.upper() == "LONG":
-            return entry_price * (1 - 1 / leverage + maintenance_margin_rate)
-        else:
-            return entry_price * (1 + 1 / leverage - maintenance_margin_rate)
 
     async def close(self) -> None:
         await self._client.aclose()

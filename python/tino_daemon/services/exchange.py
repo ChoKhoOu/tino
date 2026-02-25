@@ -299,11 +299,11 @@ class ExchangeServiceServicer(exchange_pb2_grpc.ExchangeServiceServicer):
     ) -> Any:
         try:
             connector = get_connector(request.exchange)
-            mark_price = await connector.get_mark_price(request.symbol)
+            info = await connector.get_mark_price(request.symbol)
             return exchange_pb2.GetMarkPriceResponse(
-                mark_price=mark_price,
-                index_price=0.0,
-                timestamp="",
+                mark_price=info.mark_price,
+                index_price=info.index_price,
+                timestamp=info.timestamp,
             )
         except NotImplementedError as exc:
             context.set_code(grpc.StatusCode.UNIMPLEMENTED)

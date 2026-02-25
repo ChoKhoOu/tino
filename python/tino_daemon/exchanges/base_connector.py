@@ -14,14 +14,6 @@ class MarginType(Enum):
     ISOLATED = "isolated"
 
 
-class InstrumentType(Enum):
-    """Instrument type classification."""
-
-    SPOT = "spot"
-    PERPETUAL = "perpetual"
-    FUTURES = "futures"
-
-
 @dataclass(frozen=True)
 class Ticker:
     symbol: str
@@ -94,6 +86,31 @@ class OrderResult:
     message: str
 
 
+@dataclass(frozen=True)
+class MarkPriceInfo:
+    mark_price: float
+    index_price: float
+    timestamp: str
+
+
+def compute_liquidation_price(
+    side: str,
+    entry_price: float,
+    leverage: int,
+    maintenance_margin_rate: float = 0.004,
+) -> float:
+    """Shared liquidation price estimation for perpetual contracts.
+
+    Uses a simplified formula based on leverage and MMR.
+    # TODO: Production use should query exchange-specific tiered MMR brackets
+    # rather than using a single hardcoded rate.
+    """
+    if side.upper() == "LONG":
+        return entry_price * (1 - 1 / leverage + maintenance_margin_rate)
+    else:
+        return entry_price * (1 + 1 / leverage - maintenance_margin_rate)
+
+
 class BaseExchangeConnector(abc.ABC):
     """Abstract base class defining the unified exchange interface.
 
@@ -155,6 +172,7 @@ class BaseExchangeConnector(abc.ABC):
         order_type: str,
         quantity: float,
         price: float | None = None,
+        **kwargs: object,
     ) -> OrderResult:
         """Place an order. Requires API credentials."""
         ...
@@ -174,12 +192,14 @@ class BaseExchangeConnector(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def set_margin_type(self, symbol: str, margin_type: MarginType) -> bool:
+    async def set_margin_type(
+        self, symbol: str, margin_type: MarginType, leverage: int = 1
+    ) -> bool:
         """Set margin type (cross/isolated) for a perpetual contract symbol."""
         ...
 
     @abc.abstractmethod
-    async def get_mark_price(self, symbol: str) -> float:
+    async def get_mark_price(self, symbol: str) -> MarkPriceInfo:
         """Get the mark price for a perpetual contract symbol."""
         ...
 
@@ -190,17 +210,19 @@ class BaseExchangeConnector(abc.ABC):
         """Get historical funding rates for a perpetual contract symbol."""
         ...
 
-    @abc.abstractmethod
     async def calculate_liquidation_price(
         self,
         symbol: str,
         side: str,
         entry_price: float,
         leverage: int,
-        margin: float,
     ) -> float:
-        """Calculate the liquidation price for a perpetual position."""
-        ...
+        """Calculate the liquidation price for a perpetual position.
+
+        Uses the shared simplified formula. Subclasses may override to use
+        exchange-specific tiered MMR brackets.
+        """
+        return compute_liquidation_price(side, entry_price, leverage)
 
     async def close(self) -> None:
         """Clean up resources (e.g. HTTP client). Override if needed."""
