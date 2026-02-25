@@ -12,6 +12,7 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarginType,
     Orderbook,
     OrderbookLevel,
     OrderResult,
@@ -204,6 +205,97 @@ class OKXConnector(BaseExchangeConnector):
         raise NotImplementedError(
             "OKX cancel_order requires signed API — not yet implemented"
         )
+
+    @staticmethod
+    def _to_swap_inst_id(symbol: str) -> str:
+        """Convert symbol to OKX SWAP instId format (e.g. BTCUSDT -> BTC-USDT-SWAP)."""
+        inst_id = OKXConnector._to_inst_id(symbol)
+        if not inst_id.endswith("-SWAP"):
+            inst_id = f"{inst_id}-SWAP"
+        return inst_id
+
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        inst_id = self._to_swap_inst_id(symbol)
+        try:
+            await self._rate_limiter.acquire()
+            resp = await self._client.post(
+                f"{_BASE_URL}/api/v5/account/set-leverage",
+                json={
+                    "instId": inst_id,
+                    "lever": str(leverage),
+                    "mgnMode": "cross",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("code") != "0":
+                raise ValueError(data.get("msg", "unknown"))
+            return True
+        except Exception as exc:
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+
+    async def set_margin_type(self, symbol: str, margin_type: MarginType) -> bool:
+        inst_id = self._to_swap_inst_id(symbol)
+        mgn_mode = "isolated" if margin_type == MarginType.ISOLATED else "cross"
+        try:
+            await self._rate_limiter.acquire()
+            resp = await self._client.post(
+                f"{_BASE_URL}/api/v5/account/set-leverage",
+                json={
+                    "instId": inst_id,
+                    "lever": "10",
+                    "mgnMode": mgn_mode,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("code") != "0":
+                raise ValueError(data.get("msg", "unknown"))
+            return True
+        except Exception as exc:
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+
+    async def get_mark_price(self, symbol: str) -> float:
+        inst_id = self._to_swap_inst_id(symbol)
+        data = await self._request(
+            f"{_BASE_URL}/api/v5/public/mark-price",
+            params={"instId": inst_id, "instType": "SWAP"},
+        )
+        return float(data["data"][0]["markPx"])
+
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        inst_id = self._to_swap_inst_id(symbol)
+        data = await self._request(
+            f"{_BASE_URL}/api/v5/public/funding-rate-history",
+            params={"instId": inst_id, "limit": str(min(limit, 100))},
+        )
+        return [
+            FundingRate(
+                symbol=r["instId"],
+                funding_rate=float(r["fundingRate"]),
+                next_funding_time="",
+                timestamp=r["fundingTime"],
+            )
+            for r in data["data"]
+        ]
+
+    async def calculate_liquidation_price(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        leverage: int,
+        margin: float,
+    ) -> float:
+        maintenance_margin_rate = 0.004
+        if side.upper() == "LONG":
+            return entry_price * (1 - 1 / leverage + maintenance_margin_rate)
+        else:
+            return entry_price * (1 + 1 / leverage - maintenance_margin_rate)
 
     async def close(self) -> None:
         await self._client.aclose()

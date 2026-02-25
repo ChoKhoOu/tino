@@ -16,6 +16,7 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarginType,
     Orderbook,
     OrderbookLevel,
     OrderResult,
@@ -220,6 +221,7 @@ class BinanceConnector(BaseExchangeConnector):
             qty = float(p.get("positionAmt", 0))
             if qty == 0:
                 continue
+            margin_type_str = p.get("marginType", "cross").lower()
             positions.append(
                 Position(
                     symbol=p["symbol"],
@@ -228,9 +230,22 @@ class BinanceConnector(BaseExchangeConnector):
                     entry_price=float(p.get("entryPrice", 0)),
                     unrealized_pnl=float(p.get("unRealizedProfit", 0)),
                     leverage=float(p.get("leverage", 1)),
+                    mark_price=float(p.get("markPrice", 0)),
+                    liquidation_price=float(p.get("liquidationPrice", 0)),
+                    margin_type=MarginType.ISOLATED if margin_type_str == "isolated" else MarginType.CROSS,
                 )
             )
         return positions
+
+    @staticmethod
+    def _is_futures_symbol(symbol: str) -> bool:
+        """Detect if a symbol is a perpetual futures symbol on Binance.
+
+        Binance futures symbols typically end with USDT or BUSD and are
+        traded on fapi. This heuristic covers the common linear perpetuals.
+        """
+        s = symbol.upper()
+        return s.endswith("USDT") or s.endswith("BUSD")
 
     async def place_order(
         self,
@@ -239,7 +254,14 @@ class BinanceConnector(BaseExchangeConnector):
         order_type: str,
         quantity: float,
         price: float | None = None,
+        *,
+        is_futures: bool | None = None,
     ) -> OrderResult:
+        # Auto-detect futures vs spot if not explicitly specified
+        futures = is_futures if is_futures is not None else self._is_futures_symbol(symbol)
+        base_url = _FUTURES_BASE if futures else _SPOT_BASE
+        endpoint = "/fapi/v1/order" if futures else "/api/v3/order"
+
         params: dict[str, str] = {
             "symbol": symbol,
             "side": side.upper(),
@@ -253,7 +275,7 @@ class BinanceConnector(BaseExchangeConnector):
         try:
             data = await self._request(
                 "POST",
-                f"{_SPOT_BASE}/api/v3/order",
+                f"{base_url}{endpoint}",
                 params=params,
                 signed=True,
             )
@@ -308,6 +330,81 @@ class BinanceConnector(BaseExchangeConnector):
                 success=False,
                 message=f"Cancel failed: {exc}",
             )
+
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        try:
+            await self._request(
+                "POST",
+                f"{_FUTURES_BASE}/fapi/v1/leverage",
+                params={"symbol": symbol, "leverage": str(leverage)},
+                signed=True,
+            )
+            return True
+        except Exception as exc:
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+
+    async def set_margin_type(self, symbol: str, margin_type: MarginType) -> bool:
+        margin_str = "CROSSED" if margin_type == MarginType.CROSS else "ISOLATED"
+        try:
+            await self._request(
+                "POST",
+                f"{_FUTURES_BASE}/fapi/v1/marginType",
+                params={"symbol": symbol, "marginType": margin_str},
+                signed=True,
+            )
+            return True
+        except httpx.HTTPStatusError as exc:
+            # Binance returns -4046 if margin type is already set
+            if "No need to change margin type" in exc.response.text:
+                return True
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+        except Exception as exc:
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+
+    async def get_mark_price(self, symbol: str) -> float:
+        data = await self._request(
+            "GET",
+            f"{_FUTURES_BASE}/fapi/v1/premiumIndex",
+            params={"symbol": symbol},
+        )
+        return float(data["markPrice"])
+
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        data = await self._request(
+            "GET",
+            f"{_FUTURES_BASE}/fapi/v1/fundingRate",
+            params={"symbol": symbol, "limit": str(min(limit, 1000))},
+        )
+        return [
+            FundingRate(
+                symbol=r["symbol"],
+                funding_rate=float(r["fundingRate"]),
+                next_funding_time="",
+                timestamp=str(r["fundingTime"]),
+            )
+            for r in data
+        ]
+
+    async def calculate_liquidation_price(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        leverage: int,
+        margin: float,
+    ) -> float:
+        # Maintenance margin rate for Binance USDT-M perpetuals (simplified)
+        # In production, this should be looked up from exchange bracket data.
+        maintenance_margin_rate = 0.004
+        if side.upper() == "LONG":
+            return entry_price * (1 - 1 / leverage + maintenance_margin_rate)
+        else:
+            return entry_price * (1 + 1 / leverage - maintenance_margin_rate)
 
     async def close(self) -> None:
         await self._client.aclose()

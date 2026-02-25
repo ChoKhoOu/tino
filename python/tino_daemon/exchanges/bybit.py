@@ -12,6 +12,7 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarginType,
     Orderbook,
     OrderbookLevel,
     OrderResult,
@@ -195,6 +196,95 @@ class BybitConnector(BaseExchangeConnector):
         raise NotImplementedError(
             "Bybit cancel_order requires signed API — not yet implemented"
         )
+
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        try:
+            await self._rate_limiter.acquire()
+            resp = await self._client.post(
+                f"{_BASE_URL}/v5/position/set-leverage",
+                json={
+                    "category": "linear",
+                    "symbol": symbol,
+                    "buyLeverage": str(leverage),
+                    "sellLeverage": str(leverage),
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("retCode") not in (0, 110043):
+                # 110043 = leverage not modified (already set)
+                raise ValueError(data.get("retMsg", "unknown"))
+            return True
+        except Exception as exc:
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+
+    async def set_margin_type(self, symbol: str, margin_type: MarginType) -> bool:
+        trade_mode = 1 if margin_type == MarginType.ISOLATED else 0
+        try:
+            await self._rate_limiter.acquire()
+            resp = await self._client.post(
+                f"{_BASE_URL}/v5/position/switch-isolated",
+                json={
+                    "category": "linear",
+                    "symbol": symbol,
+                    "tradeMode": trade_mode,
+                    "buyLeverage": "10",
+                    "sellLeverage": "10",
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            if data.get("retCode") not in (0, 110026):
+                # 110026 = margin mode not modified (already set)
+                raise ValueError(data.get("retMsg", "unknown"))
+            return True
+        except Exception as exc:
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+
+    async def get_mark_price(self, symbol: str) -> float:
+        data = await self._request(
+            f"{_BASE_URL}/v5/market/tickers",
+            params={"category": "linear", "symbol": symbol},
+        )
+        t = data["result"]["list"][0]
+        return float(t["markPrice"])
+
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        data = await self._request(
+            f"{_BASE_URL}/v5/market/funding/history",
+            params={
+                "category": "linear",
+                "symbol": symbol,
+                "limit": str(min(limit, 200)),
+            },
+        )
+        return [
+            FundingRate(
+                symbol=r["symbol"],
+                funding_rate=float(r["fundingRate"]),
+                next_funding_time="",
+                timestamp=str(r["fundingRateTimestamp"]),
+            )
+            for r in data["result"]["list"]
+        ]
+
+    async def calculate_liquidation_price(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        leverage: int,
+        margin: float,
+    ) -> float:
+        maintenance_margin_rate = 0.004
+        if side.upper() == "LONG":
+            return entry_price * (1 - 1 / leverage + maintenance_margin_rate)
+        else:
+            return entry_price * (1 + 1 / leverage - maintenance_margin_rate)
 
     async def close(self) -> None:
         await self._client.aclose()

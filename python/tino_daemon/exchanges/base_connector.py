@@ -4,6 +4,22 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass
+from enum import Enum
+
+
+class MarginType(Enum):
+    """Margin mode for perpetual contracts."""
+
+    CROSS = "cross"
+    ISOLATED = "isolated"
+
+
+class InstrumentType(Enum):
+    """Instrument type classification."""
+
+    SPOT = "spot"
+    PERPETUAL = "perpetual"
+    FUTURES = "futures"
 
 
 @dataclass(frozen=True)
@@ -66,6 +82,9 @@ class Position:
     entry_price: float
     unrealized_pnl: float
     leverage: float
+    mark_price: float = 0.0
+    liquidation_price: float = 0.0
+    margin_type: MarginType = MarginType.CROSS
 
 
 @dataclass(frozen=True)
@@ -147,6 +166,40 @@ class BaseExchangeConnector(abc.ABC):
         order_id: str,
     ) -> OrderResult:
         """Cancel an order. Requires API credentials."""
+        ...
+
+    @abc.abstractmethod
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        """Set leverage for a perpetual contract symbol."""
+        ...
+
+    @abc.abstractmethod
+    async def set_margin_type(self, symbol: str, margin_type: MarginType) -> bool:
+        """Set margin type (cross/isolated) for a perpetual contract symbol."""
+        ...
+
+    @abc.abstractmethod
+    async def get_mark_price(self, symbol: str) -> float:
+        """Get the mark price for a perpetual contract symbol."""
+        ...
+
+    @abc.abstractmethod
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        """Get historical funding rates for a perpetual contract symbol."""
+        ...
+
+    @abc.abstractmethod
+    async def calculate_liquidation_price(
+        self,
+        symbol: str,
+        side: str,
+        entry_price: float,
+        leverage: int,
+        margin: float,
+    ) -> float:
+        """Calculate the liquidation price for a perpetual position."""
         ...
 
     async def close(self) -> None:
