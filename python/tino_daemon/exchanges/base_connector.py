@@ -87,6 +87,35 @@ class OrderResult:
 
 
 @dataclass(frozen=True)
+class TpSlOrderResult:
+    """Result of placing a TP/SL (take-profit / stop-loss) order pair."""
+
+    order_id: str
+    success: bool
+    message: str
+    tp_order_id: str = ""
+    sl_order_id: str = ""
+
+
+@dataclass(frozen=True)
+class TrailingStopResult:
+    """Result of placing a trailing stop order."""
+
+    order_id: str
+    success: bool
+    message: str
+
+
+@dataclass(frozen=True)
+class StopOrderResult:
+    """Result of placing a stop (conditional) order."""
+
+    order_id: str
+    success: bool
+    message: str
+
+
+@dataclass(frozen=True)
 class MarkPriceInfo:
     mark_price: float
     index_price: float
@@ -209,6 +238,59 @@ class BaseExchangeConnector(abc.ABC):
     ) -> list[FundingRate]:
         """Get historical funding rates for a perpetual contract symbol."""
         ...
+
+    async def place_tp_sl_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        tp_price: float | None = None,
+        sl_price: float | None = None,
+    ) -> TpSlOrderResult:
+        """Place a take-profit / stop-loss order pair.
+
+        At least one of tp_price or sl_price must be provided.
+        Requires API credentials. Subclasses should override.
+        """
+        raise NotImplementedError(
+            f"{self.name} place_tp_sl_order not implemented"
+        )
+
+    async def place_trailing_stop(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        callback_rate: float,
+        activation_price: float | None = None,
+    ) -> TrailingStopResult:
+        """Place a trailing stop order.
+
+        callback_rate is the percentage retracement that triggers the stop
+        (e.g. 1.0 = 1%). activation_price optionally sets the price at which
+        trailing begins. Requires API credentials. Subclasses should override.
+        """
+        raise NotImplementedError(
+            f"{self.name} place_trailing_stop not implemented"
+        )
+
+    async def place_stop_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        stop_price: float,
+        price: float | None = None,
+    ) -> StopOrderResult:
+        """Place a stop (conditional) order.
+
+        The order executes when the market reaches stop_price.
+        If price is provided, a stop-limit order is placed; otherwise
+        a stop-market order. Requires API credentials. Subclasses should override.
+        """
+        raise NotImplementedError(
+            f"{self.name} place_stop_order not implemented"
+        )
 
     async def calculate_liquidation_price(
         self,

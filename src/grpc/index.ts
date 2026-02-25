@@ -7,6 +7,7 @@ export { DaemonClient, type HealthCheckResult } from "./daemon-client.js";
 export { DataClient } from "./data-client.js";
 export { BacktestClient } from "./backtest-client.js";
 export { TradingClient } from "./trading-client.js";
+export { ExchangeClient } from "./exchange-client.js";
 export { PortfolioClient } from "./portfolio-client.js";
 export { ChartClient } from "./chart-client.js";
 export { StreamingClient } from "./streaming-client.js";

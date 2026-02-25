@@ -22,7 +22,10 @@ from tino_daemon.exchanges.base_connector import (
     OrderbookLevel,
     OrderResult,
     Position,
+    StopOrderResult,
     Ticker,
+    TpSlOrderResult,
+    TrailingStopResult,
 )
 from tino_daemon.exchanges.rate_limiter import RateLimiter
 
@@ -394,6 +397,152 @@ class BinanceConnector(BaseExchangeConnector):
             )
             for r in data
         ]
+
+    async def place_tp_sl_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        tp_price: float | None = None,
+        sl_price: float | None = None,
+    ) -> TpSlOrderResult:
+        if tp_price is None and sl_price is None:
+            return TpSlOrderResult(
+                order_id="", success=False,
+                message="At least one of tp_price or sl_price is required",
+            )
+
+        # TP/SL are placed as opposing-side stop orders on Binance futures
+        close_side = "SELL" if side.upper() == "BUY" else "BUY"
+        tp_order_id = ""
+        sl_order_id = ""
+
+        try:
+            if tp_price is not None:
+                tp_params: dict[str, str] = {
+                    "symbol": symbol,
+                    "side": close_side,
+                    "type": "TAKE_PROFIT_MARKET",
+                    "stopPrice": str(tp_price),
+                    "closePosition": "true",
+                }
+                tp_data = await self._request(
+                    "POST", f"{_FUTURES_BASE}/fapi/v1/order",
+                    params=tp_params, signed=True,
+                )
+                tp_order_id = str(tp_data["orderId"])
+
+            if sl_price is not None:
+                sl_params: dict[str, str] = {
+                    "symbol": symbol,
+                    "side": close_side,
+                    "type": "STOP_MARKET",
+                    "stopPrice": str(sl_price),
+                    "closePosition": "true",
+                }
+                sl_data = await self._request(
+                    "POST", f"{_FUTURES_BASE}/fapi/v1/order",
+                    params=sl_params, signed=True,
+                )
+                sl_order_id = str(sl_data["orderId"])
+
+            return TpSlOrderResult(
+                order_id=tp_order_id or sl_order_id,
+                success=True,
+                message="TP/SL orders placed successfully",
+                tp_order_id=tp_order_id,
+                sl_order_id=sl_order_id,
+            )
+        except httpx.HTTPStatusError as exc:
+            return TpSlOrderResult(
+                order_id="", success=False,
+                message=f"TP/SL order failed: {exc.response.text}",
+            )
+        except Exception as exc:
+            return TpSlOrderResult(
+                order_id="", success=False,
+                message=f"TP/SL order failed: {exc}",
+            )
+
+    async def place_trailing_stop(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        callback_rate: float,
+        activation_price: float | None = None,
+    ) -> TrailingStopResult:
+        params: dict[str, str] = {
+            "symbol": symbol,
+            "side": side.upper(),
+            "type": "TRAILING_STOP_MARKET",
+            "quantity": str(quantity),
+            "callbackRate": str(callback_rate),
+        }
+        if activation_price is not None:
+            params["activationPrice"] = str(activation_price)
+
+        try:
+            data = await self._request(
+                "POST", f"{_FUTURES_BASE}/fapi/v1/order",
+                params=params, signed=True,
+            )
+            return TrailingStopResult(
+                order_id=str(data["orderId"]),
+                success=True,
+                message="Trailing stop order placed successfully",
+            )
+        except httpx.HTTPStatusError as exc:
+            return TrailingStopResult(
+                order_id="", success=False,
+                message=f"Trailing stop failed: {exc.response.text}",
+            )
+        except Exception as exc:
+            return TrailingStopResult(
+                order_id="", success=False,
+                message=f"Trailing stop failed: {exc}",
+            )
+
+    async def place_stop_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        stop_price: float,
+        price: float | None = None,
+    ) -> StopOrderResult:
+        order_type = "STOP" if price is not None else "STOP_MARKET"
+        params: dict[str, str] = {
+            "symbol": symbol,
+            "side": side.upper(),
+            "type": order_type,
+            "quantity": str(quantity),
+            "stopPrice": str(stop_price),
+        }
+        if price is not None:
+            params["price"] = str(price)
+            params["timeInForce"] = "GTC"
+
+        try:
+            data = await self._request(
+                "POST", f"{_FUTURES_BASE}/fapi/v1/order",
+                params=params, signed=True,
+            )
+            return StopOrderResult(
+                order_id=str(data["orderId"]),
+                success=True,
+                message="Stop order placed successfully",
+            )
+        except httpx.HTTPStatusError as exc:
+            return StopOrderResult(
+                order_id="", success=False,
+                message=f"Stop order failed: {exc.response.text}",
+            )
+        except Exception as exc:
+            return StopOrderResult(
+                order_id="", success=False,
+                message=f"Stop order failed: {exc}",
+            )
 
     async def close(self) -> None:
         await self._client.aclose()

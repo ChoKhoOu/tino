@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tino/exchange/v1/exchange.proto.
  */
 export const file_tino_exchange_v1_exchange: GenFile = /*@__PURE__*/
-  fileDesc("Ch90aW5vL2V4Y2hhbmdlL3YxL2V4Y2hhbmdlLnByb3RvEhB0aW5vLmV4Y2hhbmdlLnYxIjQKEEdldFRpY2tlclJlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJIqcBChFHZXRUaWNrZXJSZXNwb25zZRIOCgZzeW1ib2wYASABKAkSEgoKbGFzdF9wcmljZRgCIAEoARIRCgliaWRfcHJpY2UYAyABKAESEQoJYXNrX3ByaWNlGAQgASgBEhIKCnZvbHVtZV8yNGgYBSABKAESEAoIaGlnaF8yNGgYBiABKAESDwoHbG93XzI0aBgHIAEoARIRCgl0aW1lc3RhbXAYCCABKAkiewoQR2V0S2xpbmVzUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSEAoIaW50ZXJ2YWwYAyABKAkSDQoFbGltaXQYBCABKAUSEgoKc3RhcnRfdGltZRgFIAEoCRIQCghlbmRfdGltZRgGIAEoCSJ2CgVLbGluZRIRCglvcGVuX3RpbWUYASABKAMSDAoEb3BlbhgCIAEoARIMCgRoaWdoGAMgASgBEgsKA2xvdxgEIAEoARINCgVjbG9zZRgFIAEoARIOCgZ2b2x1bWUYBiABKAESEgoKY2xvc2VfdGltZRgHIAEoAyI8ChFHZXRLbGluZXNSZXNwb25zZRInCgZrbGluZXMYASADKAsyFy50aW5vLmV4Y2hhbmdlLnYxLktsaW5lIjkKFUdldEZ1bmRpbmdSYXRlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkibAoWR2V0RnVuZGluZ1JhdGVSZXNwb25zZRIOCgZzeW1ib2wYASABKAkSFAoMZnVuZGluZ19yYXRlGAIgASgBEhkKEW5leHRfZnVuZGluZ190aW1lGAMgASgJEhEKCXRpbWVzdGFtcBgEIAEoCSJGChNHZXRPcmRlcmJvb2tSZXF1ZXN0EhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRINCgVsaW1pdBgDIAEoBSIxCg5PcmRlcmJvb2tMZXZlbBINCgVwcmljZRgBIAEoARIQCghxdWFudGl0eRgCIAEoASKJAQoUR2V0T3JkZXJib29rUmVzcG9uc2USLgoEYmlkcxgBIAMoCzIgLnRpbm8uZXhjaGFuZ2UudjEuT3JkZXJib29rTGV2ZWwSLgoEYXNrcxgCIAMoCzIgLnRpbm8uZXhjaGFuZ2UudjEuT3JkZXJib29rTGV2ZWwSEQoJdGltZXN0YW1wGAMgASgJIiwKGEdldEFjY291bnRCYWxhbmNlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCSJKCgxCYWxhbmNlRW50cnkSDQoFYXNzZXQYASABKAkSDAoEZnJlZRgCIAEoARIOCgZsb2NrZWQYAyABKAESDQoFdG90YWwYBCABKAEiTQoZR2V0QWNjb3VudEJhbGFuY2VSZXNwb25zZRIwCghiYWxhbmNlcxgBIAMoCzIeLnRpbm8uZXhjaGFuZ2UudjEuQmFsYW5jZUVudHJ5Ij8KG0dldEV4Y2hhbmdlUG9zaXRpb25zUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkigQEKEEV4Y2hhbmdlUG9zaXRpb24SDgoGc3ltYm9sGAEgASgJEgwKBHNpZGUYAiABKAkSEAoIcXVhbnRpdHkYAyABKAESEwoLZW50cnlfcHJpY2UYBCABKAESFgoOdW5yZWFsaXplZF9wbmwYBSABKAESEAoIbGV2ZXJhZ2UYBiABKAEiVQocR2V0RXhjaGFuZ2VQb3NpdGlvbnNSZXNwb25zZRI1Cglwb3NpdGlvbnMYASADKAsyIi50aW5vLmV4Y2hhbmdlLnYxLkV4Y2hhbmdlUG9zaXRpb24ieAoRUGxhY2VPcmRlclJlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJEgwKBHNpZGUYAyABKAkSEgoKb3JkZXJfdHlwZRgEIAEoCRIQCghxdWFudGl0eRgFIAEoARINCgVwcmljZRgGIAEoASJIChJQbGFjZU9yZGVyUmVzcG9uc2USEAoIb3JkZXJfaWQYASABKAkSDwoHc3VjY2VzcxgCIAEoCBIPCgdtZXNzYWdlGAMgASgJIlAKGkNhbmNlbEV4Y2hhbmdlT3JkZXJSZXF1ZXN0EhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRIQCghvcmRlcl9pZBgDIAEoCSI/ChtDYW5jZWxFeGNoYW5nZU9yZGVyUmVzcG9uc2USDwoHc3VjY2VzcxgBIAEoCBIPCgdtZXNzYWdlGAIgASgJMrMGCg9FeGNoYW5nZVNlcnZpY2USVAoJR2V0VGlja2VyEiIudGluby5leGNoYW5nZS52MS5HZXRUaWNrZXJSZXF1ZXN0GiMudGluby5leGNoYW5nZS52MS5HZXRUaWNrZXJSZXNwb25zZRJUCglHZXRLbGluZXMSIi50aW5vLmV4Y2hhbmdlLnYxLkdldEtsaW5lc1JlcXVlc3QaIy50aW5vLmV4Y2hhbmdlLnYxLkdldEtsaW5lc1Jlc3BvbnNlEmMKDkdldEZ1bmRpbmdSYXRlEicudGluby5leGNoYW5nZS52MS5HZXRGdW5kaW5nUmF0ZVJlcXVlc3QaKC50aW5vLmV4Y2hhbmdlLnYxLkdldEZ1bmRpbmdSYXRlUmVzcG9uc2USXQoMR2V0T3JkZXJib29rEiUudGluby5leGNoYW5nZS52MS5HZXRPcmRlcmJvb2tSZXF1ZXN0GiYudGluby5leGNoYW5nZS52MS5HZXRPcmRlcmJvb2tSZXNwb25zZRJsChFHZXRBY2NvdW50QmFsYW5jZRIqLnRpbm8uZXhjaGFuZ2UudjEuR2V0QWNjb3VudEJhbGFuY2VSZXF1ZXN0GisudGluby5leGNoYW5nZS52MS5HZXRBY2NvdW50QmFsYW5jZVJlc3BvbnNlEnUKFEdldEV4Y2hhbmdlUG9zaXRpb25zEi0udGluby5leGNoYW5nZS52MS5HZXRFeGNoYW5nZVBvc2l0aW9uc1JlcXVlc3QaLi50aW5vLmV4Y2hhbmdlLnYxLkdldEV4Y2hhbmdlUG9zaXRpb25zUmVzcG9uc2USVwoKUGxhY2VPcmRlchIjLnRpbm8uZXhjaGFuZ2UudjEuUGxhY2VPcmRlclJlcXVlc3QaJC50aW5vLmV4Y2hhbmdlLnYxLlBsYWNlT3JkZXJSZXNwb25zZRJyChNDYW5jZWxFeGNoYW5nZU9yZGVyEiwudGluby5leGNoYW5nZS52MS5DYW5jZWxFeGNoYW5nZU9yZGVyUmVxdWVzdBotLnRpbm8uZXhjaGFuZ2UudjEuQ2FuY2VsRXhjaGFuZ2VPcmRlclJlc3BvbnNlYgZwcm90bzM");
+  fileDesc("Ch90aW5vL2V4Y2hhbmdlL3YxL2V4Y2hhbmdlLnByb3RvEhB0aW5vLmV4Y2hhbmdlLnYxIjQKEEdldFRpY2tlclJlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJIqcBChFHZXRUaWNrZXJSZXNwb25zZRIOCgZzeW1ib2wYASABKAkSEgoKbGFzdF9wcmljZRgCIAEoARIRCgliaWRfcHJpY2UYAyABKAESEQoJYXNrX3ByaWNlGAQgASgBEhIKCnZvbHVtZV8yNGgYBSABKAESEAoIaGlnaF8yNGgYBiABKAESDwoHbG93XzI0aBgHIAEoARIRCgl0aW1lc3RhbXAYCCABKAkiewoQR2V0S2xpbmVzUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSEAoIaW50ZXJ2YWwYAyABKAkSDQoFbGltaXQYBCABKAUSEgoKc3RhcnRfdGltZRgFIAEoCRIQCghlbmRfdGltZRgGIAEoCSJ2CgVLbGluZRIRCglvcGVuX3RpbWUYASABKAMSDAoEb3BlbhgCIAEoARIMCgRoaWdoGAMgASgBEgsKA2xvdxgEIAEoARINCgVjbG9zZRgFIAEoARIOCgZ2b2x1bWUYBiABKAESEgoKY2xvc2VfdGltZRgHIAEoAyI8ChFHZXRLbGluZXNSZXNwb25zZRInCgZrbGluZXMYASADKAsyFy50aW5vLmV4Y2hhbmdlLnYxLktsaW5lIjkKFUdldEZ1bmRpbmdSYXRlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkibAoWR2V0RnVuZGluZ1JhdGVSZXNwb25zZRIOCgZzeW1ib2wYASABKAkSFAoMZnVuZGluZ19yYXRlGAIgASgBEhkKEW5leHRfZnVuZGluZ190aW1lGAMgASgJEhEKCXRpbWVzdGFtcBgEIAEoCSJGChNHZXRPcmRlcmJvb2tSZXF1ZXN0EhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRINCgVsaW1pdBgDIAEoBSIxCg5PcmRlcmJvb2tMZXZlbBINCgVwcmljZRgBIAEoARIQCghxdWFudGl0eRgCIAEoASKJAQoUR2V0T3JkZXJib29rUmVzcG9uc2USLgoEYmlkcxgBIAMoCzIgLnRpbm8uZXhjaGFuZ2UudjEuT3JkZXJib29rTGV2ZWwSLgoEYXNrcxgCIAMoCzIgLnRpbm8uZXhjaGFuZ2UudjEuT3JkZXJib29rTGV2ZWwSEQoJdGltZXN0YW1wGAMgASgJIiwKGEdldEFjY291bnRCYWxhbmNlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCSJKCgxCYWxhbmNlRW50cnkSDQoFYXNzZXQYASABKAkSDAoEZnJlZRgCIAEoARIOCgZsb2NrZWQYAyABKAESDQoFdG90YWwYBCABKAEiTQoZR2V0QWNjb3VudEJhbGFuY2VSZXNwb25zZRIwCghiYWxhbmNlcxgBIAMoCzIeLnRpbm8uZXhjaGFuZ2UudjEuQmFsYW5jZUVudHJ5Ij8KG0dldEV4Y2hhbmdlUG9zaXRpb25zUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkixQEKEEV4Y2hhbmdlUG9zaXRpb24SDgoGc3ltYm9sGAEgASgJEgwKBHNpZGUYAiABKAkSEAoIcXVhbnRpdHkYAyABKAESEwoLZW50cnlfcHJpY2UYBCABKAESFgoOdW5yZWFsaXplZF9wbmwYBSABKAESEAoIbGV2ZXJhZ2UYBiABKAESEgoKbWFya19wcmljZRgHIAEoARIZChFsaXF1aWRhdGlvbl9wcmljZRgIIAEoARITCgttYXJnaW5fdHlwZRgJIAEoCSJVChxHZXRFeGNoYW5nZVBvc2l0aW9uc1Jlc3BvbnNlEjUKCXBvc2l0aW9ucxgBIAMoCzIiLnRpbm8uZXhjaGFuZ2UudjEuRXhjaGFuZ2VQb3NpdGlvbiJ4ChFQbGFjZU9yZGVyUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSDAoEc2lkZRgDIAEoCRISCgpvcmRlcl90eXBlGAQgASgJEhAKCHF1YW50aXR5GAUgASgBEg0KBXByaWNlGAYgASgBIkgKElBsYWNlT3JkZXJSZXNwb25zZRIQCghvcmRlcl9pZBgBIAEoCRIPCgdzdWNjZXNzGAIgASgIEg8KB21lc3NhZ2UYAyABKAkiUAoaQ2FuY2VsRXhjaGFuZ2VPcmRlclJlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJEhAKCG9yZGVyX2lkGAMgASgJIj8KG0NhbmNlbEV4Y2hhbmdlT3JkZXJSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEg8KB21lc3NhZ2UYAiABKAkiSAoSU2V0TGV2ZXJhZ2VSZXF1ZXN0EhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRIQCghsZXZlcmFnZRgDIAEoBSJAChNTZXRMZXZlcmFnZVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgSGAoQY3VycmVudF9sZXZlcmFnZRgCIAEoBSJNChRTZXRNYXJnaW5UeXBlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSEwoLbWFyZ2luX3R5cGUYAyABKAkiKAoVU2V0TWFyZ2luVHlwZVJlc3BvbnNlEg8KB3N1Y2Nlc3MYASABKAgiNwoTR2V0TWFya1ByaWNlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkiUgoUR2V0TWFya1ByaWNlUmVzcG9uc2USEgoKbWFya19wcmljZRgBIAEoARITCgtpbmRleF9wcmljZRgCIAEoARIRCgl0aW1lc3RhbXAYAyABKAkiTwocR2V0RnVuZGluZ1JhdGVIaXN0b3J5UmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSDQoFbGltaXQYAyABKAUiTAoRRnVuZGluZ1JhdGVSZWNvcmQSDgoGc3ltYm9sGAEgASgJEhQKDGZ1bmRpbmdfcmF0ZRgCIAEoARIRCgl0aW1lc3RhbXAYAyABKAkiVQodR2V0RnVuZGluZ1JhdGVIaXN0b3J5UmVzcG9uc2USNAoHcmVjb3JkcxgBIAMoCzIjLnRpbm8uZXhjaGFuZ2UudjEuRnVuZGluZ1JhdGVSZWNvcmQifQoVUGxhY2VUcFNsT3JkZXJSZXF1ZXN0EhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRIMCgRzaWRlGAMgASgJEhAKCHF1YW50aXR5GAQgASgBEhAKCHRwX3ByaWNlGAUgASgBEhAKCHNsX3ByaWNlGAYgASgBInYKFlBsYWNlVHBTbE9yZGVyUmVzcG9uc2USEAoIb3JkZXJfaWQYASABKAkSDwoHc3VjY2VzcxgCIAEoCBIPCgdtZXNzYWdlGAMgASgJEhMKC3RwX29yZGVyX2lkGAQgASgJEhMKC3NsX29yZGVyX2lkGAUgASgJIo0BChhQbGFjZVRyYWlsaW5nU3RvcFJlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJEgwKBHNpZGUYAyABKAkSEAoIcXVhbnRpdHkYBCABKAESFQoNY2FsbGJhY2tfcmF0ZRgFIAEoARIYChBhY3RpdmF0aW9uX3ByaWNlGAYgASgBIk8KGVBsYWNlVHJhaWxpbmdTdG9wUmVzcG9uc2USEAoIb3JkZXJfaWQYASABKAkSDwoHc3VjY2VzcxgCIAEoCBIPCgdtZXNzYWdlGAMgASgJInwKFVBsYWNlU3RvcE9yZGVyUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkSDAoEc2lkZRgDIAEoCRIQCghxdWFudGl0eRgEIAEoARISCgpzdG9wX3ByaWNlGAUgASgBEg0KBXByaWNlGAYgASgBIkwKFlBsYWNlU3RvcE9yZGVyUmVzcG9uc2USEAoIb3JkZXJfaWQYASABKAkSDwoHc3VjY2VzcxgCIAEoCBIPCgdtZXNzYWdlGAMgASgJMoIMCg9FeGNoYW5nZVNlcnZpY2USVAoJR2V0VGlja2VyEiIudGluby5leGNoYW5nZS52MS5HZXRUaWNrZXJSZXF1ZXN0GiMudGluby5leGNoYW5nZS52MS5HZXRUaWNrZXJSZXNwb25zZRJUCglHZXRLbGluZXMSIi50aW5vLmV4Y2hhbmdlLnYxLkdldEtsaW5lc1JlcXVlc3QaIy50aW5vLmV4Y2hhbmdlLnYxLkdldEtsaW5lc1Jlc3BvbnNlEmMKDkdldEZ1bmRpbmdSYXRlEicudGluby5leGNoYW5nZS52MS5HZXRGdW5kaW5nUmF0ZVJlcXVlc3QaKC50aW5vLmV4Y2hhbmdlLnYxLkdldEZ1bmRpbmdSYXRlUmVzcG9uc2USXQoMR2V0T3JkZXJib29rEiUudGluby5leGNoYW5nZS52MS5HZXRPcmRlcmJvb2tSZXF1ZXN0GiYudGluby5leGNoYW5nZS52MS5HZXRPcmRlcmJvb2tSZXNwb25zZRJsChFHZXRBY2NvdW50QmFsYW5jZRIqLnRpbm8uZXhjaGFuZ2UudjEuR2V0QWNjb3VudEJhbGFuY2VSZXF1ZXN0GisudGluby5leGNoYW5nZS52MS5HZXRBY2NvdW50QmFsYW5jZVJlc3BvbnNlEnUKFEdldEV4Y2hhbmdlUG9zaXRpb25zEi0udGluby5leGNoYW5nZS52MS5HZXRFeGNoYW5nZVBvc2l0aW9uc1JlcXVlc3QaLi50aW5vLmV4Y2hhbmdlLnYxLkdldEV4Y2hhbmdlUG9zaXRpb25zUmVzcG9uc2USVwoKUGxhY2VPcmRlchIjLnRpbm8uZXhjaGFuZ2UudjEuUGxhY2VPcmRlclJlcXVlc3QaJC50aW5vLmV4Y2hhbmdlLnYxLlBsYWNlT3JkZXJSZXNwb25zZRJyChNDYW5jZWxFeGNoYW5nZU9yZGVyEiwudGluby5leGNoYW5nZS52MS5DYW5jZWxFeGNoYW5nZU9yZGVyUmVxdWVzdBotLnRpbm8uZXhjaGFuZ2UudjEuQ2FuY2VsRXhjaGFuZ2VPcmRlclJlc3BvbnNlEloKC1NldExldmVyYWdlEiQudGluby5leGNoYW5nZS52MS5TZXRMZXZlcmFnZVJlcXVlc3QaJS50aW5vLmV4Y2hhbmdlLnYxLlNldExldmVyYWdlUmVzcG9uc2USYAoNU2V0TWFyZ2luVHlwZRImLnRpbm8uZXhjaGFuZ2UudjEuU2V0TWFyZ2luVHlwZVJlcXVlc3QaJy50aW5vLmV4Y2hhbmdlLnYxLlNldE1hcmdpblR5cGVSZXNwb25zZRJdCgxHZXRNYXJrUHJpY2USJS50aW5vLmV4Y2hhbmdlLnYxLkdldE1hcmtQcmljZVJlcXVlc3QaJi50aW5vLmV4Y2hhbmdlLnYxLkdldE1hcmtQcmljZVJlc3BvbnNlEngKFUdldEZ1bmRpbmdSYXRlSGlzdG9yeRIuLnRpbm8uZXhjaGFuZ2UudjEuR2V0RnVuZGluZ1JhdGVIaXN0b3J5UmVxdWVzdBovLnRpbm8uZXhjaGFuZ2UudjEuR2V0RnVuZGluZ1JhdGVIaXN0b3J5UmVzcG9uc2USYwoOUGxhY2VUcFNsT3JkZXISJy50aW5vLmV4Y2hhbmdlLnYxLlBsYWNlVHBTbE9yZGVyUmVxdWVzdBooLnRpbm8uZXhjaGFuZ2UudjEuUGxhY2VUcFNsT3JkZXJSZXNwb25zZRJsChFQbGFjZVRyYWlsaW5nU3RvcBIqLnRpbm8uZXhjaGFuZ2UudjEuUGxhY2VUcmFpbGluZ1N0b3BSZXF1ZXN0GisudGluby5leGNoYW5nZS52MS5QbGFjZVRyYWlsaW5nU3RvcFJlc3BvbnNlEmMKDlBsYWNlU3RvcE9yZGVyEicudGluby5leGNoYW5nZS52MS5QbGFjZVN0b3BPcmRlclJlcXVlc3QaKC50aW5vLmV4Y2hhbmdlLnYxLlBsYWNlU3RvcE9yZGVyUmVzcG9uc2ViBnByb3RvMw");
 
 /**
  * @generated from message tino.exchange.v1.GetTickerRequest
@@ -443,6 +443,21 @@ export type ExchangePosition = Message<"tino.exchange.v1.ExchangePosition"> & {
    * @generated from field: double leverage = 6;
    */
   leverage: number;
+
+  /**
+   * @generated from field: double mark_price = 7;
+   */
+  markPrice: number;
+
+  /**
+   * @generated from field: double liquidation_price = 8;
+   */
+  liquidationPrice: number;
+
+  /**
+   * @generated from field: string margin_type = 9;
+   */
+  marginType: string;
 };
 
 /**
@@ -588,6 +603,436 @@ export const CancelExchangeOrderResponseSchema: GenMessage<CancelExchangeOrderRe
   messageDesc(file_tino_exchange_v1_exchange, 19);
 
 /**
+ * @generated from message tino.exchange.v1.SetLeverageRequest
+ */
+export type SetLeverageRequest = Message<"tino.exchange.v1.SetLeverageRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: int32 leverage = 3;
+   */
+  leverage: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.SetLeverageRequest.
+ * Use `create(SetLeverageRequestSchema)` to create a new message.
+ */
+export const SetLeverageRequestSchema: GenMessage<SetLeverageRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 20);
+
+/**
+ * @generated from message tino.exchange.v1.SetLeverageResponse
+ */
+export type SetLeverageResponse = Message<"tino.exchange.v1.SetLeverageResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+
+  /**
+   * @generated from field: int32 current_leverage = 2;
+   */
+  currentLeverage: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.SetLeverageResponse.
+ * Use `create(SetLeverageResponseSchema)` to create a new message.
+ */
+export const SetLeverageResponseSchema: GenMessage<SetLeverageResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 21);
+
+/**
+ * @generated from message tino.exchange.v1.SetMarginTypeRequest
+ */
+export type SetMarginTypeRequest = Message<"tino.exchange.v1.SetMarginTypeRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: string margin_type = 3;
+   */
+  marginType: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.SetMarginTypeRequest.
+ * Use `create(SetMarginTypeRequestSchema)` to create a new message.
+ */
+export const SetMarginTypeRequestSchema: GenMessage<SetMarginTypeRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 22);
+
+/**
+ * @generated from message tino.exchange.v1.SetMarginTypeResponse
+ */
+export type SetMarginTypeResponse = Message<"tino.exchange.v1.SetMarginTypeResponse"> & {
+  /**
+   * @generated from field: bool success = 1;
+   */
+  success: boolean;
+};
+
+/**
+ * Describes the message tino.exchange.v1.SetMarginTypeResponse.
+ * Use `create(SetMarginTypeResponseSchema)` to create a new message.
+ */
+export const SetMarginTypeResponseSchema: GenMessage<SetMarginTypeResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 23);
+
+/**
+ * @generated from message tino.exchange.v1.GetMarkPriceRequest
+ */
+export type GetMarkPriceRequest = Message<"tino.exchange.v1.GetMarkPriceRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.GetMarkPriceRequest.
+ * Use `create(GetMarkPriceRequestSchema)` to create a new message.
+ */
+export const GetMarkPriceRequestSchema: GenMessage<GetMarkPriceRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 24);
+
+/**
+ * @generated from message tino.exchange.v1.GetMarkPriceResponse
+ */
+export type GetMarkPriceResponse = Message<"tino.exchange.v1.GetMarkPriceResponse"> & {
+  /**
+   * @generated from field: double mark_price = 1;
+   */
+  markPrice: number;
+
+  /**
+   * @generated from field: double index_price = 2;
+   */
+  indexPrice: number;
+
+  /**
+   * @generated from field: string timestamp = 3;
+   */
+  timestamp: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.GetMarkPriceResponse.
+ * Use `create(GetMarkPriceResponseSchema)` to create a new message.
+ */
+export const GetMarkPriceResponseSchema: GenMessage<GetMarkPriceResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 25);
+
+/**
+ * @generated from message tino.exchange.v1.GetFundingRateHistoryRequest
+ */
+export type GetFundingRateHistoryRequest = Message<"tino.exchange.v1.GetFundingRateHistoryRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: int32 limit = 3;
+   */
+  limit: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.GetFundingRateHistoryRequest.
+ * Use `create(GetFundingRateHistoryRequestSchema)` to create a new message.
+ */
+export const GetFundingRateHistoryRequestSchema: GenMessage<GetFundingRateHistoryRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 26);
+
+/**
+ * @generated from message tino.exchange.v1.FundingRateRecord
+ */
+export type FundingRateRecord = Message<"tino.exchange.v1.FundingRateRecord"> & {
+  /**
+   * @generated from field: string symbol = 1;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: double funding_rate = 2;
+   */
+  fundingRate: number;
+
+  /**
+   * @generated from field: string timestamp = 3;
+   */
+  timestamp: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.FundingRateRecord.
+ * Use `create(FundingRateRecordSchema)` to create a new message.
+ */
+export const FundingRateRecordSchema: GenMessage<FundingRateRecord> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 27);
+
+/**
+ * @generated from message tino.exchange.v1.GetFundingRateHistoryResponse
+ */
+export type GetFundingRateHistoryResponse = Message<"tino.exchange.v1.GetFundingRateHistoryResponse"> & {
+  /**
+   * @generated from field: repeated tino.exchange.v1.FundingRateRecord records = 1;
+   */
+  records: FundingRateRecord[];
+};
+
+/**
+ * Describes the message tino.exchange.v1.GetFundingRateHistoryResponse.
+ * Use `create(GetFundingRateHistoryResponseSchema)` to create a new message.
+ */
+export const GetFundingRateHistoryResponseSchema: GenMessage<GetFundingRateHistoryResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 28);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceTpSlOrderRequest
+ */
+export type PlaceTpSlOrderRequest = Message<"tino.exchange.v1.PlaceTpSlOrderRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: string side = 3;
+   */
+  side: string;
+
+  /**
+   * @generated from field: double quantity = 4;
+   */
+  quantity: number;
+
+  /**
+   * @generated from field: double tp_price = 5;
+   */
+  tpPrice: number;
+
+  /**
+   * @generated from field: double sl_price = 6;
+   */
+  slPrice: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceTpSlOrderRequest.
+ * Use `create(PlaceTpSlOrderRequestSchema)` to create a new message.
+ */
+export const PlaceTpSlOrderRequestSchema: GenMessage<PlaceTpSlOrderRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 29);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceTpSlOrderResponse
+ */
+export type PlaceTpSlOrderResponse = Message<"tino.exchange.v1.PlaceTpSlOrderResponse"> & {
+  /**
+   * @generated from field: string order_id = 1;
+   */
+  orderId: string;
+
+  /**
+   * @generated from field: bool success = 2;
+   */
+  success: boolean;
+
+  /**
+   * @generated from field: string message = 3;
+   */
+  message: string;
+
+  /**
+   * @generated from field: string tp_order_id = 4;
+   */
+  tpOrderId: string;
+
+  /**
+   * @generated from field: string sl_order_id = 5;
+   */
+  slOrderId: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceTpSlOrderResponse.
+ * Use `create(PlaceTpSlOrderResponseSchema)` to create a new message.
+ */
+export const PlaceTpSlOrderResponseSchema: GenMessage<PlaceTpSlOrderResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 30);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceTrailingStopRequest
+ */
+export type PlaceTrailingStopRequest = Message<"tino.exchange.v1.PlaceTrailingStopRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: string side = 3;
+   */
+  side: string;
+
+  /**
+   * @generated from field: double quantity = 4;
+   */
+  quantity: number;
+
+  /**
+   * @generated from field: double callback_rate = 5;
+   */
+  callbackRate: number;
+
+  /**
+   * @generated from field: double activation_price = 6;
+   */
+  activationPrice: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceTrailingStopRequest.
+ * Use `create(PlaceTrailingStopRequestSchema)` to create a new message.
+ */
+export const PlaceTrailingStopRequestSchema: GenMessage<PlaceTrailingStopRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 31);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceTrailingStopResponse
+ */
+export type PlaceTrailingStopResponse = Message<"tino.exchange.v1.PlaceTrailingStopResponse"> & {
+  /**
+   * @generated from field: string order_id = 1;
+   */
+  orderId: string;
+
+  /**
+   * @generated from field: bool success = 2;
+   */
+  success: boolean;
+
+  /**
+   * @generated from field: string message = 3;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceTrailingStopResponse.
+ * Use `create(PlaceTrailingStopResponseSchema)` to create a new message.
+ */
+export const PlaceTrailingStopResponseSchema: GenMessage<PlaceTrailingStopResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 32);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceStopOrderRequest
+ */
+export type PlaceStopOrderRequest = Message<"tino.exchange.v1.PlaceStopOrderRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: string side = 3;
+   */
+  side: string;
+
+  /**
+   * @generated from field: double quantity = 4;
+   */
+  quantity: number;
+
+  /**
+   * @generated from field: double stop_price = 5;
+   */
+  stopPrice: number;
+
+  /**
+   * @generated from field: double price = 6;
+   */
+  price: number;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceStopOrderRequest.
+ * Use `create(PlaceStopOrderRequestSchema)` to create a new message.
+ */
+export const PlaceStopOrderRequestSchema: GenMessage<PlaceStopOrderRequest> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 33);
+
+/**
+ * @generated from message tino.exchange.v1.PlaceStopOrderResponse
+ */
+export type PlaceStopOrderResponse = Message<"tino.exchange.v1.PlaceStopOrderResponse"> & {
+  /**
+   * @generated from field: string order_id = 1;
+   */
+  orderId: string;
+
+  /**
+   * @generated from field: bool success = 2;
+   */
+  success: boolean;
+
+  /**
+   * @generated from field: string message = 3;
+   */
+  message: string;
+};
+
+/**
+ * Describes the message tino.exchange.v1.PlaceStopOrderResponse.
+ * Use `create(PlaceStopOrderResponseSchema)` to create a new message.
+ */
+export const PlaceStopOrderResponseSchema: GenMessage<PlaceStopOrderResponse> = /*@__PURE__*/
+  messageDesc(file_tino_exchange_v1_exchange, 34);
+
+/**
  * @generated from service tino.exchange.v1.ExchangeService
  */
 export const ExchangeService: GenService<{
@@ -654,6 +1099,62 @@ export const ExchangeService: GenService<{
     methodKind: "unary";
     input: typeof CancelExchangeOrderRequestSchema;
     output: typeof CancelExchangeOrderResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.SetLeverage
+   */
+  setLeverage: {
+    methodKind: "unary";
+    input: typeof SetLeverageRequestSchema;
+    output: typeof SetLeverageResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.SetMarginType
+   */
+  setMarginType: {
+    methodKind: "unary";
+    input: typeof SetMarginTypeRequestSchema;
+    output: typeof SetMarginTypeResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.GetMarkPrice
+   */
+  getMarkPrice: {
+    methodKind: "unary";
+    input: typeof GetMarkPriceRequestSchema;
+    output: typeof GetMarkPriceResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.GetFundingRateHistory
+   */
+  getFundingRateHistory: {
+    methodKind: "unary";
+    input: typeof GetFundingRateHistoryRequestSchema;
+    output: typeof GetFundingRateHistoryResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.PlaceTpSlOrder
+   */
+  placeTpSlOrder: {
+    methodKind: "unary";
+    input: typeof PlaceTpSlOrderRequestSchema;
+    output: typeof PlaceTpSlOrderResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.PlaceTrailingStop
+   */
+  placeTrailingStop: {
+    methodKind: "unary";
+    input: typeof PlaceTrailingStopRequestSchema;
+    output: typeof PlaceTrailingStopResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.exchange.v1.ExchangeService.PlaceStopOrder
+   */
+  placeStopOrder: {
+    methodKind: "unary";
+    input: typeof PlaceStopOrderRequestSchema;
+    output: typeof PlaceStopOrderResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_tino_exchange_v1_exchange, 0);

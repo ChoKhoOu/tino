@@ -54,6 +54,41 @@ class ExchangeServiceStub(object):
                 request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderRequest.SerializeToString,
                 response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderResponse.FromString,
                 _registered_method=True)
+        self.SetLeverage = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/SetLeverage',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageResponse.FromString,
+                _registered_method=True)
+        self.SetMarginType = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/SetMarginType',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeResponse.FromString,
+                _registered_method=True)
+        self.GetMarkPrice = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/GetMarkPrice',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceResponse.FromString,
+                _registered_method=True)
+        self.GetFundingRateHistory = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/GetFundingRateHistory',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryResponse.FromString,
+                _registered_method=True)
+        self.PlaceTpSlOrder = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/PlaceTpSlOrder',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderResponse.FromString,
+                _registered_method=True)
+        self.PlaceTrailingStop = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/PlaceTrailingStop',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopResponse.FromString,
+                _registered_method=True)
+        self.PlaceStopOrder = channel.unary_unary(
+                '/tino.exchange.v1.ExchangeService/PlaceStopOrder',
+                request_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderRequest.SerializeToString,
+                response_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderResponse.FromString,
+                _registered_method=True)
 
 
 class ExchangeServiceServicer(object):
@@ -107,6 +142,48 @@ class ExchangeServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetLeverage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetMarginType(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetMarkPrice(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetFundingRateHistory(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PlaceTpSlOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PlaceTrailingStop(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PlaceStopOrder(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ExchangeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -149,6 +226,41 @@ def add_ExchangeServiceServicer_to_server(servicer, server):
                     servicer.CancelExchangeOrder,
                     request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderRequest.FromString,
                     response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderResponse.SerializeToString,
+            ),
+            'SetLeverage': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetLeverage,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageResponse.SerializeToString,
+            ),
+            'SetMarginType': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetMarginType,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeResponse.SerializeToString,
+            ),
+            'GetMarkPrice': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMarkPrice,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceResponse.SerializeToString,
+            ),
+            'GetFundingRateHistory': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFundingRateHistory,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryResponse.SerializeToString,
+            ),
+            'PlaceTpSlOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.PlaceTpSlOrder,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderResponse.SerializeToString,
+            ),
+            'PlaceTrailingStop': grpc.unary_unary_rpc_method_handler(
+                    servicer.PlaceTrailingStop,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopResponse.SerializeToString,
+            ),
+            'PlaceStopOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.PlaceStopOrder,
+                    request_deserializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderRequest.FromString,
+                    response_serializer=tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -367,6 +479,195 @@ class ExchangeService(object):
             '/tino.exchange.v1.ExchangeService/CancelExchangeOrder',
             tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderRequest.SerializeToString,
             tino_dot_exchange_dot_v1_dot_exchange__pb2.CancelExchangeOrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetLeverage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/SetLeverage',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.SetLeverageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetMarginType(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/SetMarginType',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.SetMarginTypeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMarkPrice(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/GetMarkPrice',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.GetMarkPriceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetFundingRateHistory(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/GetFundingRateHistory',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.GetFundingRateHistoryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PlaceTpSlOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/PlaceTpSlOrder',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTpSlOrderResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PlaceTrailingStop(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/PlaceTrailingStop',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceTrailingStopResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PlaceStopOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.exchange.v1.ExchangeService/PlaceStopOrder',
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderRequest.SerializeToString,
+            tino_dot_exchange_dot_v1_dot_exchange__pb2.PlaceStopOrderResponse.FromString,
             options,
             channel_credentials,
             insecure,
