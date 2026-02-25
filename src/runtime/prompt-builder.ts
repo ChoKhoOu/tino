@@ -1,4 +1,5 @@
 import { getActiveStyle } from '@/styles/registry.js';
+import { BACKTEST_ORCHESTRATION_GUIDE } from '@/tools/descriptions/backtest-orchestration.js';
 
 export function getCurrentDate(): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -66,6 +67,8 @@ ${toolDescriptions}
 - Do not split one request into many tool calls when one sufficient call exists
 - For factual entity questions (companies, people, organizations), verify with tools
 - Respond directly without tools for conceptual definitions and stable historical facts
+
+${BACKTEST_ORCHESTRATION_GUIDE}
 
 ## Safety Constraints
 
