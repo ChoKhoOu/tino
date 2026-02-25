@@ -8,6 +8,7 @@ export interface InitResult {
 }
 
 export interface InitOptions {
+  provider?: string;
   exchange?: string;
   defaultPair?: string;
 }
@@ -16,7 +17,7 @@ export interface InitOptions {
 
 function buildDefaultSettings(options?: InitOptions) {
   return {
-    provider: 'openai',
+    provider: options?.provider ?? 'openai',
     exchange: options?.exchange ?? '',
     defaultPair: options?.defaultPair ?? 'BTCUSDT',
   };

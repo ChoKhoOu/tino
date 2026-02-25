@@ -2,46 +2,37 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
 
-type Step = 'welcome' | 'exchange' | 'api-key' | 'api-secret' | 'validate' | 'pair' | 'summary';
+export const AI_PROVIDERS = [
+  { id: 'anthropic', label: 'Anthropic (Claude)' },
+  { id: 'openai', label: 'OpenAI (GPT)' },
+  { id: 'skip', label: 'Skip (Free Tier / Demo)' },
+];
 
-export const EXCHANGES = ['Binance', 'OKX', 'Bybit', 'Skip'];
-export const PAIRS = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'Custom'];
+export const EXCHANGES = [
+  { id: 'binance', label: 'Binance' },
+  { id: 'okx', label: 'OKX' },
+  { id: 'bybit', label: 'Bybit' },
+  { id: 'skip', label: 'Skip for now' },
+];
 
-export function StepIndicator({ current }: { current: Step }) {
-  const steps: Step[] = ['welcome', 'exchange', 'pair', 'summary'];
-  const idx = steps.indexOf(current);
-  const display = idx >= 0 ? idx + 1 : '...';
+export function StepHeader({ step, title, description }: { step: number; title: string; description?: string }) {
   return (
-    <Box marginBottom={1}>
-      <Text color={colors.muted}>Step {display} of {steps.length}</Text>
+    <Box flexDirection="column" marginBottom={1}>
+      <Text color={colors.primary} bold>Step {step} of 3: {title}</Text>
+      {description && <Text color={colors.muted}>{description}</Text>}
     </Box>
   );
 }
 
-export function WelcomeStep() {
+export function SelectionList({ items, selectedIndex }: { items: string[]; selectedIndex: number }) {
   return (
     <Box flexDirection="column">
-      <Text color={colors.primary} bold>Initialize Tino Project</Text>
-      <Text color={colors.muted}>{'\n'}This wizard will create:</Text>
-      <Text>  .tino/settings.json   - provider and exchange config</Text>
-      <Text>  .tino/permissions.json - tool permission rules</Text>
-      <Text>  .tino/risk.json        - risk management rules</Text>
-      <Text>  TINO.md               - project knowledge base</Text>
-      <Text color={colors.muted}>{'\n'}Press Enter to continue</Text>
-    </Box>
-  );
-}
-
-export function ExchangeStep({ selectedIndex }: { selectedIndex: number }) {
-  return (
-    <Box flexDirection="column">
-      <Text color={colors.primary} bold>Select Exchange</Text>
-      <Text color={colors.muted}>Choose your exchange for API integration{'\n'}</Text>
-      {EXCHANGES.map((ex, i) => (
-        <Text key={ex} color={i === selectedIndex ? colors.white : colors.muted} bold={i === selectedIndex}>
-          {i === selectedIndex ? '> ' : '  '}{ex}
+      {items.map((item, i) => (
+        <Text key={item} color={i === selectedIndex ? colors.white : colors.muted} bold={i === selectedIndex}>
+          {i === selectedIndex ? '> ' : '  '}{item}
         </Text>
       ))}
+      <Text color={colors.muted}>{'\n'}Use ↑/↓ to navigate, Enter to select</Text>
     </Box>
   );
 }
@@ -50,13 +41,13 @@ export function TextInputStep({ label, value, masked }: { label: string; value: 
   const display = masked ? '*'.repeat(value.length) : value;
   return (
     <Box flexDirection="column">
-      <Text color={colors.primary} bold>{label}</Text>
+      <Text bold>{label}</Text>
       <Box>
         <Text color={colors.muted}>{'> '}</Text>
         <Text>{display}</Text>
         <Text color={colors.primary}>|</Text>
       </Box>
-      <Text color={colors.muted}>{'\n'}Press Enter to confirm</Text>
+      <Text color={colors.muted}>{'\n'}Press Enter to confirm, Esc to go back</Text>
     </Box>
   );
 }
@@ -84,27 +75,17 @@ export function ValidateStep({ validating, error }: { validating: boolean; error
   );
 }
 
-export function PairStep({ selectedIndex }: { selectedIndex: number }) {
+export function CompleteStep() {
   return (
     <Box flexDirection="column">
-      <Text color={colors.primary} bold>Default Trading Pair</Text>
-      <Text color={colors.muted}>Choose a default instrument{'\n'}</Text>
-      {PAIRS.map((p, i) => (
-        <Text key={p} color={i === selectedIndex ? colors.white : colors.muted} bold={i === selectedIndex}>
-          {i === selectedIndex ? '> ' : '  '}{p}
-        </Text>
-      ))}
-    </Box>
-  );
-}
-
-export function SummaryStep({ exchange, pair }: { exchange: string; pair: string }) {
-  return (
-    <Box flexDirection="column">
-      <Text color={colors.primary} bold>Summary</Text>
-      <Text>  Exchange:     {exchange || '(none)'}</Text>
-      <Text>  Trading Pair: {pair}</Text>
-      <Text color={colors.muted}>{'\n'}Press Enter to create project files</Text>
+      <Text color={colors.success} bold>Setup Complete!</Text>
+      <Text color={colors.muted}>{'\n'}Tino is ready. Try asking your first question:</Text>
+      <Box paddingLeft={2} paddingTop={1} flexDirection="column">
+        <Text color={colors.primary}>"How has BTC performed recently?"</Text>
+        <Text color={colors.primary}>"Write a momentum strategy for ETH"</Text>
+        <Text color={colors.primary}>"Check my Binance portfolio balance"</Text>
+      </Box>
+      <Text color={colors.muted}>{'\n'}Press Enter to start chatting.</Text>
     </Box>
   );
 }

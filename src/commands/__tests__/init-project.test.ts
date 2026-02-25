@@ -56,6 +56,13 @@ describe('runInitProject', () => {
     expect(result.created).toContain('TINO.md');
   });
 
+  test('uses provider from options when specified', () => {
+    runInitProject(TEST_DIR, { provider: 'anthropic' });
+    const settingsPath = join(TINO_DIR, 'settings.json');
+    const settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    expect(settings.provider).toBe('anthropic');
+  });
+
   test('skips existing files and reports them', () => {
     runInitProject(TEST_DIR);
     const result = runInitProject(TEST_DIR);

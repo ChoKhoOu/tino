@@ -25,6 +25,8 @@ import { createBashHistory } from './hooks/useBashHistory.js';
 import { KeyboardDispatcher } from './keyboard/dispatcher.js';
 import { KeyboardProvider } from './keyboard/use-keyboard.js';
 
+import { getSetting, setSetting } from './config/settings.js';
+
 export function CLI() {
   const { exit } = useApp();
   const dispatcher = useMemo(() => new KeyboardDispatcher(), []);
@@ -59,7 +61,7 @@ export function CLI() {
 
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showInitWizard, setShowInitWizard] = useState(false);
+  const [showInitWizard, setShowInitWizard] = useState(() => !getSetting('onboardingCompleted', false));
   const isProcessing = runState.status === 'running' || runState.status === 'permission_pending';
 
   const statusLineData = useStatusLineData(modelState, runState, daemonStatus, history, permissionMode);
@@ -86,6 +88,7 @@ export function CLI() {
   });
 
   const handleWizardComplete = useCallback((summary: string) => {
+    setSetting('onboardingCompleted', true);
     setShowInitWizard(false);
     setHistory((prev) => [
       ...prev,
