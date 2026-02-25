@@ -49,6 +49,31 @@ Generate and validate NautilusTrader trading strategies from natural language de
 - Requires class inheritance from Strategy
 - Warns when required lifecycle methods (on_start, on_bar) are missing
 
+## Natural Language Mapping
+
+When a user describes a strategy in natural language, map their intent to parameters:
+
+| User Says | strategy_type | Key Parameters |
+|-----------|---------------|----------------|
+| "RSI strategy", "oversold/overbought" | momentum | rsi_period, oversold, overbought |
+| "moving average crossover", "SMA/EMA" | trend | fast_period, slow_period |
+| "bollinger bands", "mean reversion" | mean_reversion | bb_period, bb_std |
+| "grid trading", "range bound" | grid | grid_levels, grid_spacing |
+| "pairs trading", "arbitrage" | arbitrage | lookback, z_threshold |
+
+**Parameter defaults by strategy type:**
+- momentum: { rsi_period: 14, oversold: 30, overbought: 70 }
+- trend: { fast_period: 10, slow_period: 30 }
+- mean_reversion: { bb_period: 20, bb_std: 2.0 }
+- grid: { grid_levels: 10, grid_spacing: 0.01 }
+- arbitrage: { lookback: 60, z_threshold: 2.0 }
+
+When strategy_type='auto', the AI detects from the description text. Override defaults only when the user provides explicit values.
+
+## Connecting to Backtest
+
+After generation, the result includes a suggestedBacktest object and the strategy file path. Pass these directly to trading_sim(action='backtest') with the strategy_file and instrument.
+
 ## Usage Notes
 
 - Generated strategies include CONFIG_SCHEMA (JSON Schema 2020-12) for all tunable parameters
