@@ -1,17 +1,14 @@
-import { describe, test, expect, mock, beforeEach } from 'bun:test';
+import { afterAll, describe, test, expect, spyOn, beforeEach } from 'bun:test';
+import * as fs from 'fs';
+import { loadPermissions } from '../permissions.js';
 
-import * as realFs from 'fs';
+const mockExistsSync = spyOn(fs, 'existsSync');
+const mockReadFileSync = spyOn(fs, 'readFileSync') as unknown as ReturnType<typeof spyOn>;
 
-const mockExistsSync = mock(() => false);
-const mockReadFileSync = mock(() => '');
-
-mock.module('fs', () => ({
-  ...realFs,
-  existsSync: mockExistsSync,
-  readFileSync: mockReadFileSync,
-}));
-
-const { loadPermissions } = await import('../permissions.js');
+afterAll(() => {
+  mockExistsSync.mockRestore();
+  mockReadFileSync.mockRestore();
+});
 
 const DEFAULT_PERMISSIONS = {
   rules: [

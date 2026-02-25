@@ -1,17 +1,16 @@
-import { describe, test, expect, mock, beforeEach } from 'bun:test';
+import { afterAll, describe, test, expect, spyOn, beforeEach } from 'bun:test';
+import * as fs from 'fs';
 import { parseSkillFile } from '../loader.js';
 
-import * as realFs from 'fs';
+const mockReadFileSync = spyOn(fs, 'readFileSync') as unknown as ReturnType<typeof spyOn>;
 
-// Only mock fs for loadSkillFromPath and extractSkillMetadata
-const mockReadFileSync = mock(() => '');
-
-mock.module('fs', () => ({
-  ...realFs,
-  readFileSync: mockReadFileSync,
-}));
-
+// loadSkillFromPath and extractSkillMetadata use fs.readFileSync internally,
+// so spyOn(fs, 'readFileSync') will intercept their calls via ESM live bindings.
 const { loadSkillFromPath, extractSkillMetadata } = await import('../loader.js');
+
+afterAll(() => {
+  mockReadFileSync.mockRestore();
+});
 
 describe('parseSkillFile', () => {
   const validContent = [

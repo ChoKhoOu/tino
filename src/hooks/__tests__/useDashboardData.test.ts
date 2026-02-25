@@ -1,10 +1,12 @@
-import { describe, test, expect, mock, beforeEach, spyOn } from 'bun:test';
+import { afterAll, describe, test, expect, spyOn, beforeEach } from 'bun:test';
+import * as binanceModule from '@/tools/finance/binance-public/index.js';
+import * as okxModule from '@/tools/finance/okx/index.js';
 
 // ============================================================================
-// Module mocks — registered before importing the code under test
+// Spy-based mocks — replace individual exports without polluting module registry
 // ============================================================================
 
-const mockGetTicker24h = mock(() =>
+const mockGetTicker24h = spyOn(binanceModule, 'getTicker24h').mockImplementation(() =>
   Promise.resolve({
     symbol: 'BTCUSDT',
     lastPrice: '42300.50',
@@ -26,10 +28,10 @@ const mockGetTicker24h = mock(() =>
     firstId: 1,
     lastId: 100,
     count: 100,
-  }),
+  }) as any,
 );
 
-const mockGetFundingRate = mock(() =>
+const mockGetFundingRate = spyOn(okxModule, 'getFundingRate').mockImplementation(() =>
   Promise.resolve({
     instType: 'SWAP',
     instId: 'BTC-USDT-SWAP',
@@ -37,51 +39,15 @@ const mockGetFundingRate = mock(() =>
     nextFundingRate: '0.000280',
     fundingTime: '1700000000000',
     nextFundingTime: '1700028800000',
-  }),
+  }) as any,
 );
 
-mock.module('@/tools/finance/binance-public/index.js', () => ({
-  getTicker24h: mockGetTicker24h,
-  getKlines: mock(),
-  toUnifiedTicker: mock(),
-  toUnifiedKline: mock(),
-}));
+afterAll(() => {
+  mockGetTicker24h.mockRestore();
+  mockGetFundingRate.mockRestore();
+});
 
-mock.module('@/tools/finance/okx/index.js', () => ({
-  getFundingRate: mockGetFundingRate,
-  getKlines: mock(),
-  getTicker: mock(),
-  getFundingRateHistory: mock(),
-  getOrderBook: mock(),
-  toUnifiedTicker: mock(),
-  toUnifiedKline: mock(),
-  toUnifiedFundingRate: mock(),
-  toUnifiedOrderBook: mock(),
-}));
-
-mock.module('@/grpc/portfolio-client.js', () => ({
-  PortfolioClient: class MockPortfolioClient {
-    async getPositions() {
-      return {
-        positions: [
-          { instrument: 'BTC/USDT', quantity: 0.5, avgPrice: 41000, unrealizedPnl: 650, realizedPnl: 0, updatedAt: '' },
-          { instrument: 'ETH/USDT', quantity: -2.0, avgPrice: 2700, unrealizedPnl: -100, realizedPnl: 0, updatedAt: '' },
-        ],
-      };
-    }
-    async getSummary() {
-      return {
-        totalTrades: 10,
-        openPositions: 2,
-        totalRealizedPnl: 100,
-        totalUnrealizedPnl: 550,
-        totalFees: 12.5,
-      };
-    }
-  },
-}));
-
-// Dynamic import so mocks are in effect
+// Dynamic import so spies are in effect
 const { fetchMarketData, fetchFundingRates, fetchPortfolioData } =
   await import('../useDashboardData.js');
 
@@ -114,7 +80,7 @@ describe('fetchMarketData', () => {
         firstId: 1,
         lastId: 100,
         count: 100,
-      }),
+      }) as any,
     );
   });
 
@@ -145,7 +111,7 @@ describe('fetchMarketData', () => {
         bidPrice: '0', bidQty: '0', askPrice: '0', askQty: '0',
         openPrice: '0', highPrice: '0', lowPrice: '0', volume: '0',
         openTime: 0, closeTime: 0, firstId: 0, lastId: 0, count: 0,
-      });
+      }) as any;
     });
 
     const items = await fetchMarketData();
@@ -180,7 +146,7 @@ describe('fetchFundingRates', () => {
         nextFundingRate: '0',
         fundingTime: '0',
         nextFundingTime: '0',
-      });
+      }) as any;
     });
 
     const result = await fetchFundingRates();
@@ -202,8 +168,25 @@ describe('fetchFundingRates', () => {
 
 describe('fetchPortfolioData', () => {
   test('transforms positions and computes total PnL', async () => {
-    const { PortfolioClient } = await import('@/grpc/portfolio-client.js');
-    const client = new PortfolioClient();
+    const client = {
+      async getPositions() {
+        return {
+          positions: [
+            { instrument: 'BTC/USDT', quantity: 0.5, avgPrice: 41000, unrealizedPnl: 650, realizedPnl: 0, updatedAt: '' },
+            { instrument: 'ETH/USDT', quantity: -2.0, avgPrice: 2700, unrealizedPnl: -100, realizedPnl: 0, updatedAt: '' },
+          ],
+        };
+      },
+      async getSummary() {
+        return {
+          totalTrades: 10,
+          openPositions: 2,
+          totalRealizedPnl: 100,
+          totalUnrealizedPnl: 550,
+          totalFees: 12.5,
+        };
+      },
+    };
     const result = await fetchPortfolioData(client as any);
 
     expect(result.positions).toHaveLength(2);

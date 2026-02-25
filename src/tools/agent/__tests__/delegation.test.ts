@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, test, mock } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, test, mock, spyOn } from 'bun:test';
 import { z } from 'zod';
 import type { ToolContext, ToolPlugin } from '@/domain/index.js';
 import type { DiscoveredAgentConfig } from '@/agents/types.js';
 import { ToolRegistry } from '@/runtime/tool-registry.js';
+import * as registryModule from '@/agents/registry.js';
 
 type MockRunConfig = {
   answer: string;
@@ -49,7 +50,14 @@ class MockSessionRuntime {
 }
 
 mock.module('@/runtime/session-runtime.js', () => ({ SessionRuntime: MockSessionRuntime }));
-mock.module('@/agents/registry.js', () => ({ discoverAgentConfigs: () => discoveredAgents }));
+
+const discoverAgentConfigsSpy = spyOn(registryModule, 'discoverAgentConfigs').mockImplementation(
+  () => discoveredAgents,
+);
+
+afterAll(() => {
+  discoverAgentConfigsSpy.mockRestore();
+});
 
 const ctx: ToolContext = {
   signal: new AbortController().signal,
