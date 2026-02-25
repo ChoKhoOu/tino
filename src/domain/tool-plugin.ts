@@ -5,6 +5,7 @@ import type { PortfolioClient } from '@/grpc/portfolio-client.js';
 import type { ChartClient } from '@/grpc/chart-client.js';
 import type { StreamingClient } from '@/grpc/streaming-client.js';
 import type { DataClient } from '@/grpc/data-client.js';
+import type { ExchangeClient } from '@/grpc/exchange-client.js';
 
 export interface GrpcClients {
   trading: TradingClient;
@@ -13,6 +14,7 @@ export interface GrpcClients {
   chart: ChartClient;
   streaming: StreamingClient;
   data: DataClient;
+  exchange: ExchangeClient;
 }
 
 export interface ToolContext {
