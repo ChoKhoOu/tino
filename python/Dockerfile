@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for fast dependency resolution
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /usr/local/bin/uv
 
 WORKDIR /build
 
@@ -46,7 +46,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     TINO_DAEMON_PORT=50051
 
-# Data volume for backtest data persistence
+# Data volume for backtest data persistence — create and chown before switching user
+RUN mkdir -p /home/tino/.tino/data && chown -R tino:tino /home/tino/.tino
 VOLUME ["/home/tino/.tino/data"]
 
 EXPOSE 50051
