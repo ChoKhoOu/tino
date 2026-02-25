@@ -86,7 +86,6 @@ class RSIMomentumStrategy(Strategy):
             },
             "stop_loss_pct": {
                 "type": "number",
-                "default": None,
                 "minimum": 0.001,
                 "maximum": 0.5,
                 "description": (
@@ -152,40 +151,48 @@ class RSIMomentumStrategy(Strategy):
 
     # -- Strategy hooks --
 
+    def _process_price(self, price: float) -> list[Signal]:
+        """Append price, trim buffer, compute RSI, and return signals."""
+        self._closes.append(price)
+
+        # Keep only the data needed for RSI calculation
+        max_len = self.rsi_period + 1
+        if len(self._closes) > max_len * 2:
+            self._closes = self._closes[-max_len:]
+
+        rsi = self.compute_rsi(self._closes)
+        if rsi is None:
+            return []
+
+        if rsi < self.oversold:
+            return [
+                Signal(
+                    direction=Direction.LONG,
+                    symbol=self.symbol,
+                    size=self.position_size,
+                    price=price,
+                    metadata={"rsi": rsi},
+                )
+            ]
+        elif rsi > self.overbought:
+            return [
+                Signal(
+                    direction=Direction.SHORT,
+                    symbol=self.symbol,
+                    size=self.position_size,
+                    price=price,
+                    metadata={"rsi": rsi},
+                )
+            ]
+        return []
+
     def on_bar(self, bar: Any) -> list[Signal]:
         """Process a new bar and generate signals based on RSI.
 
         Expects bar to have a ``close`` attribute (float or convertible).
         """
         close = float(bar.close) if hasattr(bar, "close") else float(bar)
-        self._closes.append(close)
-
-        rsi = self.compute_rsi(self._closes)
-        if rsi is None:
-            return []
-
-        signals: list[Signal] = []
-        if rsi < self.oversold:
-            signals.append(
-                Signal(
-                    direction=Direction.LONG,
-                    symbol=self.symbol,
-                    size=self.position_size,
-                    price=close,
-                    metadata={"rsi": rsi},
-                )
-            )
-        elif rsi > self.overbought:
-            signals.append(
-                Signal(
-                    direction=Direction.SHORT,
-                    symbol=self.symbol,
-                    size=self.position_size,
-                    price=close,
-                    metadata={"rsi": rsi},
-                )
-            )
-        return signals
+        return self._process_price(close)
 
     def on_trade(self, trade: Any) -> list[Signal]:
         """Process a tick trade.
@@ -194,31 +201,4 @@ class RSIMomentumStrategy(Strategy):
         trade price as a close price.
         """
         price = float(trade.price) if hasattr(trade, "price") else float(trade)
-        self._closes.append(price)
-
-        rsi = self.compute_rsi(self._closes)
-        if rsi is None:
-            return []
-
-        signals: list[Signal] = []
-        if rsi < self.oversold:
-            signals.append(
-                Signal(
-                    direction=Direction.LONG,
-                    symbol=self.symbol,
-                    size=self.position_size,
-                    price=price,
-                    metadata={"rsi": rsi},
-                )
-            )
-        elif rsi > self.overbought:
-            signals.append(
-                Signal(
-                    direction=Direction.SHORT,
-                    symbol=self.symbol,
-                    size=self.position_size,
-                    price=price,
-                    metadata={"rsi": rsi},
-                )
-            )
-        return signals
+        return self._process_price(price)

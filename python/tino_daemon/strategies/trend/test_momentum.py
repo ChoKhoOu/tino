@@ -77,12 +77,15 @@ class TestConfigSchema:
         expected = {"rsi_period", "overbought", "oversold", "position_size", "stop_loss_pct"}
         assert set(props.keys()) == expected
 
-    def test_each_property_has_type_default_description(self) -> None:
+    def test_each_property_has_type_and_description(self) -> None:
         props = RSIMomentumStrategy.CONFIG_SCHEMA["properties"]
         for name, spec in props.items():
             assert "type" in spec, f"{name} missing 'type'"
-            assert "default" in spec, f"{name} missing 'default'"
             assert "description" in spec, f"{name} missing 'description'"
+
+    def test_optional_property_has_no_default(self) -> None:
+        prop = RSIMomentumStrategy.CONFIG_SCHEMA["properties"]["stop_loss_pct"]
+        assert "default" not in prop
 
     def test_rsi_period_constraints(self) -> None:
         prop = RSIMomentumStrategy.CONFIG_SCHEMA["properties"]["rsi_period"]
