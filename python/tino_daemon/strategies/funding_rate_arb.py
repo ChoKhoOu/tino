@@ -31,7 +31,7 @@ from nautilus_trader.model.enums import OrderSide  # type: ignore[import-not-fou
 from nautilus_trader.model.identifiers import InstrumentId  # type: ignore[import-not-found]
 from nautilus_trader.trading.strategy import Strategy as NautilusStrategy  # type: ignore[import-not-found]
 
-from tino_daemon.strategies.base import Direction, Signal, Strategy
+from tino_daemon.strategies.base import Direction, Signal
 
 
 class FundingRateArbConfig(StrategyConfig, frozen=True):
@@ -297,18 +297,15 @@ class FundingRateArbStrategy(NautilusStrategy):
     # -- Tino Signal generation --
 
     def evaluate_bar(self, bar: Any) -> list[Signal]:
-        """Evaluate a bar and return Tino Signals (for AI agent layer).
+        """Read-only evaluation: inspect current state and return Tino Signals.
 
         This bridges the NautilusTrader on_bar execution with the Tino
         Signal interface, allowing the AI agent to inspect strategy decisions.
+
+        Note: This method is read-only and does NOT update EMA state.
+        EMA state is only updated by ``on_bar`` (called by the NautilusTrader
+        engine).  Call this *after* ``on_bar`` to inspect the latest signals.
         """
-        close = float(bar.close) if hasattr(bar, "close") else float(bar)
-        if close <= 0:
-            return []
-
-        self._fast_ema.update(close)
-        self._slow_ema.update(close)
-
         if not self._slow_ema.initialized:
             return []
 

@@ -242,3 +242,107 @@ class TestFundingRateArbStrategyMigration:
         for param in numeric_params:
             assert "minimum" in props[param], f"Missing minimum for: {param}"
             assert "maximum" in props[param], f"Missing maximum for: {param}"
+
+
+# ---------------------------------------------------------------------------
+# FundingRateArbStrategy.evaluate_bar (read-only bridge)
+# ---------------------------------------------------------------------------
+
+
+class TestEvaluateBar:
+    """Tests for the read-only evaluate_bar bridge method."""
+
+    def _make_strategy(self) -> Any:
+        """Create a mock that has evaluate_bar bound from FundingRateArbStrategy."""
+        from types import SimpleNamespace
+        from unittest.mock import MagicMock
+
+        from tino_daemon.strategies.funding_rate_arb import (
+            FundingRateArbConfig,
+            FundingRateArbStrategy,
+            _EMA,
+        )
+
+        config = FundingRateArbConfig()
+        perp_id = MagicMock()
+        perp_id.__str__ = lambda self: "BTC-PERP.BINANCE"
+        # Build a lightweight object with the required attributes
+        strategy = SimpleNamespace(
+            perp_id=perp_id,
+            threshold=config.funding_rate_threshold,
+            exit_threshold=config.exit_threshold,
+            size_pct=config.position_size_pct,
+            funding_periods_per_day=config.funding_periods_per_day,
+            _fast_ema=_EMA(config.fast_ema_period),
+            _slow_ema=_EMA(config.slow_ema_period),
+        )
+        # Bind the real methods so we test actual logic
+        import types
+
+        strategy.evaluate_bar = types.MethodType(
+            FundingRateArbStrategy.evaluate_bar, strategy
+        )
+        strategy._compute_basis = types.MethodType(
+            FundingRateArbStrategy._compute_basis, strategy
+        )
+        return strategy
+
+    def test_returns_empty_when_not_initialized(self) -> None:
+        strategy = self._make_strategy()
+        assert strategy.evaluate_bar(100.0) == []
+
+    def test_does_not_mutate_ema_state(self) -> None:
+        strategy = self._make_strategy()
+        # Warm up EMAs manually
+        for i in range(80):
+            strategy._fast_ema.update(100.0)
+            strategy._slow_ema.update(100.0)
+
+        fast_before = strategy._fast_ema.value
+        slow_before = strategy._slow_ema.value
+
+        # Call evaluate_bar — should NOT change EMA values
+        strategy.evaluate_bar(200.0)
+
+        assert strategy._fast_ema.value == fast_before
+        assert strategy._slow_ema.value == slow_before
+
+    def test_generates_short_signal_on_premium(self) -> None:
+        strategy = self._make_strategy()
+        # Warm up slow EMA at 100
+        for _ in range(80):
+            strategy._slow_ema.update(100.0)
+            strategy._fast_ema.update(100.0)
+        # Push fast EMA up to create large premium
+        for _ in range(20):
+            strategy._fast_ema.update(200.0)
+
+        signals = strategy.evaluate_bar(None)
+        assert len(signals) == 1
+        assert signals[0].direction == Direction.SHORT
+        assert signals[0].symbol == "BTC-PERP.BINANCE"
+        assert "annualized_rate" in signals[0].metadata
+
+    def test_generates_long_signal_on_discount(self) -> None:
+        strategy = self._make_strategy()
+        # Warm up slow EMA at 100
+        for _ in range(80):
+            strategy._slow_ema.update(100.0)
+            strategy._fast_ema.update(100.0)
+        # Push fast EMA down to create large discount
+        for _ in range(20):
+            strategy._fast_ema.update(50.0)
+
+        signals = strategy.evaluate_bar(None)
+        assert len(signals) == 1
+        assert signals[0].direction == Direction.LONG
+
+    def test_returns_empty_when_within_threshold(self) -> None:
+        strategy = self._make_strategy()
+        # Warm up both EMAs at the same price — zero basis
+        for _ in range(80):
+            strategy._slow_ema.update(100.0)
+            strategy._fast_ema.update(100.0)
+
+        signals = strategy.evaluate_bar(None)
+        assert signals == []
