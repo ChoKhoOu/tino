@@ -1,4 +1,4 @@
-export type KeyMode = 'normal' | 'popup' | 'permission' | 'search' | 'rewind' | 'input';
+export type KeyMode = 'normal' | 'popup' | 'permission' | 'search' | 'rewind' | 'input' | 'dashboard';
 
 export interface KeyState {
   ctrl: boolean;

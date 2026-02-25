@@ -16,6 +16,8 @@ import { useStylePicker } from '../hooks/useStylePicker.js';
 import { useCommandPalette } from '../hooks/useCommandPalette.js';
 import { KeyboardProvider } from '../keyboard/use-keyboard.js';
 import type { KeyboardDispatcher } from '../keyboard/dispatcher.js';
+import { Dashboard } from './Dashboard.js';
+import { useDashboard } from '../hooks/useDashboard.js';
 import type { HistoryItem } from './index.js';
 import type { ModelSelectorState } from '../hooks/useModelSelector.js';
 import type { RunState } from '../hooks/useSessionRunner.js';
@@ -81,6 +83,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
   modelPopupRef,
 }: AppLayoutProps) {
   const { rows } = useTerminalSize();
+  const dashboard = useDashboard(dispatcher);
   const commandPalette = useCommandPalette(handleSubmit);
   const modelPopup = useModelSwitchPopup(modelState.currentModel, selectModel);
   const stylePicker = useStylePicker();
@@ -115,10 +118,19 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
 
   const rewindMenu = useRewindMenu(history, handleRewindAction);
 
+  if (dashboard.isActive) {
+    return (
+      <Box flexDirection="column" height={rows - 1}>
+        <Dashboard height={rows - 2} />
+        <StatusLine {...statusLineData} />
+      </Box>
+    );
+  }
+
   return (
     <Box flexDirection="column" height={rows - 1}>
       {history.length === 0 && <Intro provider={modelState.currentProvider} model={modelState.currentModel} />}
-      
+
       <Static items={history.filter(h => h.status === 'complete' || h.status === 'error' || h.status === 'interrupted')}>
         {(item) => <HistoryItemView key={item.id} item={item} />}
       </Static>
@@ -148,21 +160,21 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
         subMenuOpen={rewindMenu.subMenuOpen}
         subMenuIndex={rewindMenu.subMenuIndex}
       />
-      
-      <CommandPalette 
-        isOpen={commandPalette.isOpen} 
-        query={commandPalette.query} 
-        setQuery={commandPalette.setQuery} 
-        selectedIndex={commandPalette.selectedIndex} 
-        items={commandPalette.items} 
-        onSelect={commandPalette.select} 
+
+      <CommandPalette
+        isOpen={commandPalette.isOpen}
+        query={commandPalette.query}
+        setQuery={commandPalette.setQuery}
+        selectedIndex={commandPalette.selectedIndex}
+        items={commandPalette.items}
+        onSelect={commandPalette.select}
       />
       <ModelSwitchPopup isOpen={modelPopup.isOpen} selectedIndex={modelPopup.selectedIndex} models={modelPopup.models} />
       <StylePicker isOpen={stylePicker.isOpen} selectedIndex={stylePicker.selectedIndex} styles={stylePicker.styles} />
       <Input onSubmit={handleSubmit} historyValue={historyValue} onHistoryNavigate={handleHistoryNavigate} bashHistory={bashHistory} onSlashSelect={handleSubmit} />
-      
+
       <StatusLine {...statusLineData} />
-      
+
       <DebugPanel maxLines={8} show={isVerbose} />
     </Box>
   );
