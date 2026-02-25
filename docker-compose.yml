@@ -1,0 +1,20 @@
+services:
+  daemon:
+    build:
+      context: python
+      dockerfile: Dockerfile
+    image: ghcr.io/ouzhuohao/tino/daemon:latest
+    ports:
+      - "50051:50051"
+    volumes:
+      - "${TINO_DATA_DIR:-${HOME}/.tino/data}:/home/tino/.tino/data"
+    environment:
+      - TINO_DAEMON_PORT=50051
+      - TINO_DAEMON_LOG_LEVEL=${TINO_DAEMON_LOG_LEVEL:-INFO}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc; ch = grpc.insecure_channel('localhost:50051'); grpc.channel_ready_future(ch).result(timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
