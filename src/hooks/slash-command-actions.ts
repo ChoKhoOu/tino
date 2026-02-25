@@ -80,6 +80,7 @@ export async function runExtendedSlashAction(
     case 'exit':
     case 'verbose':
     case 'output-style':
+    case 'portfolio':
       return null;
   }
 }

@@ -192,18 +192,18 @@ describe('parseSlashCommand — config commands', () => {
 // ─── SLASH_COMMANDS registry ────────────────────────────────────────────────
 
 describe('SLASH_COMMANDS registry', () => {
-  test('contains all 23 commands', () => {
+  test('contains all 24 commands', () => {
     const expected = [
       '/model', '/clear', '/skill', '/help', '/exit',
       '/compact', '/context', '/cost', '/resume', '/export',
       '/rename', '/rewind', '/status', '/permissions', '/mcp',
       '/config', '/todos', '/verbose', '/agents', '/doctor', '/init',
-      '/output-style', '/style',
+      '/output-style', '/style', '/portfolio',
     ];
     for (const cmd of expected) {
       expect(SLASH_COMMANDS).toHaveProperty(cmd);
     }
-    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(23);
+    expect(Object.keys(SLASH_COMMANDS)).toHaveLength(24);
   });
 });
 
@@ -226,6 +226,16 @@ describe('parseSlashCommand — output style commands', () => {
     const result = parseSlashCommand('/OUTPUT-STYLE');
     expect(result?.handled).toBe(true);
     expect(result?.action).toBe('output-style');
+  });
+});
+
+// ─── Portfolio command ──────────────────────────────────────────────────────
+
+describe('parseSlashCommand — portfolio command', () => {
+  test('/portfolio returns action', () => {
+    const result = parseSlashCommand('/portfolio');
+    expect(result?.handled).toBe(true);
+    expect(result?.action).toBe('portfolio');
   });
 });
 
