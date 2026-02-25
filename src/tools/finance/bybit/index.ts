@@ -3,6 +3,8 @@
  *
  * Provides crypto market data without requiring an API key.
  * Docs: https://bybit-exchange.github.io/docs/v5/intro
+ *
+ * @deprecated Prefer `DataClient.getMarketQuote/getMarketKlines` via Python daemon gRPC.
  */
 import { fetchJson } from '../shared.js';
 import type {

@@ -1,4 +1,4 @@
-import { describe, test, expect, afterEach, beforeEach } from 'bun:test';
+import { describe, test, expect, afterEach, beforeEach, spyOn } from 'bun:test';
 import { rmSync, readdirSync, existsSync, statSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -370,6 +370,109 @@ describe('market_data consolidated tool', () => {
       expect(calledUrl).toContain('api.coingecko.com');
       expect(calledUrl).toContain('/coins/zzztestcoin/market_chart/range');
       expect(parsed.data).toBeDefined();
+    });
+  });
+
+  describe('crypto_exchange_* actions', () => {
+    test('crypto_exchange_quote routes to gRPC DataClient', async () => {
+      const { DataClient } = await import('../../../grpc/data-client.js');
+      const getMarketQuoteSpy = spyOn(DataClient.prototype, 'getMarketQuote').mockResolvedValue({
+        quote: {
+          exchange: 'binance',
+          symbol: 'BTCUSDT',
+          lastPrice: 65000,
+          bidPrice: 64990,
+          askPrice: 65010,
+          volume24h: 1000,
+          high24h: 66000,
+          low24h: 64000,
+          timestamp: '1700000000000',
+        } as any,
+      } as any);
+
+      try {
+        const result = await executeAction({
+          action: 'crypto_exchange_quote',
+          exchange: 'binance',
+          symbol: 'BTCUSDT',
+        });
+        const parsed = JSON.parse(result);
+        expect(getMarketQuoteSpy).toHaveBeenCalledWith({
+          exchange: 'binance',
+          symbol: 'BTCUSDT',
+        });
+        expect(parsed.data.symbol).toBe('BTCUSDT');
+      } finally {
+        getMarketQuoteSpy.mockRestore();
+      }
+    });
+
+    test('crypto_exchange_klines routes to gRPC DataClient', async () => {
+      const { DataClient } = await import('../../../grpc/data-client.js');
+      const getMarketKlinesSpy = spyOn(DataClient.prototype, 'getMarketKlines').mockResolvedValue({
+        klines: [{ openTime: BigInt(1700000000000), close: 65000 }] as any,
+      } as any);
+
+      try {
+        const result = await executeAction({
+          action: 'crypto_exchange_klines',
+          exchange: 'okx',
+          symbol: 'BTC-USDT',
+          interval: '1h',
+          limit: 5,
+        });
+        const parsed = JSON.parse(result);
+        expect(getMarketKlinesSpy).toHaveBeenCalledWith({
+          exchange: 'okx',
+          symbol: 'BTC-USDT',
+          interval: '1h',
+          limit: 5,
+        });
+        expect(parsed.data).toBeDefined();
+      } finally {
+        getMarketKlinesSpy.mockRestore();
+      }
+    });
+
+    test('crypto_exchange_overview parses comma-separated symbols', async () => {
+      const { DataClient } = await import('../../../grpc/data-client.js');
+      const getMarketOverviewSpy = spyOn(DataClient.prototype, 'getMarketOverview').mockResolvedValue({
+        quotes: [{ symbol: 'BTCUSDT' }, { symbol: 'ETHUSDT' }] as any,
+      } as any);
+
+      try {
+        const result = await executeAction({
+          action: 'crypto_exchange_overview',
+          exchange: 'bybit',
+          symbol: 'BTCUSDT, ETHUSDT',
+        });
+        const parsed = JSON.parse(result);
+        expect(getMarketOverviewSpy).toHaveBeenCalledWith({
+          exchange: 'bybit',
+          symbols: ['BTCUSDT', 'ETHUSDT'],
+        });
+        expect(parsed.data).toHaveLength(2);
+      } finally {
+        getMarketOverviewSpy.mockRestore();
+      }
+    });
+
+    test('crypto_supported_exchanges routes to gRPC DataClient', async () => {
+      const { DataClient } = await import('../../../grpc/data-client.js');
+      const listSupportedExchangesSpy = spyOn(DataClient.prototype, 'listSupportedExchanges').mockResolvedValue({
+        exchanges: ['binance', 'bybit', 'okx'] as any,
+      } as any);
+
+      try {
+        const result = await executeAction({
+          action: 'crypto_supported_exchanges',
+        });
+        const parsed = JSON.parse(result);
+        expect(listSupportedExchangesSpy).toHaveBeenCalledTimes(1);
+        expect(parsed.data).toEqual(['binance', 'bybit', 'okx']);
+      } finally {
+        listSupportedExchangesSpy.mockRestore();
+      }
     });
   });
 

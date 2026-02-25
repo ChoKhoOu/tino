@@ -3,6 +3,8 @@
  *
  * Provides crypto market data without requiring an API key.
  * Docs: https://binance-docs.github.io/apidocs/spot/en/
+ *
+ * @deprecated Prefer `DataClient.getMarketQuote/getMarketKlines` via Python daemon gRPC.
  */
 import { fetchJson } from '../shared.js';
 import type { BinanceKline, BinanceTicker24h } from './types.js';

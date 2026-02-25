@@ -6,11 +6,13 @@ import asyncio
 import tempfile
 from pathlib import Path
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock, patch
 
 import grpc
 import pytest
 import pytest_asyncio
 
+from tino_daemon.exchanges.base_connector import Kline, Ticker
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.services.data import DataServiceServicer
@@ -52,6 +54,20 @@ async def data_server(
 
 
 BAR_TYPE = "AAPL.XNAS-1-DAY-LAST-EXTERNAL"
+
+
+class FakeContext:
+    """Minimal gRPC context mock."""
+
+    def __init__(self) -> None:
+        self._code = grpc.StatusCode.OK
+        self._details = ""
+
+    def set_code(self, code: grpc.StatusCode) -> None:
+        self._code = code
+
+    def set_details(self, details: str) -> None:
+        self._details = details
 
 
 @pytest.mark.asyncio
@@ -230,3 +246,179 @@ async def test_delete_catalog_after_ingest(data_server, sample_csv: Path):
         after_resp = await stub.ListCatalog(data_pb2.ListCatalogRequest())
         remaining = [e for e in after_resp.entries if e.bar_type == BAR_TYPE]
         assert len(remaining) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_market_quote_success(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    mock_connector = AsyncMock()
+    mock_connector.get_ticker = AsyncMock(
+        return_value=Ticker(
+            symbol="BTCUSDT",
+            last_price=50000.0,
+            bid_price=49999.0,
+            ask_price=50001.0,
+            volume_24h=12345.0,
+            high_24h=51000.0,
+            low_24h=49000.0,
+            timestamp="1700000000000",
+        )
+    )
+
+    with patch(
+        "tino_daemon.services.data.get_connector",
+        return_value=mock_connector,
+    ):
+        resp = await servicer.GetMarketQuote(
+            data_pb2.GetMarketQuoteRequest(exchange="binance", symbol="BTCUSDT"),
+            ctx,
+        )
+
+    assert resp.quote.symbol == "BTCUSDT"
+    assert resp.quote.last_price == 50000.0
+    assert ctx._code == grpc.StatusCode.OK
+
+
+@pytest.mark.asyncio
+async def test_get_market_quote_invalid_exchange(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    with patch(
+        "tino_daemon.services.data.get_connector",
+        side_effect=ValueError("Unsupported exchange: unknown"),
+    ):
+        resp = await servicer.GetMarketQuote(
+            data_pb2.GetMarketQuoteRequest(exchange="unknown", symbol="BTCUSDT"),
+            ctx,
+        )
+
+    assert resp.quote.symbol == ""
+    assert ctx._code == grpc.StatusCode.INVALID_ARGUMENT
+
+
+@pytest.mark.asyncio
+async def test_get_market_klines_success(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    mock_connector = AsyncMock()
+    mock_connector.get_klines = AsyncMock(
+        return_value=[
+            Kline(
+                open_time=1700000000000,
+                open=50000.0,
+                high=51000.0,
+                low=49000.0,
+                close=50500.0,
+                volume=100.0,
+                close_time=1700003600000,
+            ),
+        ]
+    )
+
+    with patch(
+        "tino_daemon.services.data.get_connector",
+        return_value=mock_connector,
+    ):
+        resp = await servicer.GetMarketKlines(
+            data_pb2.GetMarketKlinesRequest(
+                exchange="binance",
+                symbol="BTCUSDT",
+                interval="1h",
+                limit=1,
+            ),
+            ctx,
+        )
+
+    assert len(resp.klines) == 1
+    assert resp.klines[0].close == 50500.0
+    assert ctx._code == grpc.StatusCode.OK
+
+
+@pytest.mark.asyncio
+async def test_get_market_klines_invalid_limit(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    resp = await servicer.GetMarketKlines(
+        data_pb2.GetMarketKlinesRequest(
+            exchange="binance",
+            symbol="BTCUSDT",
+            interval="1h",
+            limit=-1,
+        ),
+        ctx,
+    )
+
+    assert len(resp.klines) == 0
+    assert ctx._code == grpc.StatusCode.INVALID_ARGUMENT
+
+
+@pytest.mark.asyncio
+async def test_get_market_overview_success(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    mock_connector = AsyncMock()
+    mock_connector.get_ticker = AsyncMock(
+        side_effect=[
+            Ticker(
+                symbol="BTCUSDT",
+                last_price=50000.0,
+                bid_price=49999.0,
+                ask_price=50001.0,
+                volume_24h=12345.0,
+                high_24h=51000.0,
+                low_24h=49000.0,
+                timestamp="1700000000000",
+            ),
+            Ticker(
+                symbol="ETHUSDT",
+                last_price=3000.0,
+                bid_price=2999.0,
+                ask_price=3001.0,
+                volume_24h=54321.0,
+                high_24h=3200.0,
+                low_24h=2800.0,
+                timestamp="1700000000000",
+            ),
+        ]
+    )
+
+    with patch(
+        "tino_daemon.services.data.get_connector",
+        return_value=mock_connector,
+    ):
+        resp = await servicer.GetMarketOverview(
+            data_pb2.GetMarketOverviewRequest(
+                exchange="binance",
+                symbols=["BTCUSDT", "ETHUSDT"],
+            ),
+            ctx,
+        )
+
+    assert len(resp.quotes) == 2
+    assert resp.quotes[0].symbol == "BTCUSDT"
+    assert resp.quotes[1].symbol == "ETHUSDT"
+    assert ctx._code == grpc.StatusCode.OK
+
+
+@pytest.mark.asyncio
+async def test_list_supported_exchanges_success(catalog: DataCatalogWrapper):
+    servicer = DataServiceServicer(catalog=catalog)
+    ctx = FakeContext()
+
+    with patch(
+        "tino_daemon.services.data.list_exchanges",
+        return_value=["binance", "bybit", "okx"],
+    ):
+        resp = await servicer.ListSupportedExchanges(
+            data_pb2.ListSupportedExchangesRequest(),
+            ctx,
+        )
+
+    assert resp.exchanges == ["binance", "bybit", "okx"]
+    assert ctx._code == grpc.StatusCode.OK

@@ -15,6 +15,7 @@ import {
   getCurrentFundingRates,
   getHistoricalFundingRates,
 } from '../finance/funding-rates/index.js';
+import { DataClient } from '../../grpc/data-client.js';
 import type { MarketDataInput } from './market-data.tool.js';
 
 function requireSymbol(symbol: string | undefined): string {
@@ -22,12 +23,37 @@ function requireSymbol(symbol: string | undefined): string {
   return symbol;
 }
 
+function requireExchange(exchange: string | undefined): string {
+  if (!exchange) throw new Error('exchange is required for this action');
+  return exchange;
+}
+
 function fmt(data: unknown): string {
-  return JSON.stringify({ data });
+  return JSON.stringify(
+    { data },
+    (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
+  );
 }
 
 function fmtError(message: string): string {
   return JSON.stringify({ error: message });
+}
+
+let dataClient: DataClient | null = null;
+
+function getDataClient(): DataClient {
+  if (!dataClient) {
+    dataClient = new DataClient();
+  }
+  return dataClient;
+}
+
+function parseSymbols(value: string | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 
@@ -114,6 +140,44 @@ export async function routeMarketData(input: MarketDataInput): Promise<string> {
         const to = dateToUnix(input.to ?? '');
         const data = await getCoinHistory(coinId, from, to);
         return fmt(data);
+      }
+
+      case 'crypto_exchange_quote': {
+        const client = getDataClient();
+        const exchange = requireExchange(input.exchange);
+        const symbol = requireSymbol(input.symbol);
+        const data = await client.getMarketQuote({ exchange, symbol });
+        return fmt(data.quote);
+      }
+
+      case 'crypto_exchange_klines': {
+        const client = getDataClient();
+        const exchange = requireExchange(input.exchange);
+        const symbol = requireSymbol(input.symbol);
+        const data = await client.getMarketKlines({
+          exchange,
+          symbol,
+          interval: input.interval ?? input.timespan ?? '1h',
+          limit: input.limit ?? 100,
+        });
+        return fmt(data.klines);
+      }
+
+      case 'crypto_exchange_overview': {
+        const client = getDataClient();
+        const exchange = requireExchange(input.exchange);
+        const symbols = parseSymbols(input.symbol);
+        if (symbols.length === 0) {
+          return fmtError('symbol must contain at least one symbol');
+        }
+        const data = await client.getMarketOverview({ exchange, symbols });
+        return fmt(data.quotes);
+      }
+
+      case 'crypto_supported_exchanges': {
+        const client = getDataClient();
+        const data = await client.listSupportedExchanges();
+        return fmt(data.exchanges);
       }
 
       case 'funding_rates': {

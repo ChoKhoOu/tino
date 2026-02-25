@@ -5,6 +5,10 @@ service DataService {
   rpc IngestData(IngestDataRequest) returns (stream IngestDataResponse);
   rpc ListCatalog(ListCatalogRequest) returns (ListCatalogResponse);
   rpc DeleteCatalog(DeleteCatalogRequest) returns (DeleteCatalogResponse);
+  rpc GetMarketQuote(GetMarketQuoteRequest) returns (GetMarketQuoteResponse);
+  rpc GetMarketKlines(GetMarketKlinesRequest) returns (GetMarketKlinesResponse);
+  rpc GetMarketOverview(GetMarketOverviewRequest) returns (GetMarketOverviewResponse);
+  rpc ListSupportedExchanges(ListSupportedExchangesRequest) returns (ListSupportedExchangesResponse);
 }
 
 message IngestDataRequest {
@@ -47,4 +51,61 @@ message DeleteCatalogRequest {
 }
 message DeleteCatalogResponse {
   bool success = 1;
+}
+
+message GetMarketQuoteRequest {
+  string exchange = 1;
+  string symbol = 2;
+}
+
+message MarketQuote {
+  string exchange = 1;
+  string symbol = 2;
+  double last_price = 3;
+  double bid_price = 4;
+  double ask_price = 5;
+  double volume_24h = 6;
+  double high_24h = 7;
+  double low_24h = 8;
+  string timestamp = 9;
+}
+
+message GetMarketQuoteResponse {
+  MarketQuote quote = 1;
+}
+
+message GetMarketKlinesRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string interval = 3;
+  int32 limit = 4;
+}
+
+message MarketKline {
+  int64 open_time = 1;
+  double open = 2;
+  double high = 3;
+  double low = 4;
+  double close = 5;
+  double volume = 6;
+  int64 close_time = 7;
+}
+
+message GetMarketKlinesResponse {
+  repeated MarketKline klines = 1;
+}
+
+message GetMarketOverviewRequest {
+  string exchange = 1;
+  repeated string symbols = 2;
+}
+
+message GetMarketOverviewResponse {
+  repeated MarketQuote quotes = 1;
+}
+
+message ListSupportedExchangesRequest {}
+
+message ListSupportedExchangesResponse {
+  repeated string exchanges = 1;
 }

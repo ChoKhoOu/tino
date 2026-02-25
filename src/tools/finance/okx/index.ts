@@ -3,6 +3,8 @@
  *
  * Provides crypto market data without requiring an API key.
  * Docs: https://www.okx.com/docs-v5/en/
+ *
+ * @deprecated Prefer `DataClient.getMarketQuote/getMarketKlines` via Python daemon gRPC.
  */
 import { fetchJson } from '../shared.js';
 import type {

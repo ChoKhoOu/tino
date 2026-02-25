@@ -29,6 +29,26 @@ class DataServiceStub(object):
                 request_serializer=tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogRequest.SerializeToString,
                 response_deserializer=tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogResponse.FromString,
                 _registered_method=True)
+        self.GetMarketQuote = channel.unary_unary(
+                '/tino.data.v1.DataService/GetMarketQuote',
+                request_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteRequest.SerializeToString,
+                response_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteResponse.FromString,
+                _registered_method=True)
+        self.GetMarketKlines = channel.unary_unary(
+                '/tino.data.v1.DataService/GetMarketKlines',
+                request_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesRequest.SerializeToString,
+                response_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesResponse.FromString,
+                _registered_method=True)
+        self.GetMarketOverview = channel.unary_unary(
+                '/tino.data.v1.DataService/GetMarketOverview',
+                request_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewRequest.SerializeToString,
+                response_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewResponse.FromString,
+                _registered_method=True)
+        self.ListSupportedExchanges = channel.unary_unary(
+                '/tino.data.v1.DataService/ListSupportedExchanges',
+                request_serializer=tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesRequest.SerializeToString,
+                response_deserializer=tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesResponse.FromString,
+                _registered_method=True)
 
 
 class DataServiceServicer(object):
@@ -52,6 +72,30 @@ class DataServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetMarketQuote(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetMarketKlines(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetMarketOverview(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSupportedExchanges(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +113,26 @@ def add_DataServiceServicer_to_server(servicer, server):
                     servicer.DeleteCatalog,
                     request_deserializer=tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogRequest.FromString,
                     response_serializer=tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogResponse.SerializeToString,
+            ),
+            'GetMarketQuote': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMarketQuote,
+                    request_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteRequest.FromString,
+                    response_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteResponse.SerializeToString,
+            ),
+            'GetMarketKlines': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMarketKlines,
+                    request_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesRequest.FromString,
+                    response_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesResponse.SerializeToString,
+            ),
+            'GetMarketOverview': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMarketOverview,
+                    request_deserializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewRequest.FromString,
+                    response_serializer=tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewResponse.SerializeToString,
+            ),
+            'ListSupportedExchanges': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSupportedExchanges,
+                    request_deserializer=tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesRequest.FromString,
+                    response_serializer=tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -152,6 +216,114 @@ class DataService(object):
             '/tino.data.v1.DataService/DeleteCatalog',
             tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogRequest.SerializeToString,
             tino_dot_data_dot_v1_dot_data__pb2.DeleteCatalogResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMarketQuote(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.data.v1.DataService/GetMarketQuote',
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteRequest.SerializeToString,
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketQuoteResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMarketKlines(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.data.v1.DataService/GetMarketKlines',
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesRequest.SerializeToString,
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketKlinesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMarketOverview(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.data.v1.DataService/GetMarketOverview',
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewRequest.SerializeToString,
+            tino_dot_data_dot_v1_dot_data__pb2.GetMarketOverviewResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSupportedExchanges(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/tino.data.v1.DataService/ListSupportedExchanges',
+            tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesRequest.SerializeToString,
+            tino_dot_data_dot_v1_dot_data__pb2.ListSupportedExchangesResponse.FromString,
             options,
             channel_credentials,
             insecure,
