@@ -51,6 +51,7 @@ export const SettingsSchema = z.object({
   providerOverrides: z.record(z.string(), ProviderOverrideSchema).optional(),
   enabledLegacyProviders: z.array(z.enum(LEGACY_PROVIDERS)).optional(),
   graduationThresholds: GraduationThresholdsSchema,
+  onboardingCompleted: z.boolean().optional(),
 }).passthrough(); // Allow additional unknown keys for forward compatibility
 
 export type CustomProviderConfig = z.infer<typeof CustomProviderSchema>;
@@ -65,5 +66,6 @@ export interface SettingsData {
   providers?: Record<string, ProviderOverrideConfig>;
   providerOverrides?: Record<string, ProviderOverrideConfig>;
   enabledLegacyProviders?: LegacyProvider[];
+  onboardingCompleted?: boolean;
   [key: string]: unknown;
 }

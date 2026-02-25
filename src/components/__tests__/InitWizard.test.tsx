@@ -6,54 +6,28 @@ import { InitWizard } from '../InitWizard.js';
 const delay = (ms = 50) => new Promise((r) => setTimeout(r, ms));
 
 describe('InitWizard', () => {
-  it('should render welcome step on mount', () => {
+  it('should render AI provider step on mount', () => {
     const { lastFrame } = render(
       <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
     );
     const output = lastFrame()!;
-    expect(output).toContain('Initialize Tino Project');
+    expect(output).toContain('AI Model Configuration');
   });
 
-  it('should show list of files that will be created', () => {
+  it('should show AI options', () => {
     const { lastFrame } = render(
       <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
     );
     const output = lastFrame()!;
-    expect(output).toContain('settings.json');
-    expect(output).toContain('permissions.json');
+    expect(output).toContain('Anthropic (Claude 3.5 Sonnet)');
+    expect(output).toContain('OpenAI (GPT-4o)');
+    expect(output).toContain('Skip (Free Tier / Demo)');
   });
 
-  it('should show exchange selection on enter', async () => {
+  it('should show exchange selection when AI skipped', async () => {
     const { lastFrame, stdin } = render(
       <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
     );
-    stdin.write('\r');
-    await delay();
-    const output = lastFrame()!;
-    expect(output).toContain('Select Exchange');
-  });
-
-  it('should show exchange options', async () => {
-    const { lastFrame, stdin } = render(
-      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
-    );
-    stdin.write('\r');
-    await delay();
-    const output = lastFrame()!;
-    expect(output).toContain('Binance');
-    expect(output).toContain('OKX');
-    expect(output).toContain('Bybit');
-    expect(output).toContain('Skip');
-  });
-
-  it('should skip to trading pair when Skip is selected', async () => {
-    const { lastFrame, stdin } = render(
-      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
-    );
-    stdin.write('\r');
-    await delay();
-    stdin.write('\x1B[B'); // down
-    await delay();
     stdin.write('\x1B[B'); // down
     await delay();
     stdin.write('\x1B[B'); // down to Skip
@@ -61,18 +35,55 @@ describe('InitWizard', () => {
     stdin.write('\r');
     await delay();
     const output = lastFrame()!;
-    expect(output).toContain('Default Trading Pair');
+    expect(output).toContain('Exchange Connection (Optional)');
   });
 
-  it('should show API key input when exchange is selected', async () => {
+  it('should show exchange options', async () => {
     const { lastFrame, stdin } = render(
       <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
     );
+    // skip AI step
+    stdin.write('\x1B[B'); // down
+    await delay();
+    stdin.write('\x1B[B'); // down to Skip
+    await delay();
     stdin.write('\r');
     await delay();
-    stdin.write('\r'); // select Binance (first item)
+    
+    const output = lastFrame()!;
+    expect(output).toContain('Binance');
+    expect(output).toContain('OKX');
+    expect(output).toContain('Bybit');
+    expect(output).toContain('Skip for now');
+  });
+
+  it('should skip to complete when Exchange is skipped', async () => {
+    const { lastFrame, stdin } = render(
+      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
+    );
+    // skip AI
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\r'); await delay();
+    
+    // skip Exchange
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\r'); await delay();
+    
+    const output = lastFrame()!;
+    expect(output).toContain('Setup Complete!');
+  });
+
+  it('should show AI key input when AI provider is selected', async () => {
+    const { lastFrame, stdin } = render(
+      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
+    );
+    stdin.write('\r'); // select Anthropic
     await delay();
     const output = lastFrame()!;
     expect(output).toContain('API Key');
+    expect(output).toContain('Anthropic');
   });
 });
