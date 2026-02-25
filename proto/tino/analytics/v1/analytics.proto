@@ -1,0 +1,51 @@
+syntax = "proto3";
+package tino.analytics.v1;
+
+service AnalyticsService {
+  rpc DetectAnomalies(DetectAnomaliesRequest) returns (DetectAnomaliesResponse);
+}
+
+message DetectAnomaliesRequest {
+  // Which detection types to run (empty = all)
+  repeated AnomalyType types = 1;
+  // Raw data points for detection
+  repeated DataPoint prices = 2;
+  repeated DataPoint volumes = 3;
+  repeated DataPoint funding_rates = 4;
+  repeated DataPoint open_interests = 5;
+  repeated DataPoint liquidations = 6;
+  // Detection parameters
+  double zscore_threshold = 7;   // default 3.0
+  int32 window_size = 8;         // sliding window size, default 20
+  double percentile_threshold = 9; // default 95.0
+}
+
+enum AnomalyType {
+  ANOMALY_TYPE_UNSPECIFIED = 0;
+  ANOMALY_TYPE_PRICE = 1;
+  ANOMALY_TYPE_VOLUME = 2;
+  ANOMALY_TYPE_FUNDING_RATE = 3;
+  ANOMALY_TYPE_OPEN_INTEREST = 4;
+  ANOMALY_TYPE_LIQUIDATION_CASCADE = 5;
+}
+
+message DataPoint {
+  double timestamp = 1;  // unix timestamp
+  double value = 2;
+}
+
+message Anomaly {
+  AnomalyType type = 1;
+  string severity = 2;        // "low", "medium", "high", "critical"
+  double score = 3;            // detection score (e.g. z-score value)
+  double threshold = 4;        // threshold that was exceeded
+  double timestamp = 5;        // when the anomaly occurred
+  double value = 6;            // the anomalous value
+  string description = 7;      // human-readable description
+}
+
+message DetectAnomaliesResponse {
+  repeated Anomaly anomalies = 1;
+  int32 total_points_analyzed = 2;
+  string summary = 3;
+}

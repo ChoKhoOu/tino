@@ -19,6 +19,7 @@ from tino_daemon.config import DaemonConfig
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.node_registry import NodeRegistry
 from tino_daemon.persistence.portfolio_db import PortfolioDB
+from tino_daemon.proto.tino.analytics.v1 import analytics_pb2, analytics_pb2_grpc
 from tino_daemon.proto.tino.backtest.v1 import backtest_pb2, backtest_pb2_grpc
 from tino_daemon.proto.tino.chart.v1 import chart_pb2, chart_pb2_grpc
 from tino_daemon.proto.tino.daemon.v1 import daemon_pb2, daemon_pb2_grpc
@@ -27,6 +28,7 @@ from tino_daemon.proto.tino.exchange.v1 import exchange_pb2, exchange_pb2_grpc
 from tino_daemon.proto.tino.portfolio.v1 import portfolio_pb2, portfolio_pb2_grpc
 from tino_daemon.proto.tino.streaming.v1 import streaming_pb2, streaming_pb2_grpc
 from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
+from tino_daemon.services.analytics import AnalyticsServiceServicer
 from tino_daemon.services.backtest import BacktestServiceServicer
 from tino_daemon.services.chart import ChartServiceServicer
 from tino_daemon.services.daemon import DaemonServicer
@@ -75,7 +77,7 @@ async def serve(config: DaemonConfig) -> None:
     # --- DaemonService (proto-generated servicer base) ---
     daemon_servicer = DaemonServicer(
         shutdown_event=shutdown_event,
-        service_names=["DataService", "BacktestService", "TradingService", "PortfolioService", "ChartService", "ExchangeService"],
+        service_names=["DataService", "BacktestService", "TradingService", "PortfolioService", "ChartService", "ExchangeService", "AnalyticsService"],
     )
     daemon_pb2_grpc.add_DaemonServiceServicer_to_server(daemon_servicer, server)
 
@@ -117,6 +119,12 @@ async def serve(config: DaemonConfig) -> None:
         exchange_servicer, server
     )
 
+    # --- AnalyticsService (proto-generated servicer base) ---
+    analytics_servicer = AnalyticsServiceServicer()
+    analytics_pb2_grpc.add_AnalyticsServiceServicer_to_server(
+        analytics_servicer, server
+    )
+
     # --- Reflection (enables grpcurl discovery) ---
     service_names = (
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
@@ -128,6 +136,7 @@ async def serve(config: DaemonConfig) -> None:
         chart_pb2.DESCRIPTOR.services_by_name["ChartService"].full_name,
         streaming_pb2.DESCRIPTOR.services_by_name["StreamingService"].full_name,
         exchange_pb2.DESCRIPTOR.services_by_name["ExchangeService"].full_name,
+        analytics_pb2.DESCRIPTOR.services_by_name["AnalyticsService"].full_name,
         reflection.SERVICE_NAME,
     )
     reflection.enable_server_reflection(service_names, server)
