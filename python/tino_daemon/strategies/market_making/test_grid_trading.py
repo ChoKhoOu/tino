@@ -75,9 +75,9 @@ class TestConfigSchema:
         props = self.schema["properties"]
         assert "minimum" in props["grid_count"]
         assert "maximum" in props["grid_count"]
-        assert "minimum" in props["upper_price"]
-        assert "minimum" in props["lower_price"]
-        assert "minimum" in props["total_investment"]
+        assert "exclusiveMinimum" in props["upper_price"]
+        assert "exclusiveMinimum" in props["lower_price"]
+        assert "exclusiveMinimum" in props["total_investment"]
 
 
 # ---------------------------------------------------------------------------

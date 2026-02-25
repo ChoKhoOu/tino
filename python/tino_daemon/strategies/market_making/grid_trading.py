@@ -61,8 +61,7 @@ class GridTradingStrategy(Strategy):
                     "Upper bound of the grid price range. "
                     "Must be greater than lower_price."
                 ),
-                "minimum": 0,
-                "exclusiveMinimum": True,
+                "exclusiveMinimum": 0,
             },
             "lower_price": {
                 "type": "number",
@@ -70,8 +69,7 @@ class GridTradingStrategy(Strategy):
                     "Lower bound of the grid price range. "
                     "Must be less than upper_price."
                 ),
-                "minimum": 0,
-                "exclusiveMinimum": True,
+                "exclusiveMinimum": 0,
             },
             "grid_count": {
                 "type": "integer",
@@ -89,8 +87,7 @@ class GridTradingStrategy(Strategy):
                     "Total capital allocated to the grid strategy. "
                     "Divided equally among grid levels for position sizing."
                 ),
-                "minimum": 0,
-                "exclusiveMinimum": True,
+                "exclusiveMinimum": 0,
             },
             "grid_type": {
                 "type": "string",
@@ -133,7 +130,7 @@ class GridTradingStrategy(Strategy):
         self.grid_type = grid_type
 
         self._grid_levels = self._calculate_grid_levels()
-        self._size_per_grid = total_investment / grid_count
+        self._size_per_grid = total_investment / (grid_count + 1)
         # Track which levels have been filled (bought).
         # A filled level means we bought at that price and wait to sell higher.
         self._filled: set[int] = set()
