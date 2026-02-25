@@ -1,0 +1,51 @@
+syntax = "proto3";
+package tino.backtest.v1;
+
+service GridSearchService {
+  rpc RunGridSearch(GridSearchRequest) returns (stream GridSearchResponse);
+}
+
+message GridSearchRequest {
+  string strategy_path = 1;
+  string instrument = 2;
+  string bar_type = 3;
+  string start_date = 4;
+  string end_date = 5;
+  // JSON-encoded parameter ranges override, e.g. {"threshold": [0.1, 0.2, 0.3]}
+  // If empty, ranges are auto-extracted from CONFIG_SCHEMA.
+  string param_ranges_json = 6;
+  // Maximum number of parameter combinations (safety limit).
+  int32 max_combinations = 7;
+  // Metric to rank results by: "sharpe_ratio", "total_return", "max_drawdown".
+  string rank_metric = 8;
+  // Number of top results to return.
+  int32 top_n = 9;
+}
+
+message GridSearchResponse {
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_PROGRESS = 1;
+    EVENT_TYPE_COMPLETED = 2;
+    EVENT_TYPE_ERROR = 3;
+  }
+  EventType type = 1;
+  string message = 2;
+  double progress_pct = 3;
+  // Total number of combinations in the grid.
+  int32 total_combinations = 4;
+  // Number of combinations completed so far.
+  int32 completed_combinations = 5;
+  // Top-N ranked results (only populated in COMPLETED event).
+  repeated GridSearchResultEntry results = 6;
+}
+
+message GridSearchResultEntry {
+  // JSON-encoded parameter dict for this run.
+  string params_json = 1;
+  double sharpe_ratio = 2;
+  double total_return = 3;
+  double max_drawdown = 4;
+  double win_rate = 5;
+  int32 num_trades = 6;
+}
