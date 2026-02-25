@@ -78,6 +78,8 @@ const TEMPLATE_META: Record<string, { type: StrategyType; description: string }>
   },
 };
 
+// Single-path assumption: templates are always loaded from one directory per process.
+// If multi-directory support is needed, replace with Map<string, TemplateEntry[]>.
 let _cachedTemplates: TemplateEntry[] | null = null;
 
 export function getTemplateEntries(templatesDir: string): TemplateEntry[] {
@@ -201,9 +203,11 @@ function buildRetryPrompt(
   previousCode: string,
   validation: StrategyValidationResult,
   constraints?: string,
+  templateCode?: string,
+  templateName?: string,
 ): string {
   return [
-    buildUserPrompt(req, constraints),
+    buildUserPrompt(req, constraints, templateCode, templateName),
     '',
     'The previous generation failed safety/completeness checks.',
     `Validation errors: ${validation.errors.join('; ')}`,
@@ -275,17 +279,23 @@ export async function generateStrategy(input: GenerateInput, broker: ModelBroker
     validation = validateStrategyCode(code);
 
     if (validation.valid || attempt === 1) break;
-    prompt = buildRetryPrompt(req, code, validation, input.constraints);
+    prompt = buildRetryPrompt(req, code, validation, input.constraints, templateCode, templateName);
   }
 
   const className = extractStrategyClassName(code) ?? 'GeneratedStrategy';
   const fileName = toSnakeCase(className);
 
+  const now = new Date();
+  const endDate = now.toISOString().slice(0, 10);
+  const startDate = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+    .toISOString()
+    .slice(0, 10);
+
   const suggestedBacktest: SuggestedBacktest = {
     instrument: req.instrument,
     timeframe: req.timeframe,
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
+    startDate,
+    endDate,
   };
 
   return {
