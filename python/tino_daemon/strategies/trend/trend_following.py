@@ -5,6 +5,7 @@ Implements a dual moving average crossover strategy:
   - Golden cross (fast crosses above slow) -> LONG signal
   - Death cross (fast crosses below slow) -> SHORT signal
   - Tracks previous MA values to detect crossover events
+  - Optional stop-loss exits position when loss exceeds threshold
 
 Parameters:
   fast_period: Fast MA period (default 10)
@@ -16,6 +17,7 @@ Parameters:
 
 from __future__ import annotations
 
+from collections import deque
 from typing import Any
 
 import numpy as np
@@ -76,10 +78,9 @@ class MACrossoverStrategy(Strategy):
             },
             "stop_loss_pct": {
                 "type": "number",
-                "default": None,
                 "minimum": 0.001,
                 "maximum": 0.5,
-                "description": "Optional stop-loss as fraction of entry price. None disables stop-loss.",
+                "description": "Optional stop-loss as fraction of entry price. Omit to disable stop-loss.",
             },
         },
         "required": [],
@@ -95,6 +96,11 @@ class MACrossoverStrategy(Strategy):
         position_size: float = 0.1,
         stop_loss_pct: float | None = None,
     ) -> None:
+        if fast_period >= slow_period:
+            raise ValueError(
+                f"fast_period ({fast_period}) must be less than slow_period ({slow_period})"
+            )
+
         self.symbol = symbol
         self.fast_period = fast_period
         self.slow_period = slow_period
@@ -102,11 +108,17 @@ class MACrossoverStrategy(Strategy):
         self.position_size = position_size
         self.stop_loss_pct = stop_loss_pct
 
-        # Price history buffer for MA computation
-        self._prices: list[float] = []
+        # Price history buffer, bounded to slow_period for SMA
+        self._prices: deque[float] = deque(maxlen=slow_period)
         # Previous MA values for crossover detection (None = not yet computed)
         self._prev_fast_ma: float | None = None
         self._prev_slow_ma: float | None = None
+        # Incremental EMA state (seeded on first full window)
+        self._fast_ema: float | None = None
+        self._slow_ema: float | None = None
+        # Stop-loss tracking
+        self._entry_price: float | None = None
+        self._position_direction: Direction | None = None
 
     # -- MA computation --
 
@@ -116,8 +128,8 @@ class MACrossoverStrategy(Strategy):
         return float(np.mean(prices[-period:]))
 
     @staticmethod
-    def _compute_ema(prices: np.ndarray, period: int) -> float:
-        """Compute Exponential Moving Average over the full price array.
+    def _seed_ema(prices: np.ndarray, period: int) -> float:
+        """Compute initial EMA from full price array for seeding.
 
         Uses the standard EMA formula with multiplier 2/(period+1).
         Seeds the EMA with the SMA of the first `period` values.
@@ -130,30 +142,77 @@ class MACrossoverStrategy(Strategy):
             ema = (float(price) - ema) * multiplier + ema
         return ema
 
+    @staticmethod
+    def _update_ema(price: float, prev_ema: float, period: int) -> float:
+        """Incrementally update EMA with a new price. O(1)."""
+        k = 2.0 / (period + 1)
+        return price * k + prev_ema * (1 - k)
+
     def _compute_ma(self, prices: np.ndarray, period: int) -> float:
         """Compute moving average based on configured ma_type."""
         if self.ma_type == "EMA":
-            return self._compute_ema(prices, period)
+            return self._seed_ema(prices, period)
         return self._compute_sma(prices, period)
 
     # -- Strategy hooks --
 
     def on_bar(self, bar: Any) -> list[Signal]:
-        """Process a new bar and emit crossover signals.
+        """Process a new bar and emit crossover or stop-loss signals.
 
         Expects ``bar`` to have a ``close`` attribute (float or convertible).
-        Returns a list with at most one Signal on crossover, empty otherwise.
+        Returns a list with at most one Signal on crossover or stop-loss,
+        empty otherwise.
         """
         close = float(bar.close) if hasattr(bar, "close") else float(bar)
         self._prices.append(close)
+
+        # Check stop-loss before MA computation
+        if (
+            self.stop_loss_pct is not None
+            and self._entry_price is not None
+            and self._position_direction is not None
+        ):
+            if self._position_direction == Direction.LONG:
+                loss_pct = (self._entry_price - close) / self._entry_price
+            else:  # SHORT
+                loss_pct = (close - self._entry_price) / self._entry_price
+
+            if loss_pct >= self.stop_loss_pct:
+                self._entry_price = None
+                self._position_direction = None
+                return [
+                    Signal(
+                        direction=Direction.FLAT,
+                        symbol=self.symbol,
+                        size=self.position_size,
+                        price=close,
+                        metadata={
+                            "event": "stop_loss",
+                            "loss_pct": loss_pct,
+                        },
+                    )
+                ]
 
         # Need at least slow_period prices to compute both MAs
         if len(self._prices) < self.slow_period:
             return []
 
-        prices_arr = np.array(self._prices)
-        fast_ma = self._compute_ma(prices_arr, self.fast_period)
-        slow_ma = self._compute_ma(prices_arr, self.slow_period)
+        # Compute MAs
+        if self.ma_type == "EMA":
+            if self._fast_ema is None:
+                # Seed EMAs from full price array on first complete window
+                prices_arr = np.array(self._prices)
+                self._fast_ema = self._seed_ema(prices_arr, self.fast_period)
+                self._slow_ema = self._seed_ema(prices_arr, self.slow_period)
+            else:
+                self._fast_ema = self._update_ema(close, self._fast_ema, self.fast_period)
+                self._slow_ema = self._update_ema(close, self._slow_ema, self.slow_period)
+            fast_ma = self._fast_ema
+            slow_ma = self._slow_ema
+        else:
+            prices_arr = np.array(self._prices)
+            fast_ma = self._compute_sma(prices_arr, self.fast_period)
+            slow_ma = self._compute_sma(prices_arr, self.slow_period)
 
         signals: list[Signal] = []
 
@@ -178,6 +237,8 @@ class MACrossoverStrategy(Strategy):
                         },
                     )
                 )
+                self._entry_price = close
+                self._position_direction = Direction.LONG
 
             # Death cross: fast crosses below slow
             elif prev_diff >= 0 and curr_diff < 0:
@@ -195,6 +256,8 @@ class MACrossoverStrategy(Strategy):
                         },
                     )
                 )
+                self._entry_price = close
+                self._position_direction = Direction.SHORT
 
         self._prev_fast_ma = fast_ma
         self._prev_slow_ma = slow_ma
@@ -202,5 +265,5 @@ class MACrossoverStrategy(Strategy):
         return signals
 
     def on_trade(self, trade: Any) -> list[Signal]:
-        """Process a tick trade. Delegates to on_bar for signal generation."""
+        """Process a tick trade. Not used for MA crossover (returns empty)."""
         return []

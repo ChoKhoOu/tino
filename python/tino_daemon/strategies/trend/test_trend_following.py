@@ -88,6 +88,11 @@ class TestConfigSchema:
         assert "minimum" in prop
         assert "maximum" in prop
 
+    def test_stop_loss_pct_no_default(self) -> None:
+        """stop_loss_pct must not have a default key (None is invalid JSON Schema)."""
+        prop = self.schema["properties"]["stop_loss_pct"]
+        assert "default" not in prop
+
 
 class TestNoSignalWhenNotInitialized:
     """Strategy must not emit signals before it has enough data."""
@@ -203,6 +208,155 @@ class TestEMAMode:
         assert len(short_signals) >= 1
         assert short_signals[0].metadata is not None
         assert short_signals[0].metadata["ma_type"] == "EMA"
+
+
+class TestParameterValidation:
+    """Validate __init__ parameter constraints."""
+
+    def test_fast_period_must_be_less_than_slow_period(self) -> None:
+        with pytest.raises(ValueError, match="fast_period.*must be less than.*slow_period"):
+            MACrossoverStrategy(fast_period=10, slow_period=10)
+
+    def test_fast_period_greater_than_slow_period_raises(self) -> None:
+        with pytest.raises(ValueError, match="fast_period.*must be less than.*slow_period"):
+            MACrossoverStrategy(fast_period=20, slow_period=10)
+
+    def test_valid_periods_accepted(self) -> None:
+        strategy = MACrossoverStrategy(fast_period=5, slow_period=10)
+        assert strategy.fast_period == 5
+        assert strategy.slow_period == 10
+
+
+class TestStopLoss:
+    """Stop-loss exits position when loss exceeds threshold."""
+
+    def test_long_stop_loss_triggers(self) -> None:
+        strategy = MACrossoverStrategy(
+            fast_period=3, slow_period=5, ma_type="SMA",
+            position_size=0.2, stop_loss_pct=0.05,
+        )
+        # Build declining -> rally to get a golden cross LONG entry
+        declining = [100.0, 98.0, 96.0, 94.0, 92.0, 90.0, 88.0]
+        for price in declining:
+            strategy.on_bar(FakeBar(close=price))
+
+        rally = [95.0, 100.0, 105.0, 110.0]
+        entry_price: float | None = None
+        for price in rally:
+            result = strategy.on_bar(FakeBar(close=price))
+            if result and result[0].direction == Direction.LONG:
+                entry_price = price
+
+        assert entry_price is not None, "Expected a LONG entry signal"
+
+        # Now drop price by more than 5% from entry to trigger stop-loss
+        drop_price = entry_price * 0.94  # ~6% loss
+        signals = strategy.on_bar(FakeBar(close=drop_price))
+        assert len(signals) == 1
+        assert signals[0].direction == Direction.FLAT
+        assert signals[0].metadata is not None
+        assert signals[0].metadata["event"] == "stop_loss"
+
+    def test_short_stop_loss_triggers(self) -> None:
+        strategy = MACrossoverStrategy(
+            fast_period=3, slow_period=5, ma_type="SMA",
+            position_size=0.15, stop_loss_pct=0.05,
+        )
+        # Build rising -> decline to get a death cross SHORT entry
+        rising = [90.0, 92.0, 94.0, 96.0, 98.0, 100.0, 102.0]
+        for price in rising:
+            strategy.on_bar(FakeBar(close=price))
+
+        decline = [95.0, 90.0, 85.0, 80.0]
+        entry_price: float | None = None
+        for price in decline:
+            result = strategy.on_bar(FakeBar(close=price))
+            if result and result[0].direction == Direction.SHORT:
+                entry_price = price
+
+        assert entry_price is not None, "Expected a SHORT entry signal"
+
+        # Now spike price by more than 5% from entry to trigger stop-loss
+        spike_price = entry_price * 1.06  # ~6% loss for short
+        signals = strategy.on_bar(FakeBar(close=spike_price))
+        assert len(signals) == 1
+        assert signals[0].direction == Direction.FLAT
+        assert signals[0].metadata is not None
+        assert signals[0].metadata["event"] == "stop_loss"
+
+    def test_no_stop_loss_when_disabled(self) -> None:
+        """When stop_loss_pct is None, no stop-loss signals should fire."""
+        strategy = MACrossoverStrategy(
+            fast_period=3, slow_period=5, ma_type="SMA",
+            position_size=0.2, stop_loss_pct=None,
+        )
+        declining = [100.0, 98.0, 96.0, 94.0, 92.0, 90.0, 88.0]
+        for price in declining:
+            strategy.on_bar(FakeBar(close=price))
+
+        rally = [95.0, 100.0, 105.0, 110.0]
+        for price in rally:
+            strategy.on_bar(FakeBar(close=price))
+
+        # Large drop -- should NOT trigger stop-loss since it's disabled
+        signals = strategy.on_bar(FakeBar(close=50.0))
+        flat_signals = [s for s in signals if s.direction == Direction.FLAT]
+        assert flat_signals == []
+
+    def test_stop_loss_resets_after_trigger(self) -> None:
+        """After stop-loss triggers, subsequent bars should not re-trigger."""
+        strategy = MACrossoverStrategy(
+            fast_period=3, slow_period=5, ma_type="SMA",
+            position_size=0.2, stop_loss_pct=0.05,
+        )
+        declining = [100.0, 98.0, 96.0, 94.0, 92.0, 90.0, 88.0]
+        for price in declining:
+            strategy.on_bar(FakeBar(close=price))
+
+        rally = [95.0, 100.0, 105.0, 110.0]
+        for price in rally:
+            strategy.on_bar(FakeBar(close=price))
+
+        # Trigger stop-loss
+        strategy.on_bar(FakeBar(close=50.0))
+        # Next bar should NOT produce another stop-loss
+        signals = strategy.on_bar(FakeBar(close=40.0))
+        flat_signals = [s for s in signals if s.direction == Direction.FLAT]
+        assert flat_signals == []
+
+
+class TestBoundedPriceHistory:
+    """Price history buffer should be bounded by slow_period."""
+
+    def test_prices_bounded_by_slow_period(self) -> None:
+        strategy = MACrossoverStrategy(fast_period=3, slow_period=5)
+        for i in range(100):
+            strategy.on_bar(FakeBar(close=float(50 + i)))
+        assert len(strategy._prices) == 5
+
+
+class TestIncrementalEMA:
+    """EMA should use incremental computation after seeding."""
+
+    def test_ema_state_seeded_after_slow_period(self) -> None:
+        strategy = MACrossoverStrategy(fast_period=3, slow_period=5, ma_type="EMA")
+        for price in [10.0, 11.0, 12.0, 13.0]:
+            strategy.on_bar(FakeBar(close=price))
+        assert strategy._fast_ema is None  # Not yet seeded
+
+        strategy.on_bar(FakeBar(close=14.0))  # 5th bar
+        assert strategy._fast_ema is not None
+        assert strategy._slow_ema is not None
+
+    def test_ema_updates_incrementally(self) -> None:
+        strategy = MACrossoverStrategy(fast_period=3, slow_period=5, ma_type="EMA")
+        for price in [10.0, 11.0, 12.0, 13.0, 14.0]:
+            strategy.on_bar(FakeBar(close=price))
+
+        ema_after_seed = strategy._fast_ema
+        strategy.on_bar(FakeBar(close=15.0))
+        # EMA should have changed after new price
+        assert strategy._fast_ema != ema_after_seed
 
 
 class TestOnTrade:
