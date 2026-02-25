@@ -1,6 +1,6 @@
 {
   "name": "tino",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Tino - AI-powered quantitative trading workbench",
   "type": "module",
   "main": "src/index.tsx",

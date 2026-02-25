@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 # Proto-generated grpc code uses absolute imports like `from tino.data.v1 import data_pb2`.
 # Ensure the proto output root is on sys.path so these resolve correctly.
