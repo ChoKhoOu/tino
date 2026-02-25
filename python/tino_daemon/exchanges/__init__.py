@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from tino_daemon.exchanges.base_connector import BaseExchangeConnector
 from tino_daemon.exchanges.binance import BinanceConnector
+from tino_daemon.exchanges.bitget import BitgetConnector
 from tino_daemon.exchanges.bybit import BybitConnector
 from tino_daemon.exchanges.okx import OKXConnector
 
 _REGISTRY: dict[str, type[BaseExchangeConnector]] = {
     "binance": BinanceConnector,
+    "bitget": BitgetConnector,
     "okx": OKXConnector,
     "bybit": BybitConnector,
 }
