@@ -19,8 +19,8 @@ describe('InitWizard', () => {
       <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
     );
     const output = lastFrame()!;
-    expect(output).toContain('Anthropic (Claude 3.5 Sonnet)');
-    expect(output).toContain('OpenAI (GPT-4o)');
+    expect(output).toContain('Anthropic (Claude)');
+    expect(output).toContain('OpenAI (GPT)');
     expect(output).toContain('Skip (Free Tier / Demo)');
   });
 
@@ -85,5 +85,42 @@ describe('InitWizard', () => {
     const output = lastFrame()!;
     expect(output).toContain('API Key');
     expect(output).toContain('Anthropic');
+  });
+
+  it('should show exchange API key input when exchange is selected', async () => {
+    const { lastFrame, stdin } = render(
+      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
+    );
+    // skip AI step
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\r'); await delay();
+
+    // select Binance
+    stdin.write('\r'); await delay();
+    const output = lastFrame()!;
+    expect(output).toContain('Binance');
+    expect(output).toContain('API Key');
+  });
+
+  it('should show exchange API secret after entering API key', async () => {
+    const { lastFrame, stdin } = render(
+      <InitWizard projectDir="/tmp/test-init" onComplete={() => {}} />,
+    );
+    // skip AI step
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\x1B[B'); await delay();
+    stdin.write('\r'); await delay();
+
+    // select Binance
+    stdin.write('\r'); await delay();
+
+    // type API key and submit
+    stdin.write('testkey123');
+    await delay();
+    stdin.write('\r'); await delay();
+
+    const output = lastFrame()!;
+    expect(output).toContain('API Secret');
   });
 });

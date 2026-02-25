@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { Box, useInput, Text } from 'ink';
+import { Box, useInput } from 'ink';
 import { runInitProject } from '../commands/init-project.js';
 import { validateApiKey } from '../commands/api-key-validator.js';
-import { saveApiKeyForProvider } from '../config/env.js';
+import { saveApiKeyForProvider, saveApiKeyToEnv } from '../config/env.js';
 import { setSetting } from '../config/settings.js';
 import { colors } from '../theme.js';
 import {
@@ -45,20 +45,31 @@ export function InitWizard({ projectDir, onComplete }: InitWizardProps) {
   }, [exchange, exApiKey, exApiSecret]);
 
   const finalize = useCallback(() => {
-    // Save AI provider
-    if (aiProvider && aiProvider !== 'skip') {
-      setSetting('provider', aiProvider);
+    const finalProvider = aiProvider && aiProvider !== 'skip' ? aiProvider : undefined;
+    const finalEx = exchange && exchange !== 'skip' ? exchange : undefined;
+
+    // Create project files first so .tino/settings.json exists
+    runInitProject(projectDir, { provider: finalProvider, exchange: finalEx });
+
+    // Now setSetting writes to project-level .tino/settings.json (not global)
+    if (finalProvider) {
+      setSetting('provider', finalProvider);
       if (aiKey) {
-        saveApiKeyForProvider(aiProvider, aiKey);
+        saveApiKeyForProvider(finalProvider, aiKey);
       }
     }
-    
-    // Save exchange setting via init
-    const finalEx = exchange && exchange !== 'skip' ? exchange : undefined;
-    runInitProject(projectDir, { exchange: finalEx });
-    
+
+    // Persist exchange credentials to .env
+    if (finalEx && exApiKey) {
+      const prefix = finalEx.toUpperCase();
+      saveApiKeyToEnv(`${prefix}_API_KEY`, exApiKey);
+      if (exApiSecret) {
+        saveApiKeyToEnv(`${prefix}_API_SECRET`, exApiSecret);
+      }
+    }
+
     onComplete('Tino is ready!');
-  }, [projectDir, aiProvider, aiKey, exchange, onComplete]);
+  }, [projectDir, aiProvider, aiKey, exchange, exApiKey, exApiSecret, onComplete]);
 
   useInput((input, key) => {
     if (step === 'ai-provider') {

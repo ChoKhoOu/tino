@@ -3,8 +3,8 @@ import { Box, Text } from 'ink';
 import { colors } from '../theme.js';
 
 export const AI_PROVIDERS = [
-  { id: 'anthropic', label: 'Anthropic (Claude 3.5 Sonnet)' },
-  { id: 'openai', label: 'OpenAI (GPT-4o)' },
+  { id: 'anthropic', label: 'Anthropic (Claude)' },
+  { id: 'openai', label: 'OpenAI (GPT)' },
   { id: 'skip', label: 'Skip (Free Tier / Demo)' },
 ];
 
