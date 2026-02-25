@@ -1,2 +1,2 @@
 export { DaemonManager } from './manager.js';
-export type { DaemonManagerOptions, DaemonStatus } from './manager.js';
+export type { DaemonBackend, DaemonManagerOptions, DaemonStatus } from './manager.js';
