@@ -12,6 +12,22 @@ const schema = z.object({
   code: z.string().optional().describe('Strategy code to validate'),
   instrument: z.string().optional().describe('Instrument symbol, e.g., AAPL or BTCUSDT'),
   constraints: z.string().optional().describe('Strategy constraints, e.g., max drawdown 10%'),
+  strategy_type: z
+    .enum(['trend', 'mean_reversion', 'momentum', 'grid', 'arbitrage', 'auto'])
+    .optional()
+    .default('auto')
+    .describe('Strategy type hint. Use auto to detect from description.'),
+  parameters: z
+    .record(
+      z.string(),
+      z.object({
+        default: z.number(),
+        min: z.number().optional(),
+        max: z.number().optional(),
+      }),
+    )
+    .optional()
+    .describe('Custom parameter overrides with default/min/max values'),
 });
 
 export default definePlugin({
@@ -35,10 +51,15 @@ export default definePlugin({
             description: input.description,
             instrument: input.instrument,
             constraints: input.constraints,
+            strategyType: input.strategy_type,
+            parameters: input.parameters,
           },
           broker,
         );
-        return formatToolResult(result);
+        return formatToolResult({
+          ...result,
+          nextStep: 'Run trading_sim with action=backtest to validate this strategy',
+        });
       }
 
       case 'validate': {
