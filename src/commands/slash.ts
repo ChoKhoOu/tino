@@ -29,7 +29,8 @@ export type SlashAction =
   | 'verbose'
   | 'doctor'
   | 'init'
-  | 'output-style';
+  | 'output-style'
+  | 'portfolio';
 
 export interface SlashCommandResult {
   /** Whether the command was recognized and handled */
@@ -68,6 +69,7 @@ export const SLASH_COMMANDS: Record<string, string> = {
   '/init': 'Initialize project (.tino/ directory, settings, permissions)',
   '/output-style': 'Switch output style (concise, explanatory, trading, etc.)',
   '/style': 'Alias for /output-style',
+  '/portfolio': 'Show cross-exchange portfolio summary',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -187,6 +189,9 @@ export function parseSlashCommand(input: string): SlashCommandResult | null {
     case '/output-style':
     case '/style':
       return { handled: true, action: 'output-style' };
+
+    case '/portfolio':
+      return { handled: true, action: 'portfolio' };
 
     default:
       // Starts with / but not a recognized command
