@@ -10,10 +10,11 @@ import {
 } from '@/theme.js';
 import { presets } from '@/config/theme.js';
 
+const dark = presets['crypto-dark'];
+
 describe('theme', () => {
   describe('backward compatibility', () => {
     it('preserves all 14 original colors with crypto-dark equivalents', () => {
-  
       expect(colors.primary).toBe(dark.primaryText);
       expect(colors.primaryLight).toBe(dark.primaryText);
       expect(colors.success).toBe(dark.up);

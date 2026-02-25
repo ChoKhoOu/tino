@@ -28,9 +28,14 @@ export const presets: Record<string, ThemeColors> = {
   },
 };
 
+let _cached: ThemeColors | null = null;
+
 export function getTheme(): ThemeColors {
+  if (_cached) return _cached;
+
   if (process.env.NODE_ENV === 'test') {
-    return presets['crypto-dark'];
+    _cached = presets['crypto-dark'];
+    return _cached;
   }
 
   try {
@@ -39,7 +44,7 @@ export function getTheme(): ThemeColors {
     const baseTheme = presets[themeName] || presets['crypto-dark'];
     const overrides = settings.theme?.overrides || {};
 
-    return {
+    _cached = {
       background: overrides.background || baseTheme.background,
       panelBackground: overrides.panelBackground || baseTheme.panelBackground,
       border: overrides.border || baseTheme.border,
@@ -51,7 +56,13 @@ export function getTheme(): ThemeColors {
       info: overrides.info || baseTheme.info,
       aiReply: overrides.aiReply || baseTheme.aiReply,
     };
+    return _cached;
   } catch (e) {
-    return presets['crypto-dark'];
+    _cached = presets['crypto-dark'];
+    return _cached;
   }
+}
+
+export function invalidateThemeCache(): void {
+  _cached = null;
 }

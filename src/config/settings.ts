@@ -13,8 +13,8 @@ import {
 // Re-export types so existing imports from settings.ts keep working
 export type { CustomProviderConfig, ProviderOverrideConfig, TinoSettings } from './settings-schema.js';
 
-const getGlobalSettingsDir = () => join(homedir(), '.tino');
-const getGlobalSettingsFile = () => join(getGlobalSettingsDir(), 'settings.json');
+const GLOBAL_SETTINGS_DIR = join(homedir(), '.tino');
+const GLOBAL_SETTINGS_FILE = join(GLOBAL_SETTINGS_DIR, 'settings.json');
 const PROJECT_SETTINGS_FILE = '.tino/settings.json';
 
 const DEFAULT_GLOBAL_SETTINGS = { provider: 'openai' };
@@ -40,22 +40,21 @@ function deepMergeRecordValues(
   return merged;
 }
 
-function readJsonFile(p: string): Record<string, unknown> | null {
+function readJsonFile(path: string): Record<string, unknown> | null {
   try {
-    if (!existsSync(p)) return null;
-    return JSON.parse(readFileSync(p, 'utf-8'));
+    if (!existsSync(path)) return null;
+    return JSON.parse(readFileSync(path, 'utf-8'));
   } catch {
     return null;
   }
 }
 
 function ensureGlobalSettings(): Record<string, unknown> {
-  const file = getGlobalSettingsFile();
-  const existing = readJsonFile(file);
+  const existing = readJsonFile(GLOBAL_SETTINGS_FILE);
   if (existing) return existing;
   try {
-    mkdirSync(getGlobalSettingsDir(), { recursive: true });
-    writeFileSync(file, JSON.stringify(DEFAULT_GLOBAL_SETTINGS, null, 2));
+    mkdirSync(GLOBAL_SETTINGS_DIR, { recursive: true });
+    writeFileSync(GLOBAL_SETTINGS_FILE, JSON.stringify(DEFAULT_GLOBAL_SETTINGS, null, 2));
   } catch { /* non-fatal */ }
   return { ...DEFAULT_GLOBAL_SETTINGS };
 }
@@ -112,7 +111,7 @@ export function saveSettings(settings: SettingsData): boolean {
 
     const target = existsSync(PROJECT_SETTINGS_FILE)
       ? PROJECT_SETTINGS_FILE
-      : getGlobalSettingsFile();
+      : GLOBAL_SETTINGS_FILE;
     const dir = dirname(target);
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
