@@ -24,7 +24,10 @@ from tino_daemon.exchanges.base_connector import (
     OrderbookLevel,
     OrderResult,
     Position,
+    StopOrderResult,
     Ticker,
+    TpSlOrderResult,
+    TrailingStopResult,
 )
 from tino_daemon.exchanges.rate_limiter import RateLimiter
 
@@ -336,6 +339,156 @@ class OKXConnector(BaseExchangeConnector):
             )
             for r in data["data"]
         ]
+
+    async def place_tp_sl_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        tp_price: float | None = None,
+        sl_price: float | None = None,
+    ) -> TpSlOrderResult:
+        if tp_price is None and sl_price is None:
+            return TpSlOrderResult(
+                order_id="", success=False,
+                message="At least one of tp_price or sl_price is required",
+            )
+
+        inst_id = self._to_swap_inst_id(symbol)
+        # OKX: posSide for hedge mode; for one-way mode use "net"
+        pos_side = "long" if side.upper() == "BUY" else "short"
+        close_side = "sell" if side.upper() == "BUY" else "buy"
+
+        tp_order_id = ""
+        sl_order_id = ""
+
+        try:
+            if tp_price is not None:
+                tp_data = await self._signed_request(
+                    "POST", "/api/v5/trade/order-algo",
+                    body={
+                        "instId": inst_id,
+                        "tdMode": "cross",
+                        "side": close_side,
+                        "posSide": pos_side,
+                        "ordType": "conditional",
+                        "sz": str(quantity),
+                        "tpTriggerPx": str(tp_price),
+                        "tpOrdPx": "-1",  # market price
+                    },
+                )
+                if tp_data.get("data"):
+                    tp_order_id = tp_data["data"][0].get("algoId", "")
+
+            if sl_price is not None:
+                sl_data = await self._signed_request(
+                    "POST", "/api/v5/trade/order-algo",
+                    body={
+                        "instId": inst_id,
+                        "tdMode": "cross",
+                        "side": close_side,
+                        "posSide": pos_side,
+                        "ordType": "conditional",
+                        "sz": str(quantity),
+                        "slTriggerPx": str(sl_price),
+                        "slOrdPx": "-1",  # market price
+                    },
+                )
+                if sl_data.get("data"):
+                    sl_order_id = sl_data["data"][0].get("algoId", "")
+
+            return TpSlOrderResult(
+                order_id=tp_order_id or sl_order_id,
+                success=True,
+                message="TP/SL orders placed successfully",
+                tp_order_id=tp_order_id,
+                sl_order_id=sl_order_id,
+            )
+        except Exception as exc:
+            return TpSlOrderResult(
+                order_id="", success=False,
+                message=f"TP/SL order failed: {exc}",
+            )
+
+    async def place_trailing_stop(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        callback_rate: float,
+        activation_price: float | None = None,
+    ) -> TrailingStopResult:
+        inst_id = self._to_swap_inst_id(symbol)
+        pos_side = "long" if side.upper() == "BUY" else "short"
+        close_side = "sell" if side.upper() == "BUY" else "buy"
+
+        body: dict = {
+            "instId": inst_id,
+            "tdMode": "cross",
+            "side": close_side,
+            "posSide": pos_side,
+            "ordType": "move_order_stop",
+            "sz": str(quantity),
+            "callbackRatio": str(callback_rate / 100),  # OKX uses decimal ratio
+        }
+        if activation_price is not None:
+            body["activePx"] = str(activation_price)
+
+        try:
+            data = await self._signed_request(
+                "POST", "/api/v5/trade/order-algo", body=body,
+            )
+            order_id = ""
+            if data.get("data"):
+                order_id = data["data"][0].get("algoId", "")
+            return TrailingStopResult(
+                order_id=order_id, success=True,
+                message="Trailing stop order placed successfully",
+            )
+        except Exception as exc:
+            return TrailingStopResult(
+                order_id="", success=False,
+                message=f"Trailing stop failed: {exc}",
+            )
+
+    async def place_stop_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        stop_price: float,
+        price: float | None = None,
+    ) -> StopOrderResult:
+        inst_id = self._to_swap_inst_id(symbol)
+        pos_side = "long" if side.upper() == "BUY" else "short"
+
+        body: dict = {
+            "instId": inst_id,
+            "tdMode": "cross",
+            "side": side.lower(),
+            "posSide": pos_side,
+            "ordType": "conditional",
+            "sz": str(quantity),
+            "slTriggerPx": str(stop_price),
+            "slOrdPx": str(price) if price is not None else "-1",
+        }
+
+        try:
+            data = await self._signed_request(
+                "POST", "/api/v5/trade/order-algo", body=body,
+            )
+            order_id = ""
+            if data.get("data"):
+                order_id = data["data"][0].get("algoId", "")
+            return StopOrderResult(
+                order_id=order_id, success=True,
+                message="Stop order placed successfully",
+            )
+        except Exception as exc:
+            return StopOrderResult(
+                order_id="", success=False,
+                message=f"Stop order failed: {exc}",
+            )
 
     async def close(self) -> None:
         await self._client.aclose()

@@ -345,3 +345,92 @@ class ExchangeServiceServicer(exchange_pb2_grpc.ExchangeServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(exc))
             return exchange_pb2.GetFundingRateHistoryResponse()
+
+    async def PlaceTpSlOrder(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            result = await connector.place_tp_sl_order(
+                symbol=request.symbol,
+                side=request.side,
+                quantity=request.quantity,
+                tp_price=request.tp_price if request.tp_price else None,
+                sl_price=request.sl_price if request.sl_price else None,
+            )
+            return exchange_pb2.PlaceTpSlOrderResponse(
+                order_id=result.order_id,
+                success=result.success,
+                message=result.message,
+                tp_order_id=result.tp_order_id,
+                sl_order_id=result.sl_order_id,
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.PlaceTpSlOrderResponse(success=False, message=str(exc))
+        except Exception as exc:
+            logger.exception("PlaceTpSlOrder failed")
+            return exchange_pb2.PlaceTpSlOrderResponse(
+                success=False, message=str(exc)
+            )
+
+    async def PlaceTrailingStop(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            result = await connector.place_trailing_stop(
+                symbol=request.symbol,
+                side=request.side,
+                quantity=request.quantity,
+                callback_rate=request.callback_rate,
+                activation_price=request.activation_price if request.activation_price else None,
+            )
+            return exchange_pb2.PlaceTrailingStopResponse(
+                order_id=result.order_id,
+                success=result.success,
+                message=result.message,
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.PlaceTrailingStopResponse(success=False, message=str(exc))
+        except Exception as exc:
+            logger.exception("PlaceTrailingStop failed")
+            return exchange_pb2.PlaceTrailingStopResponse(
+                success=False, message=str(exc)
+            )
+
+    async def PlaceStopOrder(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            result = await connector.place_stop_order(
+                symbol=request.symbol,
+                side=request.side,
+                quantity=request.quantity,
+                stop_price=request.stop_price,
+                price=request.price if request.price else None,
+            )
+            return exchange_pb2.PlaceStopOrderResponse(
+                order_id=result.order_id,
+                success=result.success,
+                message=result.message,
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.PlaceStopOrderResponse(success=False, message=str(exc))
+        except Exception as exc:
+            logger.exception("PlaceStopOrder failed")
+            return exchange_pb2.PlaceStopOrderResponse(
+                success=False, message=str(exc)
+            )

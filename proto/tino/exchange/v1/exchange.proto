@@ -14,6 +14,9 @@ service ExchangeService {
   rpc SetMarginType(SetMarginTypeRequest) returns (SetMarginTypeResponse);
   rpc GetMarkPrice(GetMarkPriceRequest) returns (GetMarkPriceResponse);
   rpc GetFundingRateHistory(GetFundingRateHistoryRequest) returns (GetFundingRateHistoryResponse);
+  rpc PlaceTpSlOrder(PlaceTpSlOrderRequest) returns (PlaceTpSlOrderResponse);
+  rpc PlaceTrailingStop(PlaceTrailingStopRequest) returns (PlaceTrailingStopResponse);
+  rpc PlaceStopOrder(PlaceStopOrderRequest) returns (PlaceStopOrderResponse);
 }
 
 // --- Ticker ---
@@ -216,4 +219,57 @@ message FundingRateRecord {
 
 message GetFundingRateHistoryResponse {
   repeated FundingRateRecord records = 1;
+}
+
+// --- Place TP/SL Order ---
+
+message PlaceTpSlOrderRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string side = 3;
+  double quantity = 4;
+  double tp_price = 5;
+  double sl_price = 6;
+}
+
+message PlaceTpSlOrderResponse {
+  string order_id = 1;
+  bool success = 2;
+  string message = 3;
+  string tp_order_id = 4;
+  string sl_order_id = 5;
+}
+
+// --- Place Trailing Stop ---
+
+message PlaceTrailingStopRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string side = 3;
+  double quantity = 4;
+  double callback_rate = 5;
+  double activation_price = 6;
+}
+
+message PlaceTrailingStopResponse {
+  string order_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+// --- Place Stop Order ---
+
+message PlaceStopOrderRequest {
+  string exchange = 1;
+  string symbol = 2;
+  string side = 3;
+  double quantity = 4;
+  double stop_price = 5;
+  double price = 6;
+}
+
+message PlaceStopOrderResponse {
+  string order_id = 1;
+  bool success = 2;
+  string message = 3;
 }
