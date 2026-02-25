@@ -23,12 +23,15 @@ Parameters:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from nautilus_trader.config import StrategyConfig  # type: ignore[import-not-found]
 from nautilus_trader.model.data import Bar  # type: ignore[import-not-found]
 from nautilus_trader.model.enums import OrderSide  # type: ignore[import-not-found]
 from nautilus_trader.model.identifiers import InstrumentId  # type: ignore[import-not-found]
-from nautilus_trader.trading.strategy import Strategy  # type: ignore[import-not-found]
+from nautilus_trader.trading.strategy import Strategy as NautilusStrategy  # type: ignore[import-not-found]
+
+from tino_daemon.strategies.base import Direction, Signal, Strategy
 
 
 class FundingRateArbConfig(StrategyConfig, frozen=True):
@@ -91,8 +94,11 @@ class _EMA:
             self._value = (price - self._value) * self._multiplier + self._value
 
 
-class FundingRateArbStrategy(Strategy):
+class FundingRateArbStrategy(NautilusStrategy):
     """Basis-driven funding rate arbitrage strategy.
+
+    Extends NautilusTrader's Strategy for backtest/live execution and conforms
+    to the Tino Strategy interface via CONFIG_SCHEMA and class attributes.
 
     Estimates the implied funding rate from the price basis (spread between
     fast and slow EMAs) and trades mean-reversion of the premium/discount.
@@ -102,6 +108,110 @@ class FundingRateArbStrategy(Strategy):
     funding), longs the perp. Exits when basis normalizes or risk limits
     are hit.
     """
+
+    # -- Tino Strategy interface attributes --
+
+    name: str = "funding_rate_arb"
+    description: str = (
+        "Basis-driven funding rate arbitrage that captures funding alpha "
+        "by trading mean-reversion of the perp premium/discount."
+    )
+    market_regime: str = "ranging"
+
+    CONFIG_SCHEMA: dict[str, Any] = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "FundingRateArbStrategy Configuration",
+        "description": (
+            "Parameters for the funding rate arbitrage strategy. "
+            "Trades mean-reversion of the perpetual futures basis "
+            "(premium/discount relative to spot)."
+        ),
+        "type": "object",
+        "properties": {
+            "perp_instrument_id": {
+                "type": "string",
+                "default": "BTC-PERP.BINANCE",
+                "description": "Perpetual futures instrument ID in NautilusTrader format (SYMBOL.VENUE).",
+            },
+            "funding_rate_threshold": {
+                "type": "number",
+                "default": 0.15,
+                "minimum": 0.01,
+                "maximum": 1.0,
+                "description": (
+                    "Minimum annualized basis rate to trigger entry. "
+                    "Higher values mean fewer but higher-conviction trades."
+                ),
+            },
+            "exit_threshold": {
+                "type": "number",
+                "default": 0.05,
+                "minimum": 0.0,
+                "maximum": 1.0,
+                "description": (
+                    "Annualized rate below which to exit positions. "
+                    "Must be less than funding_rate_threshold."
+                ),
+            },
+            "position_size_pct": {
+                "type": "number",
+                "default": 0.10,
+                "minimum": 0.01,
+                "maximum": 1.0,
+                "description": "Fraction of account equity to allocate per trade.",
+            },
+            "rebalance_interval_bars": {
+                "type": "integer",
+                "default": 8,
+                "minimum": 1,
+                "maximum": 100,
+                "description": (
+                    "Number of bars between signal evaluations. "
+                    "Aligns with exchange funding intervals (e.g., 8h bars = 3x/day)."
+                ),
+            },
+            "stop_loss_pct": {
+                "type": "number",
+                "default": 0.02,
+                "minimum": 0.001,
+                "maximum": 0.5,
+                "description": "Maximum loss as fraction of entry price before forced exit.",
+            },
+            "take_profit_pct": {
+                "type": "number",
+                "default": 0.05,
+                "minimum": 0.001,
+                "maximum": 1.0,
+                "description": "Profit target as fraction of entry price for exit.",
+            },
+            "fast_ema_period": {
+                "type": "integer",
+                "default": 8,
+                "minimum": 2,
+                "maximum": 200,
+                "description": "Fast EMA period for current price level estimation.",
+            },
+            "slow_ema_period": {
+                "type": "integer",
+                "default": 72,
+                "minimum": 10,
+                "maximum": 500,
+                "description": "Slow EMA period as fair value proxy.",
+            },
+            "funding_periods_per_day": {
+                "type": "integer",
+                "default": 3,
+                "minimum": 1,
+                "maximum": 24,
+                "description": (
+                    "Number of funding settlement periods per day on the exchange. "
+                    "Binance/OKX = 3, some DEXs = 24."
+                ),
+            },
+        },
+        "required": [],
+        "additionalProperties": False,
+    }
 
     def __init__(self, config: FundingRateArbConfig) -> None:
         super().__init__(config)
@@ -183,6 +293,49 @@ class FundingRateArbStrategy(Strategy):
             self.close_all_positions(self.perp_id)
             self._position_side = None
             self._entry_price = 0.0
+
+    # -- Tino Signal generation --
+
+    def evaluate_bar(self, bar: Any) -> list[Signal]:
+        """Evaluate a bar and return Tino Signals (for AI agent layer).
+
+        This bridges the NautilusTrader on_bar execution with the Tino
+        Signal interface, allowing the AI agent to inspect strategy decisions.
+        """
+        close = float(bar.close) if hasattr(bar, "close") else float(bar)
+        if close <= 0:
+            return []
+
+        self._fast_ema.update(close)
+        self._slow_ema.update(close)
+
+        if not self._slow_ema.initialized:
+            return []
+
+        basis = self._compute_basis()
+        annualized_rate = basis * self.funding_periods_per_day * 365
+        symbol = str(self.perp_id) if hasattr(self, "perp_id") else "BTC-PERP.BINANCE"
+
+        signals: list[Signal] = []
+        if annualized_rate > self.threshold:
+            signals.append(
+                Signal(
+                    direction=Direction.SHORT,
+                    symbol=symbol,
+                    size=self.size_pct,
+                    metadata={"annualized_rate": annualized_rate, "basis": basis},
+                )
+            )
+        elif annualized_rate < -self.threshold:
+            signals.append(
+                Signal(
+                    direction=Direction.LONG,
+                    symbol=symbol,
+                    size=self.size_pct,
+                    metadata={"annualized_rate": annualized_rate, "basis": basis},
+                )
+            )
+        return signals
 
     # -- signal computation --
 
