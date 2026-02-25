@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useKeyboardDispatcher } from '../keyboard/use-keyboard.js';
 import { SLASH_COMMANDS } from '../commands/slash.js';
-import { CommandPaletteItem } from '../components/CommandPalette.js';
+import type { CommandPaletteItem } from '../components/CommandPalette.js';
 
 export interface UseCommandPaletteResult {
   isOpen: boolean;
@@ -138,7 +138,8 @@ export function useCommandPalette(
 
     const cleanupEnter = dispatcher.register('popup', 'return', () => {
       if (items.length > 0) {
-        select(items[selectedIndex].command);
+        const idx = Math.min(selectedIndex, items.length - 1);
+        select(items[idx].command);
       }
       return true;
     });
