@@ -22,3 +22,4 @@ export { TODO_DESCRIPTION } from './todo.js';
 export { QUESTION_DESCRIPTION } from './question.js';
 export { BACKTEST_HISTORY_DESCRIPTION } from './backtest-history.js';
 export { FUNDING_RATE_ARBITRAGE_DESCRIPTION } from './funding-rate-arbitrage.js';
+export { BACKTEST_ORCHESTRATION_GUIDE } from './backtest-orchestration.js';
