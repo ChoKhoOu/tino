@@ -2,6 +2,7 @@ import { describe, test, expect } from 'bun:test';
 import { sparklineData } from './Sparkline.js';
 import { formatColoredValue } from './ColoredTable.js';
 import { scaleBarWidths, formatCompactNumber } from './BarChart.js';
+import { colors } from '../../theme.js';
 
 // ---------------------------------------------------------------------------
 // sparklineData
@@ -46,27 +47,27 @@ describe('sparklineData', () => {
 describe('formatColoredValue', () => {
   test('positive numbers get green (success) color', () => {
     const { color } = formatColoredValue('12.5%');
-    expect(color).toBe('green');
+    expect(color).toBe(colors.success);
   });
 
   test('negative numbers get red (error) color', () => {
     const { color } = formatColoredValue('-3.2%');
-    expect(color).toBe('red');
+    expect(color).toBe(colors.error);
   });
 
   test('zero gets muted color', () => {
     const { color } = formatColoredValue('0');
-    expect(color).toBe('#a6a6a6');
+    expect(color).toBe(colors.muted);
   });
 
   test('non-numeric text gets white color', () => {
     const { color } = formatColoredValue('AAPL');
-    expect(color).toBe('#ffffff');
+    expect(color).toBe(colors.white);
   });
 
   test('parenthesized numbers treated as negative', () => {
     const { color } = formatColoredValue('(1,234)');
-    expect(color).toBe('red');
+    expect(color).toBe(colors.error);
   });
 
   test('preserves original text', () => {

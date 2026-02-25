@@ -40,6 +40,24 @@ export const GraduationThresholdsSchema = z.object({
   liveMaxRiskEvents: z.number().optional(),
 }).optional();
 
+export const ThemeOverrideSchema = z.object({
+  background: z.string().optional(),
+  panelBackground: z.string().optional(),
+  border: z.string().optional(),
+  primaryText: z.string().optional(),
+  secondaryText: z.string().optional(),
+  up: z.string().optional(),
+  down: z.string().optional(),
+  warning: z.string().optional(),
+  info: z.string().optional(),
+  aiReply: z.string().optional(),
+});
+
+export const ThemeSettingsSchema = z.object({
+  name: z.string().optional(),
+  overrides: ThemeOverrideSchema.optional(),
+});
+
 export const SettingsSchema = z.object({
   provider: z.string().optional(),
   modelId: z.string().optional(),
@@ -52,10 +70,13 @@ export const SettingsSchema = z.object({
   enabledLegacyProviders: z.array(z.enum(LEGACY_PROVIDERS)).optional(),
   graduationThresholds: GraduationThresholdsSchema,
   onboardingCompleted: z.boolean().optional(),
+  theme: ThemeSettingsSchema.optional(),
 }).passthrough(); // Allow additional unknown keys for forward compatibility
 
 export type CustomProviderConfig = z.infer<typeof CustomProviderSchema>;
 export type ProviderOverrideConfig = z.infer<typeof ProviderOverrideSchema>;
+export type ThemeOverrideConfig = z.infer<typeof ThemeOverrideSchema>;
+export type ThemeSettings = z.infer<typeof ThemeSettingsSchema>;
 export type TinoSettings = z.infer<typeof SettingsSchema>;
 
 export interface SettingsData {
@@ -67,5 +88,6 @@ export interface SettingsData {
   providerOverrides?: Record<string, ProviderOverrideConfig>;
   enabledLegacyProviders?: LegacyProvider[];
   onboardingCompleted?: boolean;
+  theme?: ThemeSettings;
   [key: string]: unknown;
 }

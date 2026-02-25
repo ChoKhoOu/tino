@@ -1,17 +1,19 @@
+import { getTheme } from './config/theme.js';
+
 export const colors = {
-  primary: '#E8772E',
-  primaryLight: '#F5B87A',
-  success: 'green',
-  error: 'red',
-  warning: 'yellow',
-  muted: '#a6a6a6',
-  mutedDark: '#303030',
-  accent: 'cyan',
-  highlight: 'magenta',
-  white: '#ffffff',
-  info: '#6CB6FF',
-  queryBg: '#3D3D3D',
-  claude: '#E5896A',
+  get primary() { return getTheme().primaryText; },
+  get primaryLight() { return getTheme().primaryText; },
+  get success() { return getTheme().up; },
+  get error() { return getTheme().down; },
+  get warning() { return getTheme().warning; },
+  get muted() { return getTheme().secondaryText; },
+  get mutedDark() { return getTheme().border; },
+  get accent() { return getTheme().info; },
+  get highlight() { return getTheme().aiReply; },
+  get white() { return getTheme().primaryText; },
+  get info() { return getTheme().info; },
+  get queryBg() { return getTheme().panelBackground; },
+  get claude() { return getTheme().aiReply; },
 } as const;
 
 export const dimensions = {
@@ -28,20 +30,39 @@ export const spacing = {
 } as const;
 
 export const componentTokens = {
-  statusLine: { bg: '#1A1A2E', fg: '#E0E0E0', separator: '#555555' },
-  popup: { bg: '#2D2D2D', border: '#555555', selected: '#3D5AFE', filter: '#FFD700' },
-  ghostText: { color: '#666666' },
-  rewindMenu: { bg: '#1E1E1E', selected: '#264F78' },
-  taskList: { pending: '#888888', inProgress: '#FFD700', complete: 'green', failed: 'red' },
+  get statusLine() {
+    const t = getTheme();
+    return { bg: t.panelBackground, fg: t.primaryText, separator: t.border };
+  },
+  get popup() {
+    const t = getTheme();
+    return { bg: t.panelBackground, border: t.border, selected: t.info, filter: t.warning };
+  },
+  get ghostText() {
+    const t = getTheme();
+    return { color: t.secondaryText };
+  },
+  get rewindMenu() {
+    const t = getTheme();
+    return { bg: t.background, selected: t.panelBackground };
+  },
+  get taskList() {
+    const t = getTheme();
+    return { pending: t.secondaryText, inProgress: t.warning, complete: t.up, failed: t.down };
+  },
 } as const;
 
-export const contextColors = { low: 'green', mid: 'yellow', high: 'red' } as const;
+export const contextColors = {
+  get low() { return getTheme().up; },
+  get mid() { return getTheme().warning; },
+  get high() { return getTheme().down; },
+} as const;
 
 export const borderStyles = {
-  default: '#555555',
-  active: '#E8772E',
-  warning: 'yellow',
-  info: '#6CB6FF',
+  get default() { return getTheme().border; },
+  get active() { return getTheme().primaryText; },
+  get warning() { return getTheme().warning; },
+  get info() { return getTheme().info; },
 } as const;
 
 export function getContextColor(percentage: number): string {

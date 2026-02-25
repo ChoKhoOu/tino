@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text } from 'ink';
+import { colors } from '../../theme.js';
 
 const BLOCKS = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 
@@ -31,7 +32,7 @@ export function sparklineData(data: number[]): string {
 
 export function Sparkline({ data, color = 'green' }: SparklineProps) {
   if (data.length === 0) {
-    return <Text color="gray">—</Text>;
+    return <Text color={colors.muted}>—</Text>;
   }
 
   return <Text color={color}>{sparklineData(data)}</Text>;

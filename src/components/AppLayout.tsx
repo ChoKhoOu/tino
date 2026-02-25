@@ -9,6 +9,7 @@ import { ScrollableContent } from './ScrollableContent.js';
 import { ModelSwitchPopup } from './ModelSwitchPopup.js';
 import { StylePicker } from './StylePicker.js';
 import { CommandPalette } from './CommandPalette.js';
+import { colors } from '../theme.js';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { useModelSwitchPopup } from '../hooks/useModelSwitchPopup.js';
 import { useStylePicker } from '../hooks/useStylePicker.js';
@@ -124,7 +125,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
 
       <ScrollableContent flexGrow={hasContent ? 1 : 0}>
         {history.filter(h => h.status === 'processing').map((item) => (<HistoryItemView key={item.id} item={item} />))}
-        {error && (<Box marginBottom={1}><Text color="red">Error: {error}</Text></Box>)}
+        {error && (<Box marginBottom={1}><Text color={colors.error}>Error: {error}</Text></Box>)}
         {isProcessing && runState.status !== 'permission_pending' && <WorkingIndicator state={workingState} />}
         {runState.status === 'permission_pending' && runState.pendingPermission && (
           <PermissionPrompt
@@ -137,7 +138,7 @@ const AppLayoutContent = React.memo(function AppLayoutContent({
       {isTaskListVisible && <TaskList tasks={tasks} />}
       {taskNotice && (
         <Box marginBottom={1}>
-          <Text color="yellow">{taskNotice}</Text>
+          <Text color={colors.warning}>{taskNotice}</Text>
         </Box>
       )}
       <RewindMenu

@@ -8,23 +8,25 @@ import {
   borderStyles,
   getContextColor,
 } from '@/theme.js';
+import { presets } from '@/config/theme.js';
 
 describe('theme', () => {
   describe('backward compatibility', () => {
-    it('preserves all 14 original colors', () => {
-      expect(colors.primary).toBe('#E8772E');
-      expect(colors.primaryLight).toBe('#F5B87A');
-      expect(colors.success).toBe('green');
-      expect(colors.error).toBe('red');
-      expect(colors.warning).toBe('yellow');
-      expect(colors.muted).toBe('#a6a6a6');
-      expect(colors.mutedDark).toBe('#303030');
-      expect(colors.accent).toBe('cyan');
-      expect(colors.highlight).toBe('magenta');
-      expect(colors.white).toBe('#ffffff');
-      expect(colors.info).toBe('#6CB6FF');
-      expect(colors.queryBg).toBe('#3D3D3D');
-      expect(colors.claude).toBe('#E5896A');
+    it('preserves all 14 original colors with crypto-dark equivalents', () => {
+  
+      expect(colors.primary).toBe(dark.primaryText);
+      expect(colors.primaryLight).toBe(dark.primaryText);
+      expect(colors.success).toBe(dark.up);
+      expect(colors.error).toBe(dark.down);
+      expect(colors.warning).toBe(dark.warning);
+      expect(colors.muted).toBe(dark.secondaryText);
+      expect(colors.mutedDark).toBe(dark.border);
+      expect(colors.accent).toBe(dark.info);
+      expect(colors.highlight).toBe(dark.aiReply);
+      expect(colors.white).toBe(dark.primaryText);
+      expect(colors.info).toBe(dark.info);
+      expect(colors.queryBg).toBe(dark.panelBackground);
+      expect(colors.claude).toBe(dark.aiReply);
     });
 
     it('preserves dimensions', () => {
@@ -44,70 +46,74 @@ describe('theme', () => {
   });
 
   describe('componentTokens', () => {
+
     it('has statusLine tokens', () => {
-      expect(componentTokens.statusLine.bg).toBe('#1A1A2E');
-      expect(componentTokens.statusLine.fg).toBe('#E0E0E0');
-      expect(componentTokens.statusLine.separator).toBe('#555555');
+      expect(componentTokens.statusLine.bg).toBe(dark.panelBackground);
+      expect(componentTokens.statusLine.fg).toBe(dark.primaryText);
+      expect(componentTokens.statusLine.separator).toBe(dark.border);
     });
 
     it('has popup tokens', () => {
-      expect(componentTokens.popup.bg).toBe('#2D2D2D');
-      expect(componentTokens.popup.border).toBe('#555555');
-      expect(componentTokens.popup.selected).toBe('#3D5AFE');
-      expect(componentTokens.popup.filter).toBe('#FFD700');
+      expect(componentTokens.popup.bg).toBe(dark.panelBackground);
+      expect(componentTokens.popup.border).toBe(dark.border);
+      expect(componentTokens.popup.selected).toBe(dark.info);
+      expect(componentTokens.popup.filter).toBe(dark.warning);
     });
 
     it('has ghostText tokens', () => {
-      expect(componentTokens.ghostText.color).toBe('#666666');
+      expect(componentTokens.ghostText.color).toBe(dark.secondaryText);
     });
 
     it('has rewindMenu tokens', () => {
-      expect(componentTokens.rewindMenu.bg).toBe('#1E1E1E');
-      expect(componentTokens.rewindMenu.selected).toBe('#264F78');
+      expect(componentTokens.rewindMenu.bg).toBe(dark.background);
+      expect(componentTokens.rewindMenu.selected).toBe(dark.panelBackground);
     });
 
     it('has taskList tokens', () => {
-      expect(componentTokens.taskList.pending).toBe('#888888');
-      expect(componentTokens.taskList.inProgress).toBe('#FFD700');
-      expect(componentTokens.taskList.complete).toBe('green');
-      expect(componentTokens.taskList.failed).toBe('red');
+      expect(componentTokens.taskList.pending).toBe(dark.secondaryText);
+      expect(componentTokens.taskList.inProgress).toBe(dark.warning);
+      expect(componentTokens.taskList.complete).toBe(dark.up);
+      expect(componentTokens.taskList.failed).toBe(dark.down);
     });
   });
 
   describe('contextColors', () => {
+
     it('defines semantic context colors', () => {
-      expect(contextColors.low).toBe('green');
-      expect(contextColors.mid).toBe('yellow');
-      expect(contextColors.high).toBe('red');
+      expect(contextColors.low).toBe(dark.up);
+      expect(contextColors.mid).toBe(dark.warning);
+      expect(contextColors.high).toBe(dark.down);
     });
   });
 
   describe('borderStyles', () => {
+
     it('defines border color tokens', () => {
-      expect(borderStyles.default).toBe('#555555');
-      expect(borderStyles.active).toBe('#E8772E');
-      expect(borderStyles.warning).toBe('yellow');
-      expect(borderStyles.info).toBe('#6CB6FF');
+      expect(borderStyles.default).toBe(dark.border);
+      expect(borderStyles.active).toBe(dark.primaryText);
+      expect(borderStyles.warning).toBe(dark.warning);
+      expect(borderStyles.info).toBe(dark.info);
     });
   });
 
   describe('getContextColor', () => {
-    it('returns green for low usage (0-69%)', () => {
-      expect(getContextColor(0)).toBe('green');
-      expect(getContextColor(50)).toBe('green');
-      expect(getContextColor(69)).toBe('green');
+
+    it('returns up for low usage (0-69%)', () => {
+      expect(getContextColor(0)).toBe(dark.up);
+      expect(getContextColor(50)).toBe(dark.up);
+      expect(getContextColor(69)).toBe(dark.up);
     });
 
-    it('returns yellow for mid usage (70-89%)', () => {
-      expect(getContextColor(70)).toBe('yellow');
-      expect(getContextColor(75)).toBe('yellow');
-      expect(getContextColor(89)).toBe('yellow');
+    it('returns warning for mid usage (70-89%)', () => {
+      expect(getContextColor(70)).toBe(dark.warning);
+      expect(getContextColor(75)).toBe(dark.warning);
+      expect(getContextColor(89)).toBe(dark.warning);
     });
 
-    it('returns red for high usage (90-100%)', () => {
-      expect(getContextColor(90)).toBe('red');
-      expect(getContextColor(95)).toBe('red');
-      expect(getContextColor(100)).toBe('red');
+    it('returns down for high usage (90-100%)', () => {
+      expect(getContextColor(90)).toBe(dark.down);
+      expect(getContextColor(95)).toBe(dark.down);
+      expect(getContextColor(100)).toBe(dark.down);
     });
   });
 });
