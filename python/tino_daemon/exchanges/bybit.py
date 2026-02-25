@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 import logging
+import os
 import time
 
 import httpx
@@ -12,6 +16,8 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarkPriceInfo,
+    MarginType,
     Orderbook,
     OrderbookLevel,
     OrderResult,
@@ -58,6 +64,16 @@ class BybitConnector(BaseExchangeConnector):
     def name(self) -> str:
         return "bybit"
 
+    def _get_credentials(self) -> tuple[str, str]:
+        """Read API key and secret from environment variables."""
+        api_key = os.environ.get("BYBIT_API_KEY", "")
+        api_secret = os.environ.get("BYBIT_API_SECRET", "")
+        if not api_key or not api_secret:
+            raise ValueError(
+                "BYBIT_API_KEY and BYBIT_API_SECRET environment variables are required"
+            )
+        return api_key, api_secret
+
     async def _request(
         self,
         url: str,
@@ -72,6 +88,41 @@ class BybitConnector(BaseExchangeConnector):
             raise ValueError(
                 f"Bybit API error: {data.get('retMsg', 'unknown')}"
             )
+        return data
+
+    async def _signed_request(
+        self,
+        method: str,
+        url: str,
+        payload: dict | None = None,
+    ) -> dict:
+        """Execute a signed request using Bybit V5 HMAC-SHA256 authentication."""
+        await self._rate_limiter.acquire()
+        api_key, api_secret = self._get_credentials()
+        timestamp = str(int(time.time() * 1000))
+        recv_window = "5000"
+
+        body_str = json.dumps(payload) if payload else ""
+        sign_payload = f"{timestamp}{api_key}{recv_window}{body_str}"
+        signature = hmac.new(
+            api_secret.encode(), sign_payload.encode(), hashlib.sha256
+        ).hexdigest()
+
+        headers = {
+            "X-BAPI-API-KEY": api_key,
+            "X-BAPI-SIGN": signature,
+            "X-BAPI-TIMESTAMP": timestamp,
+            "X-BAPI-RECV-WINDOW": recv_window,
+            "Content-Type": "application/json",
+        }
+
+        resp = await self._client.request(
+            method, url, content=body_str.encode() if body_str else None, headers=headers
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("retCode") not in (0,):
+            raise ValueError(f"Bybit API error: {data.get('retMsg', 'unknown')}")
         return data
 
     async def get_ticker(self, symbol: str) -> Ticker:
@@ -195,6 +246,89 @@ class BybitConnector(BaseExchangeConnector):
         raise NotImplementedError(
             "Bybit cancel_order requires signed API — not yet implemented"
         )
+
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        try:
+            data = await self._signed_request(
+                "POST",
+                f"{_BASE_URL}/v5/position/set-leverage",
+                payload={
+                    "category": "linear",
+                    "symbol": symbol,
+                    "buyLeverage": str(leverage),
+                    "sellLeverage": str(leverage),
+                },
+            )
+            return True
+        except ValueError as exc:
+            # 110043 = leverage not modified (already set)
+            if "110043" in str(exc):
+                return True
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+        except Exception as exc:
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+
+    async def set_margin_type(
+        self, symbol: str, margin_type: MarginType, leverage: int = 1
+    ) -> bool:
+        trade_mode = 1 if margin_type == MarginType.ISOLATED else 0
+        try:
+            data = await self._signed_request(
+                "POST",
+                f"{_BASE_URL}/v5/position/switch-isolated",
+                payload={
+                    "category": "linear",
+                    "symbol": symbol,
+                    "tradeMode": trade_mode,
+                    "buyLeverage": str(leverage),
+                    "sellLeverage": str(leverage),
+                },
+            )
+            return True
+        except ValueError as exc:
+            # 110026 = margin mode not modified (already set)
+            if "110026" in str(exc):
+                return True
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+        except Exception as exc:
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+
+    async def get_mark_price(self, symbol: str) -> MarkPriceInfo:
+        data = await self._request(
+            f"{_BASE_URL}/v5/market/tickers",
+            params={"category": "linear", "symbol": symbol},
+        )
+        t = data["result"]["list"][0]
+        return MarkPriceInfo(
+            mark_price=float(t["markPrice"]),
+            index_price=float(t.get("indexPrice", 0)),
+            timestamp=str(data["result"].get("time", data.get("time", ""))),
+        )
+
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        data = await self._request(
+            f"{_BASE_URL}/v5/market/funding/history",
+            params={
+                "category": "linear",
+                "symbol": symbol,
+                "limit": str(min(limit, 200)),
+            },
+        )
+        return [
+            FundingRate(
+                symbol=r["symbol"],
+                funding_rate=float(r["fundingRate"]),
+                next_funding_time="",
+                timestamp=str(r["fundingRateTimestamp"]),
+            )
+            for r in data["result"]["list"]
+        ]
 
     async def close(self) -> None:
         await self._client.aclose()

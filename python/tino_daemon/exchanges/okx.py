@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
+import json
 import logging
+import os
 import time
+from datetime import datetime, timezone
 
 import httpx
 
@@ -12,6 +18,8 @@ from tino_daemon.exchanges.base_connector import (
     BaseExchangeConnector,
     FundingRate,
     Kline,
+    MarkPriceInfo,
+    MarginType,
     Orderbook,
     OrderbookLevel,
     OrderResult,
@@ -66,6 +74,54 @@ class OKXConnector(BaseExchangeConnector):
         """Execute a GET request with rate limiting."""
         await self._rate_limiter.acquire()
         resp = await self._client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("code") != "0":
+            raise ValueError(f"OKX API error: {data.get('msg', 'unknown')}")
+        return data
+
+    def _get_credentials(self) -> tuple[str, str, str]:
+        """Read API key, secret, and passphrase from environment variables."""
+        api_key = os.environ.get("OKX_API_KEY", "")
+        api_secret = os.environ.get("OKX_API_SECRET", "")
+        passphrase = os.environ.get("OKX_PASSPHRASE", "")
+        if not api_key or not api_secret or not passphrase:
+            raise ValueError(
+                "OKX_API_KEY, OKX_API_SECRET, and OKX_PASSPHRASE environment variables are required"
+            )
+        return api_key, api_secret, passphrase
+
+    async def _signed_request(
+        self,
+        method: str,
+        path: str,
+        body: dict | None = None,
+    ) -> dict:
+        """Execute a signed request using OKX V5 HMAC-SHA256 authentication."""
+        await self._rate_limiter.acquire()
+        api_key, api_secret, passphrase = self._get_credentials()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+        body_str = json.dumps(body) if body else ""
+        sign_payload = f"{timestamp}{method.upper()}{path}{body_str}"
+        signature = base64.b64encode(
+            hmac.new(
+                api_secret.encode(), sign_payload.encode(), hashlib.sha256
+            ).digest()
+        ).decode()
+
+        headers = {
+            "OK-ACCESS-KEY": api_key,
+            "OK-ACCESS-SIGN": signature,
+            "OK-ACCESS-TIMESTAMP": timestamp,
+            "OK-ACCESS-PASSPHRASE": passphrase,
+            "Content-Type": "application/json",
+        }
+
+        url = f"{_BASE_URL}{path}"
+        resp = await self._client.request(
+            method, url, content=body_str.encode() if body_str else None, headers=headers
+        )
         resp.raise_for_status()
         data = resp.json()
         if data.get("code") != "0":
@@ -204,6 +260,82 @@ class OKXConnector(BaseExchangeConnector):
         raise NotImplementedError(
             "OKX cancel_order requires signed API — not yet implemented"
         )
+
+    @staticmethod
+    def _to_swap_inst_id(symbol: str) -> str:
+        """Convert symbol to OKX SWAP instId format (e.g. BTCUSDT -> BTC-USDT-SWAP)."""
+        inst_id = OKXConnector._to_inst_id(symbol)
+        if not inst_id.endswith("-SWAP"):
+            inst_id = f"{inst_id}-SWAP"
+        return inst_id
+
+    async def set_leverage(self, symbol: str, leverage: int) -> bool:
+        inst_id = self._to_swap_inst_id(symbol)
+        try:
+            await self._signed_request(
+                "POST",
+                "/api/v5/account/set-leverage",
+                body={
+                    "instId": inst_id,
+                    "lever": str(leverage),
+                    "mgnMode": "cross",
+                },
+            )
+            return True
+        except Exception as exc:
+            logger.error("set_leverage failed for %s: %s", symbol, exc)
+            return False
+
+    async def set_margin_type(
+        self, symbol: str, margin_type: MarginType, leverage: int = 1
+    ) -> bool:
+        inst_id = self._to_swap_inst_id(symbol)
+        mgn_mode = "isolated" if margin_type == MarginType.ISOLATED else "cross"
+        try:
+            await self._signed_request(
+                "POST",
+                "/api/v5/account/set-leverage",
+                body={
+                    "instId": inst_id,
+                    "lever": str(leverage),
+                    "mgnMode": mgn_mode,
+                },
+            )
+            return True
+        except Exception as exc:
+            logger.error("set_margin_type failed for %s: %s", symbol, exc)
+            return False
+
+    async def get_mark_price(self, symbol: str) -> MarkPriceInfo:
+        inst_id = self._to_swap_inst_id(symbol)
+        data = await self._request(
+            f"{_BASE_URL}/api/v5/public/mark-price",
+            params={"instId": inst_id, "instType": "SWAP"},
+        )
+        item = data["data"][0]
+        return MarkPriceInfo(
+            mark_price=float(item["markPx"]),
+            index_price=float(item.get("idxPx", 0)),
+            timestamp=item.get("ts", ""),
+        )
+
+    async def get_funding_rate_history(
+        self, symbol: str, limit: int = 100
+    ) -> list[FundingRate]:
+        inst_id = self._to_swap_inst_id(symbol)
+        data = await self._request(
+            f"{_BASE_URL}/api/v5/public/funding-rate-history",
+            params={"instId": inst_id, "limit": str(min(limit, 100))},
+        )
+        return [
+            FundingRate(
+                symbol=r["instId"],
+                funding_rate=float(r["fundingRate"]),
+                next_funding_time="",
+                timestamp=r["fundingTime"],
+            )
+            for r in data["data"]
+        ]
 
     async def close(self) -> None:
         await self._client.aclose()

@@ -10,6 +10,7 @@ from typing import Any
 import grpc
 
 from tino_daemon.exchanges import get_connector
+from tino_daemon.exchanges.base_connector import MarginType
 from tino_daemon.proto.tino.exchange.v1 import exchange_pb2, exchange_pb2_grpc
 
 logger = logging.getLogger(__name__)
@@ -172,6 +173,9 @@ class ExchangeServiceServicer(exchange_pb2_grpc.ExchangeServiceServicer):
                         entry_price=p.entry_price,
                         unrealized_pnl=p.unrealized_pnl,
                         leverage=p.leverage,
+                        mark_price=p.mark_price,
+                        liquidation_price=p.liquidation_price,
+                        margin_type=p.margin_type.value,
                     )
                     for p in positions
                 ]
@@ -241,3 +245,103 @@ class ExchangeServiceServicer(exchange_pb2_grpc.ExchangeServiceServicer):
             return exchange_pb2.CancelExchangeOrderResponse(
                 success=False, message=str(exc)
             )
+
+    async def SetLeverage(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            success = await connector.set_leverage(request.symbol, request.leverage)
+            return exchange_pb2.SetLeverageResponse(
+                success=success,
+                current_leverage=request.leverage if success else 0,
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.SetLeverageResponse(success=False)
+        except Exception as exc:
+            logger.exception("SetLeverage failed")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return exchange_pb2.SetLeverageResponse(success=False)
+
+    async def SetMarginType(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            margin_type = (
+                MarginType.ISOLATED
+                if request.margin_type.lower() == "isolated"
+                else MarginType.CROSS
+            )
+            success = await connector.set_margin_type(request.symbol, margin_type)
+            return exchange_pb2.SetMarginTypeResponse(success=success)
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.SetMarginTypeResponse(success=False)
+        except Exception as exc:
+            logger.exception("SetMarginType failed")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return exchange_pb2.SetMarginTypeResponse(success=False)
+
+    async def GetMarkPrice(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            info = await connector.get_mark_price(request.symbol)
+            return exchange_pb2.GetMarkPriceResponse(
+                mark_price=info.mark_price,
+                index_price=info.index_price,
+                timestamp=info.timestamp,
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.GetMarkPriceResponse()
+        except Exception as exc:
+            logger.exception("GetMarkPrice failed")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return exchange_pb2.GetMarkPriceResponse()
+
+    async def GetFundingRateHistory(
+        self,
+        request: Any,
+        context: grpc.aio.ServicerContext,
+    ) -> Any:
+        try:
+            connector = get_connector(request.exchange)
+            history = await connector.get_funding_rate_history(
+                symbol=request.symbol,
+                limit=request.limit or 100,
+            )
+            return exchange_pb2.GetFundingRateHistoryResponse(
+                records=[
+                    exchange_pb2.FundingRateRecord(
+                        symbol=r.symbol,
+                        funding_rate=r.funding_rate,
+                        timestamp=r.timestamp,
+                    )
+                    for r in history
+                ]
+            )
+        except NotImplementedError as exc:
+            context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+            context.set_details(str(exc))
+            return exchange_pb2.GetFundingRateHistoryResponse()
+        except Exception as exc:
+            logger.exception("GetFundingRateHistory failed")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(exc))
+            return exchange_pb2.GetFundingRateHistoryResponse()

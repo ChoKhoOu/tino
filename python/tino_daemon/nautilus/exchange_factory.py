@@ -8,16 +8,25 @@ from tino_daemon.nautilus.okx_config import build_okx_config
 
 _SUPPORTED_VENUES = frozenset({"BINANCE", "OKX", "BYBIT"})
 
+# Auto-detect account type from instrument type per venue
+_PERPETUAL_ACCOUNT_TYPE: dict[str, str] = {
+    "BINANCE": "USDT_FUTURE",
+    "BYBIT": "LINEAR",
+    "OKX": "SWAP",
+}
+
 
 def create_exchange_config(
     venue: str,
     account_type: str = "SPOT",
     testnet: bool = True,
+    instrument_type: str = "spot",
 ) -> dict[str, object]:
     """Create exchange configuration for the given venue.
 
     Routes to venue-specific config builders. Raises ValueError
-    for unsupported venues.
+    for unsupported venues. When instrument_type is 'perpetual',
+    automatically selects the appropriate futures account type.
     """
     venue_upper = venue.upper()
 
@@ -27,6 +36,10 @@ def create_exchange_config(
             f"Supported: {sorted(_SUPPORTED_VENUES)}"
         )
         raise ValueError(msg)
+
+    # Auto-detect account type for perpetual instruments
+    if instrument_type.lower() == "perpetual" and account_type == "SPOT":
+        account_type = _PERPETUAL_ACCOUNT_TYPE.get(venue_upper, account_type)
 
     if venue_upper == "BINANCE":
         return build_binance_config(account_type=account_type, testnet=testnet)
