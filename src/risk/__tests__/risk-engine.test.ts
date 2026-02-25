@@ -1,7 +1,8 @@
-import { describe, test, expect, beforeEach } from 'bun:test';
+import { describe, test, expect, beforeEach, mock } from 'bun:test';
 import { RiskEngine } from '../risk-engine.js';
 import type { RiskConfig } from '../risk-config.js';
 import type { OrderInput } from '../risk-rules.js';
+import { TelegramNotifier } from '@/notifications/telegram.js';
 
 const testConfig: RiskConfig = {
   maxPositionSize: { BTCUSDT: 1.0, '*': 100.0 },
@@ -81,5 +82,70 @@ describe('RiskEngine', () => {
 
   test('getConfig returns loaded config', () => {
     expect(engine.getConfig()).toEqual(testConfig);
+  });
+
+  describe('notification integration', () => {
+    const originalFetch = globalThis.fetch;
+
+    beforeEach(() => {
+      globalThis.fetch = originalFetch;
+    });
+
+    test('sendRiskAlert is called when pre-trade check fails', () => {
+      const fetchMock = mock(() => Promise.resolve({ ok: true } as Response));
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      const notifier = new TelegramNotifier('test-token', '-100');
+      const engineWithNotifier = new RiskEngine(testConfig, notifier);
+      // Exceed position size limit to trigger a refusal
+      engineWithNotifier.updatePosition('BTCUSDT', 0.9);
+
+      const result = engineWithNotifier.preTradeCheck(validOrder);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('exceeds limit');
+      // sendRiskAlert fires fetch to Telegram API
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+
+      const [url, opts] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toContain('/sendMessage');
+      const body = JSON.parse(opts.body as string);
+      expect(body.text).toContain('Risk Alert');
+      expect(body.text).toContain('Pre\\-trade Refused');
+    });
+
+    test('sendRiskAlert is called with critical severity when kill switch triggers', () => {
+      const fetchMock = mock(() => Promise.resolve({ ok: true } as Response));
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      const notifier = new TelegramNotifier('test-token', '-100');
+      const engineWithNotifier = new RiskEngine(testConfig, notifier);
+      // Trigger drawdown breach -> kill switch
+      engineWithNotifier.updateEquity(10_000);
+      engineWithNotifier.updateEquity(8_400); // >15% drawdown
+
+      const result = engineWithNotifier.preTradeCheck(validOrder);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('Drawdown');
+      // Two calls: one from preTradeCheck (Drawdown Breach) and one from triggerKillSwitch
+      expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(1);
+
+      const firstBody = JSON.parse(
+        (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string,
+      );
+      expect(firstBody.text).toContain('CRITICAL');
+    });
+
+    test('notification failure does not break risk engine flow', () => {
+      globalThis.fetch = mock(() => Promise.reject(new Error('network error'))) as unknown as typeof fetch;
+
+      const notifier = new TelegramNotifier('test-token', '-100');
+      const engineWithNotifier = new RiskEngine(testConfig, notifier);
+      engineWithNotifier.updatePosition('BTCUSDT', 0.9);
+
+      // Should still return the refusal without throwing
+      const result = engineWithNotifier.preTradeCheck(validOrder);
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toContain('exceeds limit');
+    });
   });
 });

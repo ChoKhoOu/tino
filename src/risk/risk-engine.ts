@@ -3,6 +3,7 @@ import { join } from 'path';
 import { loadRiskConfig, type RiskConfig } from './risk-config.js';
 import { ALL_RULES, type OrderInput, type RiskState, type RuleResult } from './risk-rules.js';
 import { getTradingClient } from '@/tools/trading/grpc-clients.js';
+import type { TelegramNotifier } from '@/notifications/telegram.js';
 
 const RISK_EVENTS_FILE = '.tino/risk-events.log';
 
@@ -14,9 +15,11 @@ export interface PreTradeResult {
 export class RiskEngine {
   private config: RiskConfig;
   private state: RiskState;
+  private notifier?: TelegramNotifier;
 
-  constructor(config?: RiskConfig) {
+  constructor(config?: RiskConfig, notifier?: TelegramNotifier) {
     this.config = config ?? loadRiskConfig();
+    this.notifier = notifier;
     this.state = {
       positions: {},
       prices: {},
@@ -37,6 +40,10 @@ export class RiskEngine {
 
   reload(): void {
     this.config = loadRiskConfig();
+  }
+
+  setNotifier(notifier: TelegramNotifier | undefined): void {
+    this.notifier = notifier;
   }
 
   updatePosition(instrument: string, quantity: number): void {
@@ -78,6 +85,13 @@ export class RiskEngine {
           this.triggerKillSwitch().catch(() => {});
         }
         this.logEvent('pre_trade_refused', { order, reason: result.reason });
+        this.notifier?.sendRiskAlert({
+          type: 'risk_alert',
+          alertType: triggerKill ? 'Drawdown Breach' : 'Pre-trade Refused',
+          severity: triggerKill ? 'critical' : 'warning',
+          details: result.reason ?? 'Unknown risk violation',
+          recommendedAction: triggerKill ? 'Kill switch activated — all trading stopped' : 'Review position sizing and risk limits',
+        }).catch(() => {});
         return { allowed: false, reason: result.reason };
       }
     }
@@ -86,6 +100,14 @@ export class RiskEngine {
 
   async triggerKillSwitch(): Promise<void> {
     this.logEvent('kill_switch_triggered', { positions: this.state.positions });
+
+    this.notifier?.sendRiskAlert({
+      type: 'risk_alert',
+      alertType: 'Kill Switch Triggered',
+      severity: 'critical',
+      details: `Positions liquidated: ${Object.keys(this.state.positions).join(', ') || 'none'}`,
+      recommendedAction: 'All trading stopped — manual review required',
+    }).catch(() => {});
 
     try {
       const client = getTradingClient();
