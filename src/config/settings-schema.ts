@@ -63,7 +63,12 @@ export const TelegramEventsSchema = z.object({
   pnlReports: z.boolean().default(true),
   riskAlerts: z.boolean().default(true),
   backtestComplete: z.boolean().default(false),
-}).default({});
+}).default({
+  tradeSignals: true,
+  pnlReports: true,
+  riskAlerts: true,
+  backtestComplete: false,
+});
 
 export const TelegramSettingsSchema = z.object({
   botToken: z.string(),

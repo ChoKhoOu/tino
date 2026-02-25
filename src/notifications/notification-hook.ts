@@ -18,9 +18,12 @@ export function createNotificationHook(settings: TelegramSettings): HookDefiniti
     type: 'function',
     fn: async (ctx: HookContext) => {
       try {
+        // Event gating convention:
+        //   "default on" events:  check `!== false`  (enabled unless explicitly disabled)
+        //   "default off" events: check `=== true`    (disabled unless explicitly enabled)
         if (ctx.toolId === 'trading_live' && events.tradeSignals !== false) {
           await handleTradingLive(notifier, ctx);
-        } else if (ctx.toolId === 'trading_sim' && events.backtestComplete) {
+        } else if (ctx.toolId === 'trading_sim' && events.backtestComplete === true) {
           await handleTradingSim(notifier, ctx);
         }
       } catch {
@@ -35,6 +38,7 @@ async function handleTradingLive(
   notifier: TelegramNotifier,
   ctx: HookContext,
 ): Promise<void> {
+  if (ctx.args?.action !== 'submit_order') return;
   if (!ctx.result) return;
 
   let parsed: Record<string, unknown>;

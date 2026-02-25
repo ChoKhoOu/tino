@@ -18,6 +18,9 @@ import { loadPermissions } from '@/config/permissions.js';
 import { loadHooks } from '@/config/hooks.js';
 import { loadSettings } from '@/config/settings.js';
 import { createNotificationHook } from '@/notifications/notification-hook.js';
+import { TelegramNotifier } from '@/notifications/telegram.js';
+import { PnLReportScheduler } from '@/notifications/pnl-scheduler.js';
+import type { TelegramSettings } from '@/notifications/types.js';
 import { discoverPlugins } from '@/plugins/discover.js';
 import { SessionStore } from '@/session/index.js';
 import { SnapshotManager } from '@/snapshot/index.js';
@@ -36,14 +39,13 @@ export function useRuntimeInit(): UseRuntimeInitResult {
   const broker = useMemo(() => new ModelBroker(), []);
   const registry = useMemo(() => new ToolRegistry(), []);
   const permissions = useMemo(() => new PermissionEngine(loadPermissions()), []);
+  const pnlSchedulerRef = useRef<PnLReportScheduler | null>(null);
   const hooks = useMemo(() => {
     const hookDefs = loadHooks();
     const settings = loadSettings();
-    const tg = settings.telegram as
-      | { enabled?: boolean; botToken?: string; chatId?: string; events?: Record<string, boolean>; pnlReportInterval?: string }
-      | undefined;
+    const tg = settings.telegram as TelegramSettings | undefined;
     if (tg?.enabled && tg.botToken && tg.chatId) {
-      hookDefs.push(createNotificationHook({
+      const tgSettings: TelegramSettings = {
         botToken: tg.botToken,
         chatId: tg.chatId,
         enabled: true,
@@ -53,8 +55,25 @@ export function useRuntimeInit(): UseRuntimeInitResult {
           riskAlerts: tg.events?.riskAlerts ?? true,
           backtestComplete: tg.events?.backtestComplete ?? false,
         },
-        pnlReportInterval: (tg.pnlReportInterval as 'hourly' | 'daily') ?? 'daily',
-      }));
+        pnlReportInterval: tg.pnlReportInterval ?? 'daily',
+      };
+      hookDefs.push(createNotificationHook(tgSettings));
+
+      if (tgSettings.events.pnlReports) {
+        const notifier = new TelegramNotifier(tgSettings.botToken, tgSettings.chatId);
+        pnlSchedulerRef.current = new PnLReportScheduler(
+          notifier,
+          tgSettings.pnlReportInterval,
+          async () => ({
+            type: 'pnl_report',
+            totalReturn: 0,
+            sharpeRatio: 0,
+            maxDrawdown: 0,
+            openPositions: 0,
+          }),
+        );
+        pnlSchedulerRef.current.start();
+      }
     }
     return new HookRunner(hookDefs);
   }, []);
@@ -121,6 +140,8 @@ export function useRuntimeInit(): UseRuntimeInitResult {
     })();
     return () => {
       cancelled = true;
+      pnlSchedulerRef.current?.stop();
+      pnlSchedulerRef.current = null;
       void lspManager.shutdown();
       const clients = mcpClientsRef.current;
       mcpClientsRef.current = [];

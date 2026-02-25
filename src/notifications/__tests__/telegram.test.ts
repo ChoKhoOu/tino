@@ -13,7 +13,7 @@ function mockFetch(ok: boolean) {
   const fn = mock(() =>
     Promise.resolve({ ok } as Response),
   );
-  globalThis.fetch = fn;
+  globalThis.fetch = fn as unknown as typeof fetch;
   return fn;
 }
 
@@ -34,7 +34,7 @@ describe('TelegramNotifier', () => {
       expect(result).toBe(true);
       expect(fetchMock).toHaveBeenCalledTimes(1);
 
-      const [url, opts] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const [url, opts] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
       expect(url).toBe(`https://api.telegram.org/bot${TOKEN}/sendMessage`);
       expect(opts.method).toBe('POST');
 
@@ -51,7 +51,7 @@ describe('TelegramNotifier', () => {
     });
 
     test('returns false when fetch throws (never throws itself)', async () => {
-      globalThis.fetch = mock(() => Promise.reject(new Error('network error')));
+      globalThis.fetch = mock(() => Promise.reject(new Error('network error'))) as unknown as typeof fetch;
       const result = await notifier.sendMessage('hello');
       expect(result).toBe(false);
     });
@@ -60,14 +60,14 @@ describe('TelegramNotifier', () => {
       const fetchMock = mockFetch(true);
       await notifier.sendMessage('<b>bold</b>', 'HTML');
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.parse_mode).toBe('HTML');
     });
 
     test('bot token never appears in error messages', async () => {
       // Force a fetch error and ensure the token doesn't leak
       const error = new Error('connection refused');
-      globalThis.fetch = mock(() => Promise.reject(error));
+      globalThis.fetch = mock(() => Promise.reject(error)) as unknown as typeof fetch;
 
       const result = await notifier.sendMessage('test');
       expect(result).toBe(false);
@@ -92,7 +92,7 @@ describe('TelegramNotifier', () => {
       const result = await notifier.sendTradeSignal(signal);
       expect(result).toBe(true);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('BUY');
       expect(body.text).toContain('BTCUSDT');
       expect(body.text).toContain('BINANCE');
@@ -112,7 +112,7 @@ describe('TelegramNotifier', () => {
 
       await notifier.sendTradeSignal(signal);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('SELL');
       expect(body.text).toContain('ETHUSDT');
     });
@@ -132,7 +132,7 @@ describe('TelegramNotifier', () => {
       const result = await notifier.sendPnLReport(report);
       expect(result).toBe(true);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('PnL Report');
       expect(body.text).toContain('15\\.60%');
       expect(body.text).toContain('1\\.85');
@@ -154,7 +154,7 @@ describe('TelegramNotifier', () => {
       const result = await notifier.sendRiskAlert(alert);
       expect(result).toBe(true);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('Risk Alert');
       expect(body.text).toContain('CRITICAL');
       expect(body.text).toContain('Kill Switch');
@@ -172,7 +172,7 @@ describe('TelegramNotifier', () => {
 
       await notifier.sendRiskAlert(alert);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('WARNING');
     });
   });
@@ -193,7 +193,7 @@ describe('TelegramNotifier', () => {
       const sent = await notifier.sendBacktestResult(result);
       expect(sent).toBe(true);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).toContain('Backtest Complete');
       expect(body.text).toContain('MomentumV2');
       expect(body.text).toContain('42\\.00%');
@@ -213,7 +213,7 @@ describe('TelegramNotifier', () => {
 
       await notifier.sendBacktestResult(result);
 
-      const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+      const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
       expect(body.text).not.toContain('Total Trades');
       expect(body.text).not.toContain('Win Rate');
     });

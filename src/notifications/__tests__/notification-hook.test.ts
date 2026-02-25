@@ -7,7 +7,7 @@ const originalFetch = globalThis.fetch;
 
 function mockFetch(ok = true) {
   const fn = mock(() => Promise.resolve({ ok } as Response));
-  globalThis.fetch = fn;
+  globalThis.fetch = fn as unknown as typeof fetch;
   return fn;
 }
 
@@ -89,7 +89,7 @@ describe('createNotificationHook', () => {
     expect(result.allow).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
     expect(body.text).toContain('BTCUSDT');
     expect(body.text).toContain('BUY');
   });
@@ -133,7 +133,7 @@ describe('createNotificationHook', () => {
     expect(result.allow).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
     expect(body.text).toContain('Backtest Complete');
     expect(body.text).toContain('momentum\\.py');
   });
@@ -152,13 +152,14 @@ describe('createNotificationHook', () => {
   });
 
   test('returns { allow: true } even when notification fetch fails', async () => {
-    globalThis.fetch = mock(() => Promise.reject(new Error('network failure')));
+    globalThis.fetch = mock(() => Promise.reject(new Error('network failure'))) as unknown as typeof fetch;
     const hook = createNotificationHook(defaultSettings);
 
     const ctx: HookContext = {
       event: 'PostToolUse',
       toolId: 'trading_live',
       args: {
+        action: 'submit_order',
         venue: 'SIM',
         order: { instrument: 'ETHUSDT', side: 'sell', price: 2000, quantity: 1 },
       },
@@ -167,6 +168,19 @@ describe('createNotificationHook', () => {
 
     const result = await hook.fn!(ctx);
     expect(result.allow).toBe(true);
+  });
+
+  test('skips trading_live when action is not submit_order', async () => {
+    const fetchMock = mockFetch(true);
+    const hook = createNotificationHook(defaultSettings);
+
+    await hook.fn!({
+      event: 'PostToolUse',
+      toolId: 'trading_live',
+      args: { action: 'get_positions' },
+      result: JSON.stringify({ data: { positions: [] } }),
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test('returns { allow: true } when result is invalid JSON', async () => {
