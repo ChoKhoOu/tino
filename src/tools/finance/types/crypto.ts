@@ -108,6 +108,17 @@ export function parseDashSymbol(instId: string): { base: string; quote: string; 
   return { base, quote, unified: `${base}/${quote}` };
 }
 
+/**
+ * Parse an underscore-separated symbol (e.g. "BTC_USDT").
+ * Used by Gate.io.
+ */
+export function parseUnderscoreSymbol(pair: string): { base: string; quote: string; unified: string } {
+  const parts = pair.split('_');
+  const base = parts[0]!.toUpperCase();
+  const quote = parts[1]!.toUpperCase();
+  return { base, quote, unified: `${base}/${quote}` };
+}
+
 // ============================================================================
 // CoinGecko response types
 // ============================================================================

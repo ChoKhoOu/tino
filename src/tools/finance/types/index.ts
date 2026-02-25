@@ -32,7 +32,7 @@ export type {
   CoinGeckoCoin,
 } from './crypto.js';
 
-export { parseConcatSymbol, parseDashSymbol } from './crypto.js';
+export { parseConcatSymbol, parseDashSymbol, parseUnderscoreSymbol } from './crypto.js';
 
 export type {
   PolygonBar,
