@@ -16,6 +16,11 @@ from tino_daemon.proto.tino.trading.v1 import trading_pb2, trading_pb2_grpc
 from tino_daemon.services.trading import TradingServiceServicer
 
 
+async def collect_events(stream) -> list[Any]:
+    """Drain a streaming RPC into a list with explicit call-site timeout."""
+    return [event async for event in stream]
+
+
 class FakeTradingNode:
     def __init__(self) -> None:
         self.stop_calls: list[bool] = []
@@ -112,18 +117,22 @@ async def test_start_trading_streams_events(trading_server):
         stub = trading_pb2_grpc.TradingServiceStub(channel)
         request = trading_pb2.StartTradingRequest(
             strategy_path="strategies/demo.py",
+            mode="live",
             venue="BINANCE",
             instruments=["BTCUSDT.BINANCE"],
             config_json="{}",
         )
 
-        events = [event async for event in stub.StartTrading(request)]
+        events = await asyncio.wait_for(
+            collect_events(stub.StartTrading(request)),
+            timeout=5.0,
+        )
         types = [event.type for event in events]
 
         assert trading_pb2.StartTradingResponse.EVENT_TYPE_STARTED in types
         assert trading_pb2.StartTradingResponse.EVENT_TYPE_ORDER_FILLED in types
         assert trading_pb2.StartTradingResponse.EVENT_TYPE_STOPPED in types
-        assert node.started_mode == "paper"
+        assert node.started_mode == "live"
 
 
 @pytest.mark.asyncio
@@ -212,12 +221,17 @@ async def test_start_trading_streams_error_when_node_crashes(monkeypatch):
     try:
         async with grpc.aio.insecure_channel(f"localhost:{port}") as channel:
             stub = trading_pb2_grpc.TradingServiceStub(channel)
-            events = [
-                event
-                async for event in stub.StartTrading(
-                    trading_pb2.StartTradingRequest(strategy_path="strategies/demo.py")
-                )
-            ]
+            events = await asyncio.wait_for(
+                collect_events(
+                    stub.StartTrading(
+                        trading_pb2.StartTradingRequest(
+                            strategy_path="strategies/demo.py",
+                            mode="live",
+                        )
+                    )
+                ),
+                timeout=5.0,
+            )
             error_events = [
                 event
                 for event in events

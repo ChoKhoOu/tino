@@ -8,11 +8,13 @@ Inherits from the proto-generated DataServiceServicer base class and implements:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import AsyncIterator
 
 import grpc
 
+from tino_daemon.exchanges import get_connector, list_exchanges
 from tino_daemon.nautilus.catalog import DataCatalogWrapper
 from tino_daemon.proto.tino.data.v1 import data_pb2, data_pb2_grpc
 from tino_daemon.wranglers.base import BaseWrangler
@@ -44,6 +46,29 @@ class DataServiceServicer(data_pb2_grpc.DataServiceServicer):
 
     def __init__(self, catalog: DataCatalogWrapper) -> None:
         self._catalog = catalog
+
+    @staticmethod
+    def _set_error(
+        context: grpc.aio.ServicerContext,
+        code: grpc.StatusCode,
+        details: str,
+    ) -> None:
+        context.set_code(code)
+        context.set_details(details)
+
+    @staticmethod
+    def _to_market_quote(exchange: str, ticker: object) -> data_pb2.MarketQuote:
+        return data_pb2.MarketQuote(
+            exchange=exchange,
+            symbol=getattr(ticker, "symbol"),
+            last_price=getattr(ticker, "last_price"),
+            bid_price=getattr(ticker, "bid_price"),
+            ask_price=getattr(ticker, "ask_price"),
+            volume_24h=getattr(ticker, "volume_24h"),
+            high_24h=getattr(ticker, "high_24h"),
+            low_24h=getattr(ticker, "low_24h"),
+            timestamp=getattr(ticker, "timestamp"),
+        )
 
     async def IngestData(
         self,
@@ -186,3 +211,156 @@ class DataServiceServicer(data_pb2_grpc.DataServiceServicer):
             logger.warning("No data found to delete for %s", instrument)
 
         return data_pb2.DeleteCatalogResponse(success=success)
+
+    async def GetMarketQuote(
+        self,
+        request: data_pb2.GetMarketQuoteRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.GetMarketQuoteResponse:
+        exchange = request.exchange.strip().lower()
+        symbol = request.symbol.strip().upper()
+
+        if not exchange or not symbol:
+            self._set_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "exchange and symbol are required",
+            )
+            return data_pb2.GetMarketQuoteResponse()
+
+        try:
+            connector = get_connector(exchange)
+            ticker = await connector.get_ticker(symbol)
+            return data_pb2.GetMarketQuoteResponse(
+                quote=self._to_market_quote(exchange, ticker)
+            )
+        except ValueError as exc:
+            logger.error("GetMarketQuote validation error: %s", exc)
+            self._set_error(context, grpc.StatusCode.INVALID_ARGUMENT, str(exc))
+            return data_pb2.GetMarketQuoteResponse()
+        except NotImplementedError as exc:
+            logger.error("GetMarketQuote not implemented: %s", exc)
+            self._set_error(context, grpc.StatusCode.UNIMPLEMENTED, str(exc))
+            return data_pb2.GetMarketQuoteResponse()
+        except Exception as exc:
+            logger.exception("GetMarketQuote failed")
+            self._set_error(context, grpc.StatusCode.INTERNAL, str(exc))
+            return data_pb2.GetMarketQuoteResponse()
+
+    async def GetMarketKlines(
+        self,
+        request: data_pb2.GetMarketKlinesRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.GetMarketKlinesResponse:
+        exchange = request.exchange.strip().lower()
+        symbol = request.symbol.strip().upper()
+        interval = request.interval.strip() or "1h"
+        limit = request.limit or 100
+
+        if not exchange or not symbol:
+            self._set_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "exchange and symbol are required",
+            )
+            return data_pb2.GetMarketKlinesResponse()
+        if limit <= 0:
+            self._set_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "limit must be greater than 0",
+            )
+            return data_pb2.GetMarketKlinesResponse()
+
+        try:
+            connector = get_connector(exchange)
+            klines = await connector.get_klines(
+                symbol=symbol,
+                interval=interval,
+                limit=limit,
+            )
+            return data_pb2.GetMarketKlinesResponse(
+                klines=[
+                    data_pb2.MarketKline(
+                        open_time=k.open_time,
+                        open=k.open,
+                        high=k.high,
+                        low=k.low,
+                        close=k.close,
+                        volume=k.volume,
+                        close_time=k.close_time,
+                    )
+                    for k in klines
+                ]
+            )
+        except ValueError as exc:
+            logger.error("GetMarketKlines validation error: %s", exc)
+            self._set_error(context, grpc.StatusCode.INVALID_ARGUMENT, str(exc))
+            return data_pb2.GetMarketKlinesResponse()
+        except NotImplementedError as exc:
+            logger.error("GetMarketKlines not implemented: %s", exc)
+            self._set_error(context, grpc.StatusCode.UNIMPLEMENTED, str(exc))
+            return data_pb2.GetMarketKlinesResponse()
+        except Exception as exc:
+            logger.exception("GetMarketKlines failed")
+            self._set_error(context, grpc.StatusCode.INTERNAL, str(exc))
+            return data_pb2.GetMarketKlinesResponse()
+
+    async def GetMarketOverview(
+        self,
+        request: data_pb2.GetMarketOverviewRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.GetMarketOverviewResponse:
+        exchange = request.exchange.strip().lower()
+        symbols = [s.strip().upper() for s in request.symbols if s.strip()]
+
+        if not exchange:
+            self._set_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "exchange is required",
+            )
+            return data_pb2.GetMarketOverviewResponse()
+        if not symbols:
+            self._set_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "at least one symbol is required",
+            )
+            return data_pb2.GetMarketOverviewResponse()
+
+        try:
+            connector = get_connector(exchange)
+            tickers = await asyncio.gather(
+                *(connector.get_ticker(symbol) for symbol in symbols)
+            )
+            return data_pb2.GetMarketOverviewResponse(
+                quotes=[self._to_market_quote(exchange, ticker) for ticker in tickers]
+            )
+        except ValueError as exc:
+            logger.error("GetMarketOverview validation error: %s", exc)
+            self._set_error(context, grpc.StatusCode.INVALID_ARGUMENT, str(exc))
+            return data_pb2.GetMarketOverviewResponse()
+        except NotImplementedError as exc:
+            logger.error("GetMarketOverview not implemented: %s", exc)
+            self._set_error(context, grpc.StatusCode.UNIMPLEMENTED, str(exc))
+            return data_pb2.GetMarketOverviewResponse()
+        except Exception as exc:
+            logger.exception("GetMarketOverview failed")
+            self._set_error(context, grpc.StatusCode.INTERNAL, str(exc))
+            return data_pb2.GetMarketOverviewResponse()
+
+    async def ListSupportedExchanges(
+        self,
+        request: data_pb2.ListSupportedExchangesRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> data_pb2.ListSupportedExchangesResponse:
+        _ = request
+        try:
+            return data_pb2.ListSupportedExchangesResponse(
+                exchanges=list_exchanges()
+            )
+        except Exception as exc:
+            logger.exception("ListSupportedExchanges failed")
+            self._set_error(context, grpc.StatusCode.INTERNAL, str(exc))
+            return data_pb2.ListSupportedExchangesResponse()

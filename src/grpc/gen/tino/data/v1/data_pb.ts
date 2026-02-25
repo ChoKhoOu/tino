@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file tino/data/v1/data.proto.
  */
 export const file_tino_data_v1_data: GenFile = /*@__PURE__*/
-  fileDesc("Chd0aW5vL2RhdGEvdjEvZGF0YS5wcm90bxIMdGluby5kYXRhLnYxIm8KEUluZ2VzdERhdGFSZXF1ZXN0Eg4KBnNvdXJjZRgBIAEoCRISCgppbnN0cnVtZW50GAIgASgJEhAKCGJhcl90eXBlGAMgASgJEhIKCnN0YXJ0X2RhdGUYBCABKAkSEAoIZW5kX2RhdGUYBSABKAki/gEKEkluZ2VzdERhdGFSZXNwb25zZRI4CgR0eXBlGAEgASgOMioudGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXNwb25zZS5FdmVudFR5cGUSDwoHbWVzc2FnZRgCIAEoCRIUCgxwcm9ncmVzc19wY3QYAyABKAESFQoNcm93c19pbmdlc3RlZBgEIAEoAyJwCglFdmVudFR5cGUSGgoWRVZFTlRfVFlQRV9VTlNQRUNJRklFRBAAEhcKE0VWRU5UX1RZUEVfUFJPR1JFU1MQARIYChRFVkVOVF9UWVBFX0NPTVBMRVRFRBACEhQKEEVWRU5UX1RZUEVfRVJST1IQAyIUChJMaXN0Q2F0YWxvZ1JlcXVlc3QiQgoTTGlzdENhdGFsb2dSZXNwb25zZRIrCgdlbnRyaWVzGAEgAygLMhoudGluby5kYXRhLnYxLkNhdGFsb2dFbnRyeSJtCgxDYXRhbG9nRW50cnkSEgoKaW5zdHJ1bWVudBgBIAEoCRIQCghiYXJfdHlwZRgCIAEoCRISCgpzdGFydF9kYXRlGAMgASgJEhAKCGVuZF9kYXRlGAQgASgJEhEKCXJvd19jb3VudBgFIAEoAyI8ChREZWxldGVDYXRhbG9nUmVxdWVzdBISCgppbnN0cnVtZW50GAEgASgJEhAKCGJhcl90eXBlGAIgASgJIigKFURlbGV0ZUNhdGFsb2dSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIMo4CCgtEYXRhU2VydmljZRJRCgpJbmdlc3REYXRhEh8udGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXF1ZXN0GiAudGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXNwb25zZTABElIKC0xpc3RDYXRhbG9nEiAudGluby5kYXRhLnYxLkxpc3RDYXRhbG9nUmVxdWVzdBohLnRpbm8uZGF0YS52MS5MaXN0Q2F0YWxvZ1Jlc3BvbnNlElgKDURlbGV0ZUNhdGFsb2cSIi50aW5vLmRhdGEudjEuRGVsZXRlQ2F0YWxvZ1JlcXVlc3QaIy50aW5vLmRhdGEudjEuRGVsZXRlQ2F0YWxvZ1Jlc3BvbnNlYgZwcm90bzM");
+  fileDesc("Chd0aW5vL2RhdGEvdjEvZGF0YS5wcm90bxIMdGluby5kYXRhLnYxIm8KEUluZ2VzdERhdGFSZXF1ZXN0Eg4KBnNvdXJjZRgBIAEoCRISCgppbnN0cnVtZW50GAIgASgJEhAKCGJhcl90eXBlGAMgASgJEhIKCnN0YXJ0X2RhdGUYBCABKAkSEAoIZW5kX2RhdGUYBSABKAki/gEKEkluZ2VzdERhdGFSZXNwb25zZRI4CgR0eXBlGAEgASgOMioudGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXNwb25zZS5FdmVudFR5cGUSDwoHbWVzc2FnZRgCIAEoCRIUCgxwcm9ncmVzc19wY3QYAyABKAESFQoNcm93c19pbmdlc3RlZBgEIAEoAyJwCglFdmVudFR5cGUSGgoWRVZFTlRfVFlQRV9VTlNQRUNJRklFRBAAEhcKE0VWRU5UX1RZUEVfUFJPR1JFU1MQARIYChRFVkVOVF9UWVBFX0NPTVBMRVRFRBACEhQKEEVWRU5UX1RZUEVfRVJST1IQAyIUChJMaXN0Q2F0YWxvZ1JlcXVlc3QiQgoTTGlzdENhdGFsb2dSZXNwb25zZRIrCgdlbnRyaWVzGAEgAygLMhoudGluby5kYXRhLnYxLkNhdGFsb2dFbnRyeSJtCgxDYXRhbG9nRW50cnkSEgoKaW5zdHJ1bWVudBgBIAEoCRIQCghiYXJfdHlwZRgCIAEoCRISCgpzdGFydF9kYXRlGAMgASgJEhAKCGVuZF9kYXRlGAQgASgJEhEKCXJvd19jb3VudBgFIAEoAyI8ChREZWxldGVDYXRhbG9nUmVxdWVzdBISCgppbnN0cnVtZW50GAEgASgJEhAKCGJhcl90eXBlGAIgASgJIigKFURlbGV0ZUNhdGFsb2dSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIIjkKFUdldE1hcmtldFF1b3RlUmVxdWVzdBIQCghleGNoYW5nZRgBIAEoCRIOCgZzeW1ib2wYAiABKAkiswEKC01hcmtldFF1b3RlEhAKCGV4Y2hhbmdlGAEgASgJEg4KBnN5bWJvbBgCIAEoCRISCgpsYXN0X3ByaWNlGAMgASgBEhEKCWJpZF9wcmljZRgEIAEoARIRCglhc2tfcHJpY2UYBSABKAESEgoKdm9sdW1lXzI0aBgGIAEoARIQCghoaWdoXzI0aBgHIAEoARIPCgdsb3dfMjRoGAggASgBEhEKCXRpbWVzdGFtcBgJIAEoCSJCChZHZXRNYXJrZXRRdW90ZVJlc3BvbnNlEigKBXF1b3RlGAEgASgLMhkudGluby5kYXRhLnYxLk1hcmtldFF1b3RlIlsKFkdldE1hcmtldEtsaW5lc1JlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDgoGc3ltYm9sGAIgASgJEhAKCGludGVydmFsGAMgASgJEg0KBWxpbWl0GAQgASgFInwKC01hcmtldEtsaW5lEhEKCW9wZW5fdGltZRgBIAEoAxIMCgRvcGVuGAIgASgBEgwKBGhpZ2gYAyABKAESCwoDbG93GAQgASgBEg0KBWNsb3NlGAUgASgBEg4KBnZvbHVtZRgGIAEoARISCgpjbG9zZV90aW1lGAcgASgDIkQKF0dldE1hcmtldEtsaW5lc1Jlc3BvbnNlEikKBmtsaW5lcxgBIAMoCzIZLnRpbm8uZGF0YS52MS5NYXJrZXRLbGluZSI9ChhHZXRNYXJrZXRPdmVydmlld1JlcXVlc3QSEAoIZXhjaGFuZ2UYASABKAkSDwoHc3ltYm9scxgCIAMoCSJGChlHZXRNYXJrZXRPdmVydmlld1Jlc3BvbnNlEikKBnF1b3RlcxgBIAMoCzIZLnRpbm8uZGF0YS52MS5NYXJrZXRRdW90ZSIfCh1MaXN0U3VwcG9ydGVkRXhjaGFuZ2VzUmVxdWVzdCIzCh5MaXN0U3VwcG9ydGVkRXhjaGFuZ2VzUmVzcG9uc2USEQoJZXhjaGFuZ2VzGAEgAygJMqYFCgtEYXRhU2VydmljZRJRCgpJbmdlc3REYXRhEh8udGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXF1ZXN0GiAudGluby5kYXRhLnYxLkluZ2VzdERhdGFSZXNwb25zZTABElIKC0xpc3RDYXRhbG9nEiAudGluby5kYXRhLnYxLkxpc3RDYXRhbG9nUmVxdWVzdBohLnRpbm8uZGF0YS52MS5MaXN0Q2F0YWxvZ1Jlc3BvbnNlElgKDURlbGV0ZUNhdGFsb2cSIi50aW5vLmRhdGEudjEuRGVsZXRlQ2F0YWxvZ1JlcXVlc3QaIy50aW5vLmRhdGEudjEuRGVsZXRlQ2F0YWxvZ1Jlc3BvbnNlElsKDkdldE1hcmtldFF1b3RlEiMudGluby5kYXRhLnYxLkdldE1hcmtldFF1b3RlUmVxdWVzdBokLnRpbm8uZGF0YS52MS5HZXRNYXJrZXRRdW90ZVJlc3BvbnNlEl4KD0dldE1hcmtldEtsaW5lcxIkLnRpbm8uZGF0YS52MS5HZXRNYXJrZXRLbGluZXNSZXF1ZXN0GiUudGluby5kYXRhLnYxLkdldE1hcmtldEtsaW5lc1Jlc3BvbnNlEmQKEUdldE1hcmtldE92ZXJ2aWV3EiYudGluby5kYXRhLnYxLkdldE1hcmtldE92ZXJ2aWV3UmVxdWVzdBonLnRpbm8uZGF0YS52MS5HZXRNYXJrZXRPdmVydmlld1Jlc3BvbnNlEnMKFkxpc3RTdXBwb3J0ZWRFeGNoYW5nZXMSKy50aW5vLmRhdGEudjEuTGlzdFN1cHBvcnRlZEV4Y2hhbmdlc1JlcXVlc3QaLC50aW5vLmRhdGEudjEuTGlzdFN1cHBvcnRlZEV4Y2hhbmdlc1Jlc3BvbnNlYgZwcm90bzM");
 
 /**
  * @generated from message tino.data.v1.IngestDataRequest
@@ -219,6 +219,267 @@ export const DeleteCatalogResponseSchema: GenMessage<DeleteCatalogResponse> = /*
   messageDesc(file_tino_data_v1_data, 6);
 
 /**
+ * @generated from message tino.data.v1.GetMarketQuoteRequest
+ */
+export type GetMarketQuoteRequest = Message<"tino.data.v1.GetMarketQuoteRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketQuoteRequest.
+ * Use `create(GetMarketQuoteRequestSchema)` to create a new message.
+ */
+export const GetMarketQuoteRequestSchema: GenMessage<GetMarketQuoteRequest> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 7);
+
+/**
+ * @generated from message tino.data.v1.MarketQuote
+ */
+export type MarketQuote = Message<"tino.data.v1.MarketQuote"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: double last_price = 3;
+   */
+  lastPrice: number;
+
+  /**
+   * @generated from field: double bid_price = 4;
+   */
+  bidPrice: number;
+
+  /**
+   * @generated from field: double ask_price = 5;
+   */
+  askPrice: number;
+
+  /**
+   * @generated from field: double volume_24h = 6;
+   */
+  volume24h: number;
+
+  /**
+   * @generated from field: double high_24h = 7;
+   */
+  high24h: number;
+
+  /**
+   * @generated from field: double low_24h = 8;
+   */
+  low24h: number;
+
+  /**
+   * @generated from field: string timestamp = 9;
+   */
+  timestamp: string;
+};
+
+/**
+ * Describes the message tino.data.v1.MarketQuote.
+ * Use `create(MarketQuoteSchema)` to create a new message.
+ */
+export const MarketQuoteSchema: GenMessage<MarketQuote> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 8);
+
+/**
+ * @generated from message tino.data.v1.GetMarketQuoteResponse
+ */
+export type GetMarketQuoteResponse = Message<"tino.data.v1.GetMarketQuoteResponse"> & {
+  /**
+   * @generated from field: tino.data.v1.MarketQuote quote = 1;
+   */
+  quote?: MarketQuote;
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketQuoteResponse.
+ * Use `create(GetMarketQuoteResponseSchema)` to create a new message.
+ */
+export const GetMarketQuoteResponseSchema: GenMessage<GetMarketQuoteResponse> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 9);
+
+/**
+ * @generated from message tino.data.v1.GetMarketKlinesRequest
+ */
+export type GetMarketKlinesRequest = Message<"tino.data.v1.GetMarketKlinesRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: string symbol = 2;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: string interval = 3;
+   */
+  interval: string;
+
+  /**
+   * @generated from field: int32 limit = 4;
+   */
+  limit: number;
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketKlinesRequest.
+ * Use `create(GetMarketKlinesRequestSchema)` to create a new message.
+ */
+export const GetMarketKlinesRequestSchema: GenMessage<GetMarketKlinesRequest> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 10);
+
+/**
+ * @generated from message tino.data.v1.MarketKline
+ */
+export type MarketKline = Message<"tino.data.v1.MarketKline"> & {
+  /**
+   * @generated from field: int64 open_time = 1;
+   */
+  openTime: bigint;
+
+  /**
+   * @generated from field: double open = 2;
+   */
+  open: number;
+
+  /**
+   * @generated from field: double high = 3;
+   */
+  high: number;
+
+  /**
+   * @generated from field: double low = 4;
+   */
+  low: number;
+
+  /**
+   * @generated from field: double close = 5;
+   */
+  close: number;
+
+  /**
+   * @generated from field: double volume = 6;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: int64 close_time = 7;
+   */
+  closeTime: bigint;
+};
+
+/**
+ * Describes the message tino.data.v1.MarketKline.
+ * Use `create(MarketKlineSchema)` to create a new message.
+ */
+export const MarketKlineSchema: GenMessage<MarketKline> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 11);
+
+/**
+ * @generated from message tino.data.v1.GetMarketKlinesResponse
+ */
+export type GetMarketKlinesResponse = Message<"tino.data.v1.GetMarketKlinesResponse"> & {
+  /**
+   * @generated from field: repeated tino.data.v1.MarketKline klines = 1;
+   */
+  klines: MarketKline[];
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketKlinesResponse.
+ * Use `create(GetMarketKlinesResponseSchema)` to create a new message.
+ */
+export const GetMarketKlinesResponseSchema: GenMessage<GetMarketKlinesResponse> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 12);
+
+/**
+ * @generated from message tino.data.v1.GetMarketOverviewRequest
+ */
+export type GetMarketOverviewRequest = Message<"tino.data.v1.GetMarketOverviewRequest"> & {
+  /**
+   * @generated from field: string exchange = 1;
+   */
+  exchange: string;
+
+  /**
+   * @generated from field: repeated string symbols = 2;
+   */
+  symbols: string[];
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketOverviewRequest.
+ * Use `create(GetMarketOverviewRequestSchema)` to create a new message.
+ */
+export const GetMarketOverviewRequestSchema: GenMessage<GetMarketOverviewRequest> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 13);
+
+/**
+ * @generated from message tino.data.v1.GetMarketOverviewResponse
+ */
+export type GetMarketOverviewResponse = Message<"tino.data.v1.GetMarketOverviewResponse"> & {
+  /**
+   * @generated from field: repeated tino.data.v1.MarketQuote quotes = 1;
+   */
+  quotes: MarketQuote[];
+};
+
+/**
+ * Describes the message tino.data.v1.GetMarketOverviewResponse.
+ * Use `create(GetMarketOverviewResponseSchema)` to create a new message.
+ */
+export const GetMarketOverviewResponseSchema: GenMessage<GetMarketOverviewResponse> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 14);
+
+/**
+ * @generated from message tino.data.v1.ListSupportedExchangesRequest
+ */
+export type ListSupportedExchangesRequest = Message<"tino.data.v1.ListSupportedExchangesRequest"> & {
+};
+
+/**
+ * Describes the message tino.data.v1.ListSupportedExchangesRequest.
+ * Use `create(ListSupportedExchangesRequestSchema)` to create a new message.
+ */
+export const ListSupportedExchangesRequestSchema: GenMessage<ListSupportedExchangesRequest> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 15);
+
+/**
+ * @generated from message tino.data.v1.ListSupportedExchangesResponse
+ */
+export type ListSupportedExchangesResponse = Message<"tino.data.v1.ListSupportedExchangesResponse"> & {
+  /**
+   * @generated from field: repeated string exchanges = 1;
+   */
+  exchanges: string[];
+};
+
+/**
+ * Describes the message tino.data.v1.ListSupportedExchangesResponse.
+ * Use `create(ListSupportedExchangesResponseSchema)` to create a new message.
+ */
+export const ListSupportedExchangesResponseSchema: GenMessage<ListSupportedExchangesResponse> = /*@__PURE__*/
+  messageDesc(file_tino_data_v1_data, 16);
+
+/**
  * @generated from service tino.data.v1.DataService
  */
 export const DataService: GenService<{
@@ -245,6 +506,38 @@ export const DataService: GenService<{
     methodKind: "unary";
     input: typeof DeleteCatalogRequestSchema;
     output: typeof DeleteCatalogResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.data.v1.DataService.GetMarketQuote
+   */
+  getMarketQuote: {
+    methodKind: "unary";
+    input: typeof GetMarketQuoteRequestSchema;
+    output: typeof GetMarketQuoteResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.data.v1.DataService.GetMarketKlines
+   */
+  getMarketKlines: {
+    methodKind: "unary";
+    input: typeof GetMarketKlinesRequestSchema;
+    output: typeof GetMarketKlinesResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.data.v1.DataService.GetMarketOverview
+   */
+  getMarketOverview: {
+    methodKind: "unary";
+    input: typeof GetMarketOverviewRequestSchema;
+    output: typeof GetMarketOverviewResponseSchema;
+  },
+  /**
+   * @generated from rpc tino.data.v1.DataService.ListSupportedExchanges
+   */
+  listSupportedExchanges: {
+    methodKind: "unary";
+    input: typeof ListSupportedExchangesRequestSchema;
+    output: typeof ListSupportedExchangesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_tino_data_v1_data, 0);
