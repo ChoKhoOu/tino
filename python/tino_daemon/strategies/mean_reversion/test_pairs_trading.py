@@ -105,8 +105,8 @@ class TestCointegration:
         strat = PairsTradingStrategy(
             symbol_a="A", symbol_b="B", lookback_period=5
         )
-        # Feed perfectly correlated prices (ratio ~2.0)
-        for a, b in [(100, 50), (102, 51), (104, 52), (103, 51.5), (105, 52.5)]:
+        # Feed approximately correlated prices with some noise
+        for a, b in [(100, 50), (102, 51.5), (104, 51), (103, 52.5), (105, 52)]:
             strat._prices["A"].append(float(a))
             strat._prices["B"].append(float(b))
 

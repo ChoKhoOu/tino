@@ -128,7 +128,7 @@ class PairsTradingStrategy(Strategy):
     ) -> float:
         """Compute hedge ratio via OLS regression: price_a = beta * price_b + alpha."""
         # OLS: beta = cov(a, b) / var(b)
-        var_b = float(np.var(prices_b, ddof=0))
+        var_b = float(np.var(prices_b, ddof=1))
         if var_b == 0:
             return 0.0
         beta = float(np.cov(prices_a, prices_b)[0, 1] / var_b)
@@ -147,7 +147,7 @@ class PairsTradingStrategy(Strategy):
         lagged = residuals[:-1]
         # OLS: diff = gamma * lagged + error
         # gamma = cov(diff, lagged) / var(lagged)
-        var_lagged = float(np.var(lagged, ddof=0))
+        var_lagged = float(np.var(lagged, ddof=1))
         if var_lagged == 0:
             return False
         gamma = float(np.cov(diff, lagged)[0, 1] / var_lagged)
