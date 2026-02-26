@@ -63,6 +63,7 @@ async function main() {
       engineDir: paths.engineDir,
       dashboardDist: paths.dashboardDist,
     }),
+    { exitOnCtrlC: false },
   );
 
   await waitUntilExit();
