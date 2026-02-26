@@ -1,0 +1,12 @@
+{
+  "id": "112d9e46-5e2e-45e4-b6a6-eb7fb217cb5a",
+  "version_hash": "sha256:52ad7eb73f5da1c50b2a582fd53718fb778f0886ebb27f4ebeb4e65843aae3f8",
+  "name": "Backtest Test Strategy",
+  "description": null,
+  "parameters": {
+    "period": 20
+  },
+  "created_at": "2026-02-26T04:00:40.732037+00:00",
+  "created_by_session": null,
+  "parent_version_hash": null
+}

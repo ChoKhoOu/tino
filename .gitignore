@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.test-venv/
+*.egg
+
+# Data & cache
+data/*.json
+data/*.parquet
+data/cache_index.json
+data/tino2.db
+!data/.gitkeep
+
+# Strategies (user-generated, not tracked)
+strategies/**/*.py
+strategies/**/*.meta.json
+!strategies/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.pytest_cache/
+htmlcov/
+
+# Turbo
+.turbo/
+
+# OMC state
+.omc/
+
+# Misc
+*.log
+
+# spec
+specs/
+.specify/
+
+# claude code
+.claude/commands/speckit*

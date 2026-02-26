@@ -1,0 +1,1 @@
+class BacktestTestStrategy: pass
