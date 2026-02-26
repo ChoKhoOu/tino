@@ -1,0 +1,70 @@
+schema: spec-driven
+
+# Tino Constitution v1.0.1 — Ratified 2026-02-26
+
+context: |
+  Domain: AI-powered quantitative cryptocurrency trading platform (CEX live trading)
+
+  Tech stack:
+    - Node.js (TypeScript 5.x, Node 20+): CLI, TUI rendering, Web Dashboard (React)
+    - Python: Backtesting engine, live trading execution, quantitative analysis (NautilusTrader)
+    - Cross-language communication via formally defined API contracts (REST/WebSocket/RPC)
+    - Validation: Zod (TypeScript side), Pydantic (Python side)
+
+  Architecture: Monorepo containing Node.js CLI, Python Engine, and React Web Dashboard
+
+  Core Principles:
+
+    I. Risk First, Always (Absolute Risk Veto)
+      - The system trades real capital on CEX. Risk control holds absolute, non-bypassable veto.
+      - MUST hard-code global risk circuit breaker (max drawdown, single-order size cap, daily loss limit).
+        Circuit breaker MUST NOT be overridable by AI Agent, CLI, or API.
+      - Exchange API keys MUST be isolated by permission: trading keys MUST NOT carry withdrawal permissions.
+      - All risk parameter changes MUST require explicit human confirmation via TUI.
+      - MUST implement a kill-switch that cancels all orders and flattens positions, accessible from CLI and Web Dashboard.
+
+    II. Isomorphic Execution (Backtest-Live Parity)
+      - Strategy scripts MUST run without modification in both backtest and live environments.
+      - Exactly one strategy execution interface; backtest and live differ only in data adapter and order router.
+      - MUST NOT contain separate backtest-only or live-only strategy code paths.
+      - Strategies use an abstract adapter interface (NautilusTrader execution model) for both historical replay and real-time feeds.
+
+    III. Human-in-the-Loop (Clear Human-AI Boundary)
+      - AI Agent is a code generator and analyst, never the final decision-maker.
+      - Strategy deployment, parameter adjustment, or capital allocation to live MUST prompt for human confirmation (y/N in TUI).
+      - CLI MUST distinguish sandbox/backtest (safe to auto-execute) from live (MUST block for confirmation).
+      - AI-generated strategy code MUST be reviewed before persistence or scheduling. MUST NOT silently deploy to live.
+
+    IV. Strict Boundary Decoupling (Domain-Driven Isolation)
+      - Node.js owns UI: TUI, web dashboard, user interaction. No candlestick/indicator/order/exchange API logic.
+      - Python owns computation: backtesting, live trading, quantitative analysis. No frontend rendering logic.
+      - Shared data types (OHLCV, order status, backtest results) defined in single source-of-truth schema, validated at both boundaries.
+
+  Engineering Standards:
+    - Every AI-generated strategy (.py) MUST be content-hashed or git-committed. Every run records exact strategy version hash.
+    - All Node.js-Python communication governed by shared schema (JSON Schema / Protocol Buffers).
+    - Prompts MUST be versioned constants in dedicated files; no inline prompt concatenation.
+    - LLM output MUST use Function Calling / Tools for structured JSON; no regex parsing of natural language.
+
+  Testing Standards:
+    - Integration tests highest priority: full chain validation (Node.js command → Python engine → backtest JSON result).
+    - Maintain canonical historical K-line data as regression benchmark.
+    - After engine core updates, replay benchmark and verify Sharpe/PnL match baseline (within floating-point tolerance). Deviation blocks merge.
+    - TDD where feasible: Red → Green → Refactor.
+
+rules:
+  proposal:
+    - Every proposal MUST include a "Risk Assessment" section evaluating impact on live trading safety
+    - Every proposal MUST specify which boundary it affects (Node.js UI / Python Engine / Cross-language API)
+    - Proposals touching live trading MUST include a rollback plan
+    - MUST NOT propose features that bypass the human confirmation gate for live operations
+  design:
+    - MUST respect Strict Boundary Decoupling — no mixing of UI logic and quantitative computation
+    - MUST define cross-language API contracts explicitly when the feature spans Node.js and Python
+    - MUST ensure backtest-live isomorphism — no separate code paths for backtest vs live
+    - Risk control components MUST be designed as non-bypassable at the engine layer
+  tasks:
+    - Tasks that modify risk parameters or live trading logic MUST include a verification step with human review
+    - Tasks MUST specify which language boundary (TypeScript / Python) the implementation belongs to
+    - Integration test tasks MUST validate the full Node.js → Python → Result chain
+    - Strategy-related tasks MUST verify isomorphic execution (runs in both backtest and live without modification)

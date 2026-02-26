@@ -69,7 +69,7 @@ async def validate_binance_key(api_key: str, api_secret: str) -> dict:
             if permissions.get("enableWithdrawals", False):
                 raise WithdrawalPermissionError(
                     "API key has withdrawal permissions enabled. "
-                    "Tino2 REFUSES to operate with withdrawal-capable keys. "
+                    "tino REFUSES to operate with withdrawal-capable keys. "
                     "Please create a new API key with ONLY trading permissions."
                 )
 

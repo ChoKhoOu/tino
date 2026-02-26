@@ -3,7 +3,7 @@
 import aiosqlite
 
 _db: aiosqlite.Connection | None = None
-DB_PATH = "data/tino2.db"
+DB_PATH = "data/tino.db"
 
 
 async def init_db(db_path: str = DB_PATH) -> None:

@@ -1,1 +1,1 @@
-"""Tino2 Quantitative Trading Engine."""
+"""tino Quantitative Trading Engine."""
