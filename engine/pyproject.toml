@@ -1,5 +1,5 @@
 [project]
-name = "tino2-engine"
+name = "tino-engine"
 version = "0.1.0"
 description = "Quantitative trading engine powered by NautilusTrader"
 requires-python = ">=3.12"

@@ -1,5 +1,5 @@
 {
-  "name": "tino2",
+  "name": "tino",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -10,7 +10,8 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "dev": "turbo run dev",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "package": "bash scripts/package-engine.sh && turbo run build"
   },
   "devDependencies": {
     "turbo": "^2.4.0",
@@ -18,5 +19,6 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "packageManager": "npm@11.8.0"
 }

@@ -1,20 +1,27 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { Chat, type ChatMessage } from './components/Chat.js';
 import { Input } from './components/Input.js';
 import { StrategyReview } from './components/StrategyReview.js';
 import { StrategyAgent, type AgentAction } from './agents/strategy-agent.js';
 import { LLMClient } from './services/llm-client.js';
+import { startEngineWatchdog } from './daemon/engine-watchdog.js';
+
+type EngineStatus = 'healthy' | 'reconnecting' | 'offline';
 
 interface AppProps {
   engineUrl?: string;
   apiKey?: string;
+  pythonPath?: string;
+  engineDir?: string;
+  dashboardDist?: string;
 }
 
-export function App({ engineUrl = 'http://localhost:8000', apiKey }: AppProps) {
+export function App({ engineUrl = 'http://localhost:8000', apiKey, pythonPath, engineDir, dashboardDist }: AppProps) {
   const { exit } = useApp();
   const [llm] = useState(() => new LLMClient({ apiKey }));
   const [agent] = useState(() => new StrategyAgent(llm, engineUrl));
+  const [engineStatus, setEngineStatus] = useState<EngineStatus>('healthy');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'system',
@@ -24,6 +31,26 @@ export function App({ engineUrl = 'http://localhost:8000', apiKey }: AppProps) {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastAction, setLastAction] = useState<AgentAction | null>(null);
+
+  useEffect(() => {
+    if (!pythonPath || !engineDir) return;
+
+    const stopWatchdog = startEngineWatchdog(
+      { pythonPath, engineDir, dashboardDist },
+      () => {
+        setEngineStatus('offline');
+      },
+      () => {
+        setEngineStatus('healthy');
+      },
+      10000,
+      () => {
+        setEngineStatus('reconnecting');
+      },
+    );
+
+    return stopWatchdog;
+  }, [pythonPath, engineDir, dashboardDist]);
 
   const handleSubmit = useCallback(
     async (input: string) => {
@@ -202,7 +229,9 @@ export function App({ engineUrl = 'http://localhost:8000', apiKey }: AppProps) {
           AI: {llm.status}
         </Text>
         <Text color="gray"> | </Text>
-        <Text color="gray">Engine: {engineUrl}</Text>
+        <Text color={engineStatus === 'healthy' ? 'green' : engineStatus === 'reconnecting' ? 'yellow' : 'red'}>
+          Engine: {engineStatus}
+        </Text>
       </Box>
 
       {/* Main content area */}

@@ -17,7 +17,7 @@ __pycache__/
 data/*.json
 data/*.parquet
 data/cache_index.json
-data/tino2.db
+data/tino.db
 !data/.gitkeep
 
 # Strategies (user-generated, not tracked)
@@ -49,12 +49,8 @@ htmlcov/
 # OMC state
 .omc/
 
+# Packaged engine
+engine/.packaged/
+
 # Misc
 *.log
-
-# spec
-specs/
-.specify/
-
-# claude code
-.claude/commands/speckit*

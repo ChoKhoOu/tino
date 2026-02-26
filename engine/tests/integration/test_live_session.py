@@ -47,7 +47,7 @@ async def test_deploy_requires_backtest(client):
 
     # Get default risk profile
     import aiosqlite
-    db = await aiosqlite.connect("data/tino2.db")
+    db = await aiosqlite.connect("data/tino.db")
     db.row_factory = aiosqlite.Row
     cursor = await db.execute("SELECT id FROM risk_profiles LIMIT 1")
     row = await cursor.fetchone()

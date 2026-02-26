@@ -1,5 +1,5 @@
 {
-  "id": "63af8e94-e6d4-4175-abe8-8bcb96ded31e",
+  "id": "a0923d36-48da-45eb-8695-3bf671e0a0e4",
   "version_hash": "sha256:5b8de0b174a3f2b85f3a61ab959f1938b2d2bdda113d2b13adf02b03b39d3ccd",
   "name": "Test EMA Strategy",
   "description": "Simple EMA crossover for testing",
@@ -7,7 +7,7 @@
     "fast_period": 10,
     "slow_period": 20
   },
-  "created_at": "2026-02-26T04:06:15.382943+00:00",
+  "created_at": "2026-02-26T09:00:59.482294+00:00",
   "created_by_session": null,
   "parent_version_hash": null
 }

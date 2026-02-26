@@ -1,10 +1,10 @@
 {
-  "id": "bb35cde8-b819-428a-88ec-8a8db7ee29fa",
+  "id": "1d911836-7e0d-41ec-b847-7475c2b788de",
   "version_hash": "sha256:de7e63fe9e21d0265790b13b83a6329146f4426e173df413eb5e5eb8d67efacc",
   "name": "No Backtest Strategy",
   "description": null,
   "parameters": {},
-  "created_at": "2026-02-26T04:00:40.765361+00:00",
+  "created_at": "2026-02-26T09:00:56.244212+00:00",
   "created_by_session": null,
   "parent_version_hash": null
 }
