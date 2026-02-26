@@ -222,6 +222,37 @@ export class StrategyAgent {
     }
   }
 
+  async *streamConversation(
+    input: string,
+    options?: { signal?: AbortSignal },
+  ): AsyncGenerator<{
+    type: 'text' | 'usage';
+    text?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+  }> {
+    this._addToHistory('user', input);
+
+    const systemPrompt = this.state.currentCode
+      ? `You are Tino, an AI quantitative trading assistant. The user has an active strategy called "${this.state.currentName}". Help them refine, analyze, or discuss trading strategies. Be concise and actionable.`
+      : `You are Tino, an AI quantitative trading assistant. Help the user create and refine quantitative trading strategies. Be concise and actionable.`;
+
+    let fullText = '';
+    for await (const chunk of this.llm.streamChat(
+      input,
+      systemPrompt,
+      this.conversationHistory.slice(0, -1), // exclude current message
+      options,
+    )) {
+      yield chunk;
+      if (chunk.type === 'text' && chunk.text) {
+        fullText += chunk.text;
+      }
+    }
+
+    this._addToHistory('assistant', fullText);
+  }
+
   private _addToHistory(role: 'user' | 'assistant', content: string): void {
     this.conversationHistory.push({ role, content });
     // Keep history manageable (last 20 messages)

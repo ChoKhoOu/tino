@@ -17,6 +17,7 @@ import {
   ANALYSIS_SYSTEM_PROMPT,
   ANALYSIS_TOOL_SCHEMA,
 } from '../prompts/analysis.js';
+import { streamCompletion } from '../core/streaming-client.js';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -73,6 +74,10 @@ export class LLMClient {
 
   get isAvailable(): boolean {
     return this._status === 'connected';
+  }
+
+  get modelName(): string {
+    return this.model;
   }
 
   async checkHealth(): Promise<void> {
@@ -144,6 +149,54 @@ export class LLMClient {
       fullMessage,
       conversationHistory,
     );
+  }
+
+  async *streamChat(
+    userMessage: string,
+    systemPrompt: string,
+    conversationHistory: Message[] = [],
+    options?: { signal?: AbortSignal },
+  ): AsyncGenerator<{ type: 'text' | 'usage'; text?: string; inputTokens?: number; outputTokens?: number }> {
+    if (!this.isAvailable) {
+      this._status = 'offline';
+      throw new Error('LLM service is unavailable. AI features are disabled.');
+    }
+
+    const messages = [
+      ...conversationHistory.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      { role: 'user' as const, content: userMessage },
+    ];
+
+    try {
+      for await (const chunk of streamCompletion({
+        apiKey: this.apiKey,
+        model: this.model,
+        baseUrl: this.baseUrl,
+        systemPrompt,
+        messages,
+        maxTokens: 8192,
+        signal: options?.signal,
+      })) {
+        if (chunk.type === 'text_delta' && chunk.text) {
+          yield { type: 'text', text: chunk.text };
+        } else if (chunk.type === 'usage') {
+          yield { type: 'usage', inputTokens: chunk.inputTokens, outputTokens: chunk.outputTokens };
+        }
+      }
+      this._status = 'connected';
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('401') || error.message.includes('403')) {
+          this._status = 'offline';
+        } else if (error.message.includes('429') || error.message.includes('500')) {
+          this._status = 'degraded';
+        }
+      }
+      throw error;
+    }
   }
 
   private async _callWithTool<T>(
